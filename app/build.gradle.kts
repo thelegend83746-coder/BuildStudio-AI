@@ -72,5 +72,5 @@ dependencies {
     implementation("org.eclipse.jdt:ecj:3.26.0")
     implementation("com.android.tools:r8:8.2.33")
 
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    implementation(files("libs/apksig-8.2.2.jar"))
 }
