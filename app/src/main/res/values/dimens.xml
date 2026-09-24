@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="actionbar_icon_size">40dp</dimen>
+    <dimen name="actionbar_button_padding">16dp</dimen>
+    <dimen name="card_corner_radius">12dp</dimen>
+    <dimen name="editor_text_size">14sp</dimen>
+    <dimen name="drawer_width">320dp</dimen>
+</resources>

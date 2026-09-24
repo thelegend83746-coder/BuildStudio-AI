@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.build.studio">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <application
+        android:name="com.apk.builder.ApplicationLoader"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="BUILD STUDIO"
+        android:roundIcon="@drawable/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.BuildStudio.CyberDark"
+        android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
+        android:extractNativeLibs="true">
+
+        <!-- Splash Activity (Launcher) -->
+        <activity
+            android:name="com.apk.builder.SplashActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.BuildStudio.CyberDark">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Main Activity & Dashboard -->
+        <activity
+            android:name="com.apk.builder.MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.apk.builder.CreateProjectActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.apk.builder.CodeEditorActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.apk.builder.SettingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <service
+            android:name="com.apk.builder.BuildService"
+            android:exported="false" />
+
+        <!-- Backward Compatibility Aliases for com.build.studio -->
+        <activity
+            android:name="com.build.studio.HomeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.MainActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.CreateProjectActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.CodeEditorActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.EditorActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.BuildSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.BuildAiActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.OllamaSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.ProjectListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <service
+            android:name="com.tyron.compiler.BuildService"
+            android:exported="false" />
+
+        <!-- FileProvider for APK Installation Dispatches -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.build.studio.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider" />
+        </provider>
+
+    </application>
+
+</manifest>

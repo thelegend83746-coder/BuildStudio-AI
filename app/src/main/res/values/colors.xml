@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark / Modern IDE Cyber Theme Palette -->
+    <color name="primary_accent">#2979FF</color>
+    <color name="colorPrimary">#2979FF</color>
+    <color name="colorPrimaryDark">#1565C0</color>
+    <color name="colorAccent">#2979FF</color>
+
+    <!-- Dark Background / Canvas -->
+    <color name="dark_background">#0D1117</color>
+    <color name="dark_canvas">#121820</color>
+    <color name="bg_slate_50">#0D1117</color>
+    <color name="bg_slate_100">#121820</color>
+    <color name="bg_slate_200">#2D3B4E</color>
+    <color name="bg_white">#1A222D</color>
+
+    <!-- Surface / Cards & Secondary Surface -->
+    <color name="surface_card">#1A222D</color>
+    <color name="surface_secondary">#222E3C</color>
+    <color name="cardview_dark_background">#1A222D</color>
+    <color name="cardview_light_background">#1A222D</color>
+
+    <!-- Outlines & Borders -->
+    <color name="outline_border">#2D3B4E</color>
+
+    <!-- Status & Indicators -->
+    <color name="indicator_success">#00E676</color>
+    <color name="status_green">#00E676</color>
+    <color name="indicator_error">#FF5252</color>
+    <color name="status_red">#FF5252</color>
+    <color name="indicator_warning">#FFD600</color>
+    <color name="status_amber">#FFD600</color>
+
+    <!-- Typography -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#8B949E</color>
+    <color name="text_slate_900">#FFFFFF</color>
+    <color name="text_slate_600">#8B949E</color>
+    <color name="text_slate_500">#8B949E</color>
+    <color name="text_slate_400">#6E7681</color>
+    <color name="textActionNameColor">#FFFFFF</color>
+
+    <!-- Log Terminal Text -->
+    <color name="terminal_log_text">#A9B7C6</color>
+
+    <!-- Code Editor UI Colors -->
+    <color name="editor_background">#0D1117</color>
+    <color name="editor_gutter_bg">#121820</color>
+    <color name="editor_gutter_text">#6E7681</color>
+    <color name="editor_selected_line">#161B22</color>
+    <color name="editor_selection">#264F78</color>
+    <color name="editor_cursor">#2979FF</color>
+    <color name="editor_tab_indicator">#2979FF</color>
+    <color name="editor_tab_text_selected">#2979FF</color>
+    <color name="editor_tab_text_normal">#8B949E</color>
+
+    <!-- AI Sparkle Purple -->
+    <color name="ai_sparkle_purple">#8B5CF6</color>
+    <color name="ai_card_bg">#1A222D</color>
+    <color name="ai_bubble_user">#2979FF</color>
+    <color name="ai_bubble_assistant">#222E3C</color>
+</resources>

@@ -1,0 +1,6 @@
+-keep class com.build.studio.** { *; }
+-keep class com.apk.builder.** { *; }
+-keep class com.tyron.compiler.** { *; }
+-keep class io.github.rosemoe.sora.** { *; }
+-dontwarn org.eclipse.jdt.**
+-dontwarn com.android.tools.r8.**
