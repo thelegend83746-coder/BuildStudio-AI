@@ -62,8 +62,8 @@ dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
 
     // Sora Editor
-    implementation("io.github.rosemoe.sora-editor:editor:0.23.4")
-    implementation("io.github.rosemoe.sora-editor:language-java:0.23.4")
+    implementation("io.github.Rosemoe.sora-editor:editor:0.23.4")
+    implementation("io.github.Rosemoe.sora-editor:language-java:0.23.4")
 
     // HTTP / REST API Client for Build AI (Ollama & OpenAI endpoints)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
