@@ -45,10 +45,16 @@ public class ECJCompiler extends Compiler {
             args.add(javaVer);
         }
 
+        File androidxJar = ApplicationLoader.getInstance().getAndroidxJar();
+        String classpath = androidJar.getAbsolutePath();
+        if (androidxJar != null && androidxJar.exists()) {
+            classpath += File.pathSeparator + androidxJar.getAbsolutePath();
+        }
+
         args.add("-bootclasspath");
         args.add(androidJar.getAbsolutePath());
         args.add("-cp");
-        args.add(androidJar.getAbsolutePath());
+        args.add(classpath);
         args.add("-d");
         args.add(classesDir.getAbsolutePath());
         args.add("-proc:none");

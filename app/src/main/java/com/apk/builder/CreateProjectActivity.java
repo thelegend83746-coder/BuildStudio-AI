@@ -71,7 +71,7 @@ public class CreateProjectActivity extends AppCompatActivity {
         spMinSdk.setAdapter(minAdapter);
         spMinSdk.setSelection(1); // Default API 22
 
-        String[] targetSdks = {"28 (Android 9.0)", "30 (Android 11.0)", "31 (Android 12.0)", "33 (Android 13.0)", "34 (Android 14.0)", "35 (Android 15.0)"};
+        String[] targetSdks = {"28 (Android 9.0)", "30 (Android 11.0)", "31 (Android 12.0)", "33 (Android 13.0)", "34 (Android 14.0)"};
         ArrayAdapter<String> targetAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, targetSdks);
         spTargetSdk.setAdapter(targetAdapter);
         spTargetSdk.setSelection(4); // Default API 34
@@ -306,6 +306,8 @@ public class CreateProjectActivity extends AppCompatActivity {
 
         String themesContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<resources>\n" +
+                "    <style name=\"Theme.AppCompat.Light.NoActionBar\" parent=\"@android:style/Theme.Material.Light.NoActionBar\" />\n" +
+                "    <style name=\"Theme.MaterialComponents.DayNight.NoActionBar\" parent=\"@android:style/Theme.Material.Light.NoActionBar\" />\n" +
                 "    <style name=\"AppTheme\" parent=\"" + themeParent + "\">\n" +
                 "        <item name=\"android:colorPrimary\">@color/colorPrimary</item>\n" +
                 "        <item name=\"android:colorPrimaryDark\">@color/colorPrimaryDark</item>\n" +

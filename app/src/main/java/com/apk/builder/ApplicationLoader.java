@@ -166,23 +166,30 @@ public class ApplicationLoader extends Application {
     }
 
     public File getAndroidJar(int apiLevel) {
-        int resolvedApi = Math.max(30, Math.min(36, apiLevel));
+        int resolvedApi = Math.max(30, Math.min(34, apiLevel));
         File platformJar = new File(getFilesDir(), "platforms/android-" + resolvedApi + "/android.jar");
-        if (platformJar.exists() && platformJar.length() > 0) {
+        if (platformJar.exists() && platformJar.length() > 10000000) {
             return platformJar;
         }
 
         try (InputStream is = getAssets().open("platforms/android-" + resolvedApi + "/android.jar")) {
-            FileUtil.copyAsset(is, platformJar);
-            return platformJar;
+            boolean ok = FileUtil.copyAsset(is, platformJar);
+            if (ok && platformJar.exists() && platformJar.length() > 10000000) {
+                return platformJar;
+            }
         } catch (Exception ignored) {}
 
         File rootJar = new File(getFilesDir(), "android.jar");
-        if (rootJar.exists() && rootJar.length() > 0) return rootJar;
+        if (rootJar.exists() && rootJar.length() > 10000000) return rootJar;
+
+        try (InputStream is = getAssets().open("android.jar.zip")) {
+            FileUtil.unzip(is, getFilesDir());
+            if (rootJar.exists() && rootJar.length() > 10000000) return rootJar;
+        } catch (Exception ignored) {}
 
         try (InputStream is = getAssets().open("platforms/android-34/android.jar")) {
             FileUtil.copyAsset(is, rootJar);
-            return rootJar;
+            if (rootJar.exists() && rootJar.length() > 10000000) return rootJar;
         } catch (Exception ignored) {}
 
         return rootJar;
@@ -206,5 +213,15 @@ public class ApplicationLoader extends Application {
             } catch (Exception ignored) {}
         }
         return pem;
+    }
+
+    public File getAndroidxJar() {
+        File jar = new File(getFilesDir(), "libs/androidx-stubs.jar");
+        if (jar.exists() && jar.length() > 0) return jar;
+        try (InputStream is = getAssets().open("libs/androidx-stubs.jar")) {
+            FileUtil.copyAsset(is, jar);
+            return jar;
+        } catch (Exception ignored) {}
+        return null;
     }
 }

@@ -36,10 +36,52 @@ public class SettingActivity extends AppCompatActivity {
         if (path != null) {
             project = new Project(name != null ? name : "Project", pkg != null ? pkg : "com.example", path);
         } else {
-            project = new Project("TestApp", "com.example.test", getFilesDir().getAbsolutePath());
+            project = findRecentProject();
+            if (project == null) {
+                project = createDemoProject();
+            }
         }
 
         initViews();
+    }
+
+    private Project findRecentProject() {
+        try {
+            File projectsDir = new File(android.os.Environment.getExternalStorageDirectory(), "BUILD STUDIO/projects");
+            if (projectsDir.exists() && projectsDir.isDirectory()) {
+                File[] files = projectsDir.listFiles(File::isDirectory);
+                if (files != null && files.length > 0) {
+                    java.util.Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+                    for (File f : files) {
+                        Project p = Project.loadFromDirectory(f);
+                        if (p != null) return p;
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private Project createDemoProject() {
+        File demoDir = new File(getFilesDir(), "projects/TestApp");
+        demoDir.mkdirs();
+        File srcDir = new File(demoDir, "app/src/main/java/com/example/testapp");
+        srcDir.mkdirs();
+        File resValues = new File(demoDir, "app/src/main/res/values");
+        resValues.mkdirs();
+
+        FileUtil.writeFile(new File(demoDir, "app/src/main/AndroidManifest.xml").getAbsolutePath(),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"com.example.testapp\">\n    <application android:label=\"@string/app_name\" android:theme=\"@style/AppTheme\">\n        <activity android:name=\".MainActivity\" android:exported=\"true\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\" />\n                <category android:name=\"android.intent.category.LAUNCHER\" />\n            </intent-filter>\n        </activity>\n    </application>\n</manifest>\n");
+        FileUtil.writeFile(new File(srcDir, "MainActivity.java").getAbsolutePath(),
+                "package com.example.testapp;\nimport android.app.Activity;\nimport android.os.Bundle;\nimport android.widget.TextView;\npublic class MainActivity extends Activity {\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        TextView tv = new TextView(this);\n        tv.setText(\"Hello from TestApp!\");\n        setContentView(tv);\n    }\n}\n");
+        FileUtil.writeFile(new File(resValues, "strings.xml").getAbsolutePath(),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <string name=\"app_name\">TestApp</string>\n</resources>\n");
+        FileUtil.writeFile(new File(resValues, "styles.xml").getAbsolutePath(),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <style name=\"AppTheme\" parent=\"@android:style/Theme.Material.Light.NoActionBar\" />\n</resources>\n");
+
+        Project p = new Project("TestApp", "com.example.testapp", demoDir.getAbsolutePath());
+        p.saveConfig();
+        return p;
     }
 
     private void initViews() {

@@ -33,6 +33,11 @@ public class D8Compiler extends Compiler {
             throw new Exception("No .class files found in " + classesDir.getAbsolutePath() + " for DEX compilation.");
         }
 
+        File androidxJar = ApplicationLoader.getInstance().getAndroidxJar();
+        if (androidxJar != null && androidxJar.exists()) {
+            classFiles.add(androidxJar);
+        }
+
         Logger.log("[" + toolName + "] Converting " + classFiles.size() + " bytecode files to DEX format");
         ClassLoader cl = ApplicationLoader.getInstance().getToolchainClassLoader();
 

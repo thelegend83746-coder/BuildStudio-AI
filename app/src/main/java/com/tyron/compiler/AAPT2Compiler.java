@@ -40,19 +40,54 @@ public class AAPT2Compiler extends Compiler {
         genDir.mkdirs();
         binDir.mkdirs();
 
+        // Ensure res directory, fallback resources, and manifest exist
+        File resDir = project.getResDir();
+        if (!resDir.exists()) {
+            resDir.mkdirs();
+        }
+        File valuesDir = new File(resDir, "values");
+        if (!valuesDir.exists()) {
+            valuesDir.mkdirs();
+        }
+        File stringsXml = new File(valuesDir, "strings.xml");
+        if (!stringsXml.exists()) {
+            com.apk.builder.FileUtil.writeFile(stringsXml.getAbsolutePath(),
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <string name=\"app_name\">" + project.getName() + "</string>\n</resources>\n");
+        }
+        File compatThemes = new File(valuesDir, "compat_themes.xml");
+        if (!compatThemes.exists()) {
+            com.apk.builder.FileUtil.writeFile(compatThemes.getAbsolutePath(),
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n" +
+                    "    <style name=\"Theme.AppCompat\" parent=\"@android:style/Theme.Material.Light.DarkActionBar\" />\n" +
+                    "    <style name=\"Theme.AppCompat.Light\" parent=\"@android:style/Theme.Material.Light\" />\n" +
+                    "    <style name=\"Theme.AppCompat.Light.NoActionBar\" parent=\"@android:style/Theme.Material.Light.NoActionBar\" />\n" +
+                    "    <style name=\"Theme.AppCompat.DayNight\" parent=\"@android:style/Theme.Material.Light\" />\n" +
+                    "    <style name=\"Theme.AppCompat.DayNight.NoActionBar\" parent=\"@android:style/Theme.Material.Light.NoActionBar\" />\n" +
+                    "    <style name=\"Theme.MaterialComponents\" parent=\"@android:style/Theme.Material.Light.DarkActionBar\" />\n" +
+                    "    <style name=\"Theme.MaterialComponents.DayNight\" parent=\"@android:style/Theme.Material.Light\" />\n" +
+                    "    <style name=\"Theme.MaterialComponents.DayNight.NoActionBar\" parent=\"@android:style/Theme.Material.Light.NoActionBar\" />\n" +
+                    "</resources>\n");
+        }
+        File manifest = project.getManifestFile();
+        if (!manifest.exists()) {
+            manifest.getParentFile().mkdirs();
+            com.apk.builder.FileUtil.writeFile(manifest.getAbsolutePath(),
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\"" + project.getPackageName() + "\">\n    <application android:label=\"@string/app_name\" />\n</manifest>\n");
+        }
+
         // Step 1: AAPT2 Compile
         notifyProgress("[AAPT2] Compiling XML resources and assets...", 1, 7);
-        Logger.log("[AAPT2] Compiling XML resources from " + project.getResDir().getAbsolutePath());
+        Logger.log("[AAPT2] Compiling XML resources from " + resDir.getAbsolutePath());
 
         List<String> compileCmd = new ArrayList<>();
         compileCmd.add(aapt2Binary.getAbsolutePath());
         compileCmd.add("compile");
         compileCmd.add("--dir");
-        compileCmd.add(project.getResDir().getAbsolutePath());
+        compileCmd.add(resDir.getAbsolutePath());
         compileCmd.add("-o");
         compileCmd.add(compiledResDir.getAbsolutePath());
 
-        BinaryExecutor.Result compileResult = BinaryExecutor.execute(compileCmd, project.getResDir());
+        BinaryExecutor.Result compileResult = BinaryExecutor.execute(compileCmd, buildDir);
         if (!compileResult.isSuccess()) {
             throw new Exception("AAPT2 compile failed:\n" + compileResult.output);
         }

@@ -25,7 +25,12 @@ public class BinaryExecutor {
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
             if (workingDir != null) {
-                pb.directory(workingDir);
+                if (!workingDir.exists()) {
+                    workingDir.mkdirs();
+                }
+                if (workingDir.exists() && workingDir.isDirectory()) {
+                    pb.directory(workingDir);
+                }
             }
             pb.redirectErrorStream(true);
             Process process = pb.start();
