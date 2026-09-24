@@ -17,6 +17,7 @@ public class CompilerResult {
 
     public boolean isSuccess() { return success; }
     public File getOutputApk() { return outputApk; }
+    public File getApkFile() { return outputApk; }
     public String getLogs() { return logs; }
     public String getErrorMessage() { return errorMessage; }
 }

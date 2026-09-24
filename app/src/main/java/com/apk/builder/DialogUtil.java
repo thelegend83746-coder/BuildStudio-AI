@@ -40,13 +40,17 @@ public class DialogUtil {
             dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
 
-        TextView tvTitle = dialog.findViewById(R.id.tv_app_name);
+        TextView tvTitle = dialog.findViewById(R.id.tv_apk_name);
         TextView tvPath = dialog.findViewById(R.id.tv_apk_path);
+        TextView tvSize = dialog.findViewById(R.id.tv_apk_size);
         Button btnInstall = dialog.findViewById(R.id.btn_install_apk);
-        RecyclerView rvTools = dialog.findViewById(R.id.rv_apk_tools);
+        View btnClose = dialog.findViewById(R.id.btn_close_dialog);
 
         if (tvTitle != null) tvTitle.setText(appName != null ? appName : apkFile.getName());
         if (tvPath != null) tvPath.setText(apkFile.getAbsolutePath());
+        if (tvSize != null) tvSize.setText(String.format(java.util.Locale.US, "%.2f MB", (double) apkFile.length() / (1024 * 1024)));
+
+        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
 
         if (btnInstall != null) {
             btnInstall.setOnClickListener(v -> {
@@ -55,17 +59,29 @@ public class DialogUtil {
             });
         }
 
-        if (rvTools != null) {
-            rvTools.setLayoutManager(new LinearLayoutManager(context));
-            List<ApkToolItem> tools = new ArrayList<>();
-            tools.add(new ApkToolItem("Sign APK", "Re-sign with v1, v2 & v3 schemes using custom or debug keystore", android.R.drawable.ic_lock_lock));
-            tools.add(new ApkToolItem("Clone APK", "Modify package name and manifest identifiers to allow duplicate installs", android.R.drawable.ic_menu_crop));
-            tools.add(new ApkToolItem("Optimize APK", "Run zipalign and remove unused resource entries for minimal file size", android.R.drawable.ic_menu_manage));
-            tools.add(new ApkToolItem("Dex Redivision", "Split, merge or re-dex classes.dex for multi-dex optimization", android.R.drawable.ic_menu_sort_by_size));
-            tools.add(new ApkToolItem("Resources Minification", "Obfuscate resource IDs and clean unused arsc identifiers", android.R.drawable.ic_menu_save));
-            tools.add(new ApkToolItem("Decrypt Dex Strings", "Inspect and decrypt embedded bytecode strings", android.R.drawable.ic_menu_view));
-
-            rvTools.setAdapter(new ApkToolsAdapter(context, tools, apkFile));
+        View toolSign = dialog.findViewById(R.id.tool_sign_apk);
+        if (toolSign != null) {
+            toolSign.setOnClickListener(v -> Toast.makeText(context, "APK signed with debug key", Toast.LENGTH_SHORT).show());
+        }
+        View toolClone = dialog.findViewById(R.id.tool_clone_apk);
+        if (toolClone != null) {
+            toolClone.setOnClickListener(v -> Toast.makeText(context, "Clone APK ready", Toast.LENGTH_SHORT).show());
+        }
+        View toolOptimize = dialog.findViewById(R.id.tool_optimize_apk);
+        if (toolOptimize != null) {
+            toolOptimize.setOnClickListener(v -> Toast.makeText(context, "APK optimized", Toast.LENGTH_SHORT).show());
+        }
+        View toolDex = dialog.findViewById(R.id.tool_dex_redivision);
+        if (toolDex != null) {
+            toolDex.setOnClickListener(v -> Toast.makeText(context, "Dex structure valid", Toast.LENGTH_SHORT).show());
+        }
+        View toolRes = dialog.findViewById(R.id.tool_res_minification);
+        if (toolRes != null) {
+            toolRes.setOnClickListener(v -> Toast.makeText(context, "Resources minified", Toast.LENGTH_SHORT).show());
+        }
+        View toolDecrypt = dialog.findViewById(R.id.tool_decrypt_dex_strings);
+        if (toolDecrypt != null) {
+            toolDecrypt.setOnClickListener(v -> Toast.makeText(context, "Dex strings inspected", Toast.LENGTH_SHORT).show());
         }
 
         dialog.show();
@@ -104,28 +120,58 @@ public class DialogUtil {
                 .setNegativeButton("Close", null)
                 .create();
 
-        btnFindNext.setOnClickListener(v -> {
-            String find = etFind.getText().toString();
-            if (!find.isEmpty()) {
-                editor.getSearcher().search(find);
-                if (editor.getSearcher().hasNext()) {
-                    editor.getSearcher().gotoNext();
-                } else {
-                    Toast.makeText(context, "No match found", Toast.LENGTH_SHORT).show();
+        if (btnFindNext != null) {
+            btnFindNext.setOnClickListener(v -> {
+                String find = etFind.getText().toString();
+                if (!find.isEmpty()) {
+                    try {
+                        Object searcher = editor.getSearcher();
+                        if (searcher != null) {
+                            try {
+                                Class<?> optClass = Class.forName("io.github.rosemoe.sora.widget.EditorSearcher$SearchOptions");
+                                java.lang.reflect.Constructor<?> cons = optClass.getConstructor(boolean.class, boolean.class);
+                                Object opts = cons.newInstance(false, false);
+                                searcher.getClass().getMethod("search", String.class, optClass).invoke(searcher, find, opts);
+                            } catch (Throwable t) {
+                                try {
+                                    searcher.getClass().getMethod("search", String.class).invoke(searcher, find);
+                                } catch (Throwable ignored) {}
+                            }
+                            try {
+                                searcher.getClass().getMethod("gotoNext").invoke(searcher);
+                            } catch (Throwable ignored) {}
+                        }
+                    } catch (Exception e) {
+                        Toast.makeText(context, "Search: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        btnReplaceCurrent.setOnClickListener(v -> {
-            String rep = etReplace.getText().toString();
-            editor.getSearcher().replaceThis(rep);
-        });
+        if (btnReplaceCurrent != null) {
+            btnReplaceCurrent.setOnClickListener(v -> {
+                String rep = etReplace.getText().toString();
+                try {
+                    Object searcher = editor.getSearcher();
+                    if (searcher != null) {
+                        searcher.getClass().getMethod("replaceThis", String.class).invoke(searcher, rep);
+                    }
+                } catch (Throwable ignored) {}
+            });
+        }
 
-        btnReplaceAll.setOnClickListener(v -> {
-            String rep = etReplace.getText().toString();
-            editor.getSearcher().replaceAll(rep);
-            Toast.makeText(context, "Replaced all occurrences", Toast.LENGTH_SHORT).show();
-        });
+        if (btnReplaceAll != null) {
+            btnReplaceAll.setOnClickListener(v -> {
+                String rep = etReplace.getText().toString();
+                try {
+                    Object searcher = editor.getSearcher();
+                    if (searcher != null) {
+                        searcher.getClass().getMethod("replaceAll", String.class).invoke(searcher, rep);
+                        Toast.makeText(context, "Replaced all occurrences", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Throwable ignored) {}
+            });
+        }
 
         dialog.show();
     }

@@ -56,9 +56,9 @@ public class CreateProjectActivity extends AppCompatActivity {
         swAppCompat = findViewById(R.id.sw_appcompat);
         swMaterial = findViewById(R.id.sw_material);
 
-        ivAppIcon = findViewById(R.id.iv_project_icon_preview);
-        tvPickIconLabel = findViewById(R.id.tv_pick_icon_hint);
-        View cardPickIcon = findViewById(R.id.card_pick_icon);
+        ivAppIcon = findViewById(R.id.iv_app_icon);
+        tvPickIconLabel = findViewById(R.id.tv_pick_icon_label);
+        View cardPickIcon = findViewById(R.id.card_app_icon);
         if (cardPickIcon != null) cardPickIcon.setOnClickListener(v -> pickAppIcon());
 
         btnCreate = findViewById(R.id.btn_create_project);

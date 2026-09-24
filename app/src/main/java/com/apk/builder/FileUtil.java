@@ -94,6 +94,26 @@ public class FileUtil {
         }
     }
 
+    public static boolean copyDirectory(File src, File dst) {
+        if (!src.exists()) return false;
+        if (src.isDirectory()) {
+            if (!dst.exists()) dst.mkdirs();
+            File[] files = src.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    copyDirectory(file, new File(dst, file.getName()));
+                }
+            }
+            return true;
+        } else {
+            return copyFile(src, dst);
+        }
+    }
+
+    public static boolean deleteDirectory(File fileOrDirectory) {
+        return deleteRecursive(fileOrDirectory);
+    }
+
     public static boolean deleteRecursive(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory()) {
             File[] children = fileOrDirectory.listFiles();

@@ -44,33 +44,37 @@ public class SettingActivity extends AppCompatActivity {
 
     private void initViews() {
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
-        TextView tvTitle = findViewById(R.id.tv_toolbar_title);
+        TextView tvTitle = findViewById(R.id.tv_header_title);
         if (tvTitle != null) tvTitle.setText(project.getName() + " - Build Settings");
 
-        rgJavaVersion = findViewById(R.id.rg_settings_java);
-        rgDexer = findViewById(R.id.rg_settings_dexer);
-        swStringFog = findViewById(R.id.sw_stringfog);
-        swR8Shrinker = findViewById(R.id.sw_r8);
-        swProguard = findViewById(R.id.sw_proguard);
+        rgJavaVersion = findViewById(R.id.rg_java_version);
+        rgDexer = findViewById(R.id.rg_dexer);
+        swStringFog = findViewById(R.id.sw_string_fog);
+        swR8Shrinker = findViewById(R.id.sw_r8_shrink);
 
         tvTerminalLog = findViewById(R.id.tv_terminal_output);
         svTerminalLog = findViewById(R.id.sv_terminal);
-        btnRunBuild = findViewById(R.id.btn_start_compilation);
+        btnRunBuild = findViewById(R.id.btn_start_build);
 
-        findViewById(R.id.btn_copy_terminal).setOnClickListener(v -> {
-            ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm != null && tvTerminalLog != null) {
-                cm.setPrimaryClip(ClipData.newPlainText("Build Log", tvTerminalLog.getText()));
-                Toast.makeText(this, "Logs copied to clipboard", Toast.LENGTH_SHORT).show();
-            }
-        });
+        View btnCopy = findViewById(R.id.btn_copy_log);
+        if (btnCopy != null) {
+            btnCopy.setOnClickListener(v -> {
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                if (cm != null && tvTerminalLog != null) {
+                    cm.setPrimaryClip(ClipData.newPlainText("Build Log", tvTerminalLog.getText()));
+                    Toast.makeText(this, "Logs copied to clipboard", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
-        btnRunBuild.setOnClickListener(v -> startCompilation());
+        if (btnRunBuild != null) {
+            btnRunBuild.setOnClickListener(v -> startCompilation());
+        }
     }
 
     private void startCompilation() {
-        btnRunBuild.setEnabled(false);
-        tvTerminalLog.setText("");
+        if (btnRunBuild != null) btnRunBuild.setEnabled(false);
+        if (tvTerminalLog != null) tvTerminalLog.setText("");
         logLine("Starting build for " + project.getName() + "...");
 
         CompilerAsyncTask task = new CompilerAsyncTask(this, project, new CompilerAsyncTask.CompilerCallback() {
@@ -80,12 +84,12 @@ public class SettingActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCompleted(CompilerResult result) {
+            public void onComplete(CompilerResult result) {
                 runOnUiThread(() -> {
-                    btnRunBuild.setEnabled(true);
+                    if (btnRunBuild != null) btnRunBuild.setEnabled(true);
                     if (result.isSuccess()) {
-                        logLine("\n[BUILD SUCCESS] APK generated at: " + result.getApkFile().getAbsolutePath());
-                        DialogUtil.showApkUtilityDialog(SettingActivity.this, result.getApkFile(), project.getName());
+                        logLine("\n[BUILD SUCCESS] APK generated at: " + result.getOutputApk().getAbsolutePath());
+                        DialogUtil.showApkUtilityDialog(SettingActivity.this, result.getOutputApk(), project.getName());
                     } else {
                         logLine("\n[BUILD FAILED] " + result.getErrorMessage());
                     }

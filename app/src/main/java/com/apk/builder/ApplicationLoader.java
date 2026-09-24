@@ -26,6 +26,12 @@ public class ApplicationLoader extends Application {
         return instance != null ? instance.getApplicationContext() : null;
     }
 
+    public static void initEnvironment() {
+        if (instance != null) {
+            instance.initCompilerEnvironment();
+        }
+    }
+
     private void initCompilerEnvironment() {
         new Thread(() -> {
             try {

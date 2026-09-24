@@ -172,8 +172,8 @@ public class MainActivity extends AppCompatActivity {
                 super(v);
                 ivAppIcon = v.findViewById(R.id.iv_project_icon);
                 tvAppName = v.findViewById(R.id.tv_project_name);
-                tvPackageName = v.findViewById(R.id.tv_package_name);
-                tvSdkBadge = v.findViewById(R.id.tv_sdk_range);
+                tvPackageName = v.findViewById(R.id.tv_project_package);
+                tvSdkBadge = v.findViewById(R.id.tv_project_sdk_range);
                 tvTimestamp = v.findViewById(R.id.tv_project_timestamp);
             }
         }
@@ -184,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                 .setTitle("Delete Project")
                 .setMessage("Are you sure you want to permanently delete '" + project.getName() + "'?")
                 .setPositiveButton("Delete", (dialog, which) -> {
-                    FileUtil.deleteDirectory(new File(project.getRootPath()));
+                    FileUtil.deleteRecursive(new File(project.getRootPath()));
                     loadProjects();
                     Toast.makeText(this, "Project deleted", Toast.LENGTH_SHORT).show();
                 })

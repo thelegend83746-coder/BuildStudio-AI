@@ -13,7 +13,12 @@ public class CompilerAsyncTask {
 
     public interface CompilerCallback {
         void onProgress(String message, int step, int total);
-        void onComplete(CompilerResult result);
+        default void onComplete(CompilerResult result) {
+            onCompleted(result);
+        }
+        default void onCompleted(CompilerResult result) {
+            // default no-op if onComplete is overridden
+        }
     }
 
     private final Context context;

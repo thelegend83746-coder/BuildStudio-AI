@@ -39,10 +39,15 @@ public class Compiler {
                     }
 
                     @Override
-                    public void onCompleted(CompilerResult result) {
+                    public void onComplete(CompilerResult result) {
                         if (callback != null) {
                             callback.onCompleted(result);
                         }
+                    }
+
+                    @Override
+                    public void onCompleted(CompilerResult result) {
+                        onComplete(result);
                     }
                 }
         );

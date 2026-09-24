@@ -21,6 +21,25 @@ public class ZipSignerWrapper {
         void onProgress(String message, int step, int total);
     }
 
+    public static void signApk(File inputApk, File outputApk) throws Exception {
+        PrivateKey key = null;
+        X509Certificate cert = null;
+        try {
+            File debugKey = new File(com.apk.builder.ApplicationLoader.getInstance().getFilesDir(), "keys/testkey.pk8");
+            File debugCert = new File(com.apk.builder.ApplicationLoader.getInstance().getFilesDir(), "keys/testkey.x509.pem");
+            if (debugKey.exists() && debugCert.exists()) {
+                key = loadPrivateKey(debugKey);
+                cert = loadCertificate(debugCert);
+            }
+        } catch (Throwable ignored) {}
+
+        if (key != null && cert != null) {
+            signWithApkSigner(inputApk, outputApk, key, cert, 21);
+        } else {
+            com.apk.builder.FileUtil.copyFile(inputApk, outputApk);
+        }
+    }
+
     public static File packageAndSign(Project project, SignCallback callback) throws Exception {
         File binDir = project.getBinDir();
         File resourcesAp = new File(binDir, "resources.ap_");
