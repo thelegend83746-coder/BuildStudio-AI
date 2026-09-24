@@ -199,23 +199,23 @@ public class CreateProjectActivity extends AppCompatActivity {
         new File(root, "app/build/bin").mkdirs();
 
         // 1. AndroidManifest.xml
-        String manifestContent = "<?xml version="1.0" encoding="utf-8"?>\n" +
-                "<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n" +
-                "    package="" + pkg + ""\n" +
-                "    android:versionCode="" + verCode + ""\n" +
-                "    android:versionName="" + verName + "">\n\n" +
-                "    <uses-sdk android:minSdkVersion="" + minSdk + "" android:targetSdkVersion="" + targetSdk + "" />\n\n" +
+        String manifestContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    package=\"" + pkg + "\"\n" +
+                "    android:versionCode=\"" + verCode + "\"\n" +
+                "    android:versionName=\"" + verName + "\">\n\n" +
+                "    <uses-sdk android:minSdkVersion=\"" + minSdk + "\" android:targetSdkVersion=\"" + targetSdk + "\" />\n\n" +
                 "    <application\n" +
-                "        android:allowBackup="true"\n" +
-                "        android:icon="@mipmap/ic_launcher"\n" +
-                "        android:label="" + appName + ""\n" +
-                "        android:theme="@style/AppTheme">\n\n" +
+                "        android:allowBackup=\"true\"\n" +
+                "        android:icon=\"@mipmap/ic_launcher\"\n" +
+                "        android:label=\"" + appName + "\"\n" +
+                "        android:theme=\"@style/AppTheme\">\n\n" +
                 "        <activity\n" +
-                "            android:name=".MainActivity"\n" +
-                "            android:exported="true">\n" +
+                "            android:name=\".MainActivity\"\n" +
+                "            android:exported=\"true\">\n" +
                 "            <intent-filter>\n" +
-                "                <action android:name="android.intent.action.MAIN" />\n" +
-                "                <category android:name="android.intent.category.LAUNCHER" />\n" +
+                "                <action android:name=\"android.intent.action.MAIN\" />\n" +
+                "                <category android:name=\"android.intent.category.LAUNCHER\" />\n" +
                 "            </intent-filter>\n" +
                 "        </activity>\n" +
                 "    </application>\n" +
@@ -229,95 +229,49 @@ public class CreateProjectActivity extends AppCompatActivity {
         String baseActivityName = useAppCompat ? "AppCompatActivity" : "Activity";
 
         String javaContent = "package " + pkg + ";\n\n" +
-                "import android.os.Bundle;
-" +
-                "import android.widget.TextView;
-" +
-                "import android.widget.Toast;
-" +
-                (useAppCompat ? "import androidx.appcompat.app.AppCompatActivity;
-
-" : "import android.app.Activity;
-
-") +
-                "public class MainActivity extends " + baseActivityName + " {
-
-" +
-                "    private TextView tvGreeting;
-
-" +
-                "    @Override
-" +
-                "    protected void onCreate(Bundle savedInstanceState) {
-" +
-                "        super.onCreate(savedInstanceState);
-" +
-                "        setContentView(R.layout.activity_main);
-
-" +
-                "        tvGreeting = findViewById(R.id.tv_greeting);
-" +
-                "        Toast.makeText(this, "Welcome to " + appName + "!", Toast.LENGTH_SHORT).show();
-" +
-                "    }
-" +
-                "}
-";
+                "import android.os.Bundle;\n" +
+                "import android.widget.TextView;\n" +
+                "import android.widget.Toast;\n" +
+                (useAppCompat ? "import androidx.appcompat.app.AppCompatActivity;\n\n" : "import android.app.Activity;\n\n") +
+                "public class MainActivity extends " + baseActivityName + " {\n\n" +
+                "    private TextView tvGreeting;\n\n" +
+                "    @Override\n" +
+                "    protected void onCreate(Bundle savedInstanceState) {\n" +
+                "        super.onCreate(savedInstanceState);\n" +
+                "        setContentView(R.layout.activity_main);\n\n" +
+                "        tvGreeting = findViewById(R.id.tv_greeting);\n" +
+                "        Toast.makeText(this, \"Welcome to " + appName + "!\", Toast.LENGTH_SHORT).show();\n" +
+                "    }\n" +
+                "}\n";
 
         writeFile(new File(javaDir, "MainActivity.java"), javaContent);
         writeFile(new File(appJavaDir, "MainActivity.java"), javaContent);
 
         // 3. activity_main.xml and main.xml
-        String layoutContent = "<?xml version="1.0" encoding="utf-8"?>
-" +
-                "<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-" +
-                "    android:layout_width="match_parent"
-" +
-                "    android:layout_height="match_parent"
-" +
-                "    android:gravity="center"
-" +
-                "    android:background="@color/background_color"
-" +
-                "    android:orientation="vertical"
-" +
-                "    android:padding="16dp">
-
-" +
-                "    <TextView
-" +
-                "        android:id="@+id/tv_greeting"
-" +
-                "        android:layout_width="wrap_content"
-" +
-                "        android:layout_height="wrap_content"
-" +
-                "        android:text="@string/hello_message"
-" +
-                "        android:textColor="@color/colorPrimary"
-" +
-                "        android:textSize="22sp"
-" +
-                "        android:textStyle="bold" />
-
-" +
-                "    <TextView
-" +
-                "        android:layout_width="wrap_content"
-" +
-                "        android:layout_height="wrap_content"
-" +
-                "        android:layout_marginTop="8dp"
-" +
-                "        android:text="Built directly on device with BUILD STUDIO"
-" +
-                "        android:textColor="#8B949E"
-" +
-                "        android:textSize="14sp" />
-" +
-                "</LinearLayout>
-";
+        String layoutContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    android:layout_width=\"match_parent\"\n" +
+                "    android:layout_height=\"match_parent\"\n" +
+                "    android:gravity=\"center\"\n" +
+                "    android:background=\"@color/background_color\"\n" +
+                "    android:orientation=\"vertical\"\n" +
+                "    android:padding=\"16dp\">\n\n" +
+                "    <TextView\n" +
+                "        android:id=\"@+id/tv_greeting\"\n" +
+                "        android:layout_width=\"wrap_content\"\n" +
+                "        android:layout_height=\"wrap_content\"\n" +
+                "        android:text=\"@string/hello_message\"\n" +
+                "        android:textColor=\"@color/colorPrimary\"\n" +
+                "        android:textSize=\"22sp\"\n" +
+                "        android:textStyle=\"bold\" />\n\n" +
+                "    <TextView\n" +
+                "        android:layout_width=\"wrap_content\"\n" +
+                "        android:layout_height=\"wrap_content\"\n" +
+                "        android:layout_marginTop=\"8dp\"\n" +
+                "        android:text=\"Built directly on device with BUILD STUDIO\"\n" +
+                "        android:textColor=\"#8B949E\"\n" +
+                "        android:textSize=\"14sp\" />\n" +
+                "</LinearLayout>\n";
 
         writeFile(new File(layoutDir, "activity_main.xml"), layoutContent);
         writeFile(new File(layoutDir, "main.xml"), layoutContent);
@@ -325,35 +279,23 @@ public class CreateProjectActivity extends AppCompatActivity {
         writeFile(new File(appLayoutDir, "main.xml"), layoutContent);
 
         // 4. strings.xml
-        String stringsContent = "<?xml version="1.0" encoding="utf-8"?>
-" +
-                "<resources>
-" +
-                "    <string name="app_name">" + appName + "</string>
-" +
-                "    <string name="hello_message">Hello Bhai!</string>
-" +
-                "</resources>
-";
+        String stringsContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "    <string name=\"app_name\">" + appName + "</string>\n" +
+                "    <string name=\"hello_message\">Hello Bhai!</string>\n" +
+                "</resources>\n";
 
         writeFile(new File(valuesDir, "strings.xml"), stringsContent);
         writeFile(new File(appValuesDir, "strings.xml"), stringsContent);
 
         // 5. colors.xml
-        String colorsContent = "<?xml version="1.0" encoding="utf-8"?>
-" +
-                "<resources>
-" +
-                "    <color name="colorPrimary">#2979FF</color>
-" +
-                "    <color name="colorPrimaryDark">#1565C0</color>
-" +
-                "    <color name="colorAccent">#00E676</color>
-" +
-                "    <color name="background_color">#0D1117</color>
-" +
-                "</resources>
-";
+        String colorsContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "    <color name=\"colorPrimary\">#2979FF</color>\n" +
+                "    <color name=\"colorPrimaryDark\">#1565C0</color>\n" +
+                "    <color name=\"colorAccent\">#00E676</color>\n" +
+                "    <color name=\"background_color\">#0D1117</color>\n" +
+                "</resources>\n";
 
         writeFile(new File(valuesDir, "colors.xml"), colorsContent);
         writeFile(new File(appValuesDir, "colors.xml"), colorsContent);
@@ -362,22 +304,14 @@ public class CreateProjectActivity extends AppCompatActivity {
         String themeParent = useMaterial ? "Theme.MaterialComponents.DayNight.NoActionBar" :
                 (useAppCompat ? "Theme.AppCompat.Light.NoActionBar" : "@android:style/Theme.DeviceDefault.Light.NoActionBar");
 
-        String themesContent = "<?xml version="1.0" encoding="utf-8"?>
-" +
-                "<resources>
-" +
-                "    <style name="AppTheme" parent="" + themeParent + "">
-" +
-                "        <item name="android:colorPrimary">@color/colorPrimary</item>
-" +
-                "        <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
-" +
-                "        <item name="android:colorAccent">@color/colorAccent</item>
-" +
-                "    </style>
-" +
-                "</resources>
-";
+        String themesContent = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<resources>\n" +
+                "    <style name=\"AppTheme\" parent=\"" + themeParent + "\">\n" +
+                "        <item name=\"android:colorPrimary\">@color/colorPrimary</item>\n" +
+                "        <item name=\"android:colorPrimaryDark\">@color/colorPrimaryDark</item>\n" +
+                "        <item name=\"android:colorAccent\">@color/colorAccent</item>\n" +
+                "    </style>\n" +
+                "</resources>\n";
 
         writeFile(new File(valuesDir, "themes.xml"), themesContent);
         writeFile(new File(valuesDir, "styles.xml"), themesContent);

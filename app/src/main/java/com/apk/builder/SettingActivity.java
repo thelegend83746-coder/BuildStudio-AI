@@ -84,12 +84,10 @@ public class SettingActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     btnRunBuild.setEnabled(true);
                     if (result.isSuccess()) {
-                        logLine("
-[BUILD SUCCESS] APK generated at: " + result.getApkFile().getAbsolutePath());
+                        logLine("\n[BUILD SUCCESS] APK generated at: " + result.getApkFile().getAbsolutePath());
                         DialogUtil.showApkUtilityDialog(SettingActivity.this, result.getApkFile(), project.getName());
                     } else {
-                        logLine("
-[BUILD FAILED] " + result.getErrorMessage());
+                        logLine("\n[BUILD FAILED] " + result.getErrorMessage());
                     }
                 });
             }
@@ -99,8 +97,7 @@ public class SettingActivity extends AppCompatActivity {
 
     private void logLine(String line) {
         if (tvTerminalLog != null) {
-            tvTerminalLog.append(line + "
-");
+            tvTerminalLog.append(line + "\n");
             if (svTerminalLog != null) {
                 svTerminalLog.post(() -> svTerminalLog.fullScroll(View.FOCUS_DOWN));
             }

@@ -196,11 +196,8 @@ public class ZipSignerWrapper {
         MessageDigest sha1 = MessageDigest.getInstance("SHA1");
 
         StringBuilder manifest = new StringBuilder();
-        manifest.append("Manifest-Version: 1.0
-");
-        manifest.append("Created-By: 1.0 (BUILD STUDIO Native Compiler)
-
-");
+        manifest.append("Manifest-Version: 1.0\r\n");
+        manifest.append("Created-By: 1.0 (BUILD STUDIO Native Compiler)\r\n\r\n");
 
         Map<String, String> digests = new TreeMap<>();
         for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
@@ -210,31 +207,21 @@ public class ZipSignerWrapper {
             String b64 = android.util.Base64.encodeToString(digest, android.util.Base64.NO_WRAP);
             digests.put(entry.getKey(), b64);
 
-            manifest.append("Name: ").append(entry.getKey()).append("
-");
-            manifest.append("SHA1-Digest: ").append(b64).append("
-
-");
+            manifest.append("Name: ").append(entry.getKey()).append("\r\n");
+            manifest.append("SHA1-Digest: ").append(b64).append("\r\n\r\n");
         }
         byte[] manifestBytes = manifest.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
         StringBuilder certSf = new StringBuilder();
-        certSf.append("Signature-Version: 1.0
-");
-        certSf.append("Created-By: 1.0 (BUILD STUDIO Native Compiler)
-");
+        certSf.append("Signature-Version: 1.0\r\n");
+        certSf.append("Created-By: 1.0 (BUILD STUDIO Native Compiler)\r\n");
         sha1.reset();
         String manifestDigest = android.util.Base64.encodeToString(sha1.digest(manifestBytes), android.util.Base64.NO_WRAP);
-        certSf.append("SHA1-Digest-Manifest: ").append(manifestDigest).append("
-
-");
+        certSf.append("SHA1-Digest-Manifest: ").append(manifestDigest).append("\r\n\r\n");
 
         for (Map.Entry<String, String> d : digests.entrySet()) {
-            certSf.append("Name: ").append(d.getKey()).append("
-");
-            certSf.append("SHA1-Digest: ").append(d.getValue()).append("
-
-");
+            certSf.append("Name: ").append(d.getKey()).append("\r\n");
+            certSf.append("SHA1-Digest: ").append(d.getValue()).append("\r\n\r\n");
         }
         byte[] certSfBytes = certSf.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
 

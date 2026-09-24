@@ -97,10 +97,8 @@ public class ECJCompiler extends Compiler {
         if (!compileSuccess) {
             String errStr = errWriter.toString().trim();
             if (errStr.isEmpty()) errStr = outWriter.toString().trim();
-            Logger.log("[ECJ] Compilation error:
-" + errStr);
-            throw new Exception("ECJ Compilation Errors:
-" + errStr);
+            Logger.log("[ECJ] Compilation error:\n" + errStr);
+            throw new Exception("ECJ Compilation Errors:\n" + errStr);
         }
 
         Logger.log("[ECJ] Compilation successful. Bytecode generated at: " + classesDir.getAbsolutePath());

@@ -54,8 +54,7 @@ public class AAPT2Compiler extends Compiler {
 
         BinaryExecutor.Result compileResult = BinaryExecutor.execute(compileCmd, project.getResDir());
         if (!compileResult.isSuccess()) {
-            throw new Exception("AAPT2 compile failed:
-" + compileResult.output);
+            throw new Exception("AAPT2 compile failed:\n" + compileResult.output);
         }
 
         File[] flatFiles = compiledResDir.listFiles((dir, name) -> name.endsWith(".flat"));
@@ -104,8 +103,7 @@ public class AAPT2Compiler extends Compiler {
 
         BinaryExecutor.Result linkResult = BinaryExecutor.execute(linkCmd, buildDir);
         if (!linkResult.isSuccess()) {
-            throw new Exception("AAPT2 link failed:
-" + linkResult.output);
+            throw new Exception("AAPT2 link failed:\n" + linkResult.output);
         }
 
         if (!resourcesAp.exists() || resourcesAp.length() == 0) {

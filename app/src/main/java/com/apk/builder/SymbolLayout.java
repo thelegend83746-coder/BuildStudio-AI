@@ -17,7 +17,7 @@ public class SymbolLayout extends HorizontalScrollView {
     private CodeEditor targetEditor;
 
     private static final String[] DEFAULT_SYMBOLS = {
-            "(", ")", "{", "}", "[", "]", ";", """, "'", "=",
+            "(", ")", "{", "}", "[", "]", ";", "\"", "'", "=",
             "<", ">", "/", "\\", "+", "-", "*", "?", ":", "!",
             "&", "|", ".", ",", "@", "#", "$", "%", "^", "~", "`"
     };

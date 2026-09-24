@@ -303,8 +303,7 @@ public class CodeEditorActivity extends AppCompatActivity {
             @Override
             public void onProgress(String message, int step, int totalSteps) {
                 runOnUiThread(() -> {
-                    tvSheetLog.append(message + "
-");
+                    tvSheetLog.append(message + "\n");
                     svSheetLog.post(() -> svSheetLog.fullScroll(View.FOCUS_DOWN));
                 });
             }
@@ -314,17 +313,11 @@ public class CodeEditorActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (result.isSuccess()) {
                         tvSheetTitle.setText("Build Succeeded!");
-                        tvSheetLog.append("
-=== BUILD SUCCESSFUL ===
-Output: " + result.getApkFile().getAbsolutePath() + "
-");
+                        tvSheetLog.append("\n=== BUILD SUCCESSFUL ===\nOutput: " + result.getApkFile().getAbsolutePath() + "\n");
                         DialogUtil.showApkUtilityDialog(CodeEditorActivity.this, result.getApkFile(), currentProject.getName());
                     } else {
                         tvSheetTitle.setText("Build Failed");
-                        tvSheetLog.append("
-=== BUILD FAILED ===
-" + result.getErrorMessage() + "
-");
+                        tvSheetLog.append("\n=== BUILD FAILED ===\n" + result.getErrorMessage() + "\n");
                     }
                     svSheetLog.post(() -> svSheetLog.fullScroll(View.FOCUS_DOWN));
                 });
