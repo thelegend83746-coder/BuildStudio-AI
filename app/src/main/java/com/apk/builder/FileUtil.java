@@ -8,7 +8,10 @@ import java.util.zip.ZipInputStream;
 public class FileUtil {
 
     public static String readFile(String path) {
-        File file = new File(path);
+        return readFile(new File(path));
+    }
+
+    public static String readFile(File file) {
         if (!file.exists()) return "";
         StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
@@ -23,7 +26,10 @@ public class FileUtil {
     }
 
     public static boolean writeFile(String path, String content) {
-        File file = new File(path);
+        return writeFile(new File(path), content);
+    }
+
+    public static boolean writeFile(File file, String content) {
         File parent = file.getParentFile();
         if (parent != null && !parent.exists()) {
             parent.mkdirs();

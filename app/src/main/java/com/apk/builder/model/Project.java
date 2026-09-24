@@ -30,6 +30,14 @@ public class Project {
         loadConfig();
     }
 
+    public static Project loadFromDirectory(File dir) {
+        if (dir == null || !dir.isDirectory()) return null;
+        Project p = new Project(dir.getName(), "com.example." + dir.getName().toLowerCase().replaceAll("[^a-z0-9_]", ""), dir.getAbsolutePath());
+        p.loadConfig();
+        p.setLastModified(dir.lastModified());
+        return p;
+    }
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 

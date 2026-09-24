@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         rvProjects = findViewById(R.id.rv_projects);
-        emptyStateView = findViewById(R.id.ll_empty_state);
+        emptyStateView = findViewById(R.id.tv_empty_projects);
         FloatingActionButton fabCreate = findViewById(R.id.fab_create_project);
 
         rvProjects.setLayoutManager(new LinearLayoutManager(this));
@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
             overridePendingTransition(R.anim.animate_slide_left_enter, R.anim.animate_slide_left_exit);
         });
 
-        View btnSettings = findViewById(R.id.btn_app_settings);
+        View btnSettings = findViewById(R.id.btn_top_settings);
         if (btnSettings != null) {
             btnSettings.setOnClickListener(v -> {
                 Intent intent = new Intent(MainActivity.this, SettingActivity.class);

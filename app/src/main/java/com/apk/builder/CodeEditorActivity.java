@@ -189,25 +189,35 @@ public class CodeEditorActivity extends AppCompatActivity {
     }
 
     private void setupBottomSheet() {
-        View bottomSheet = findViewById(R.id.bottom_sheet);
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        View bottomSheet = findViewById(R.id.bottom_sheet_panel);
+        if (bottomSheet != null) {
+            bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        }
 
         tvSheetTitle = findViewById(R.id.tv_sheet_title);
         tvSheetLog = findViewById(R.id.tv_sheet_log);
         svSheetLog = findViewById(R.id.sv_sheet_log);
 
-        findViewById(R.id.btn_close_sheet).setOnClickListener(v -> {
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-        });
+        View btnClose = findViewById(R.id.btn_sheet_close);
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> {
+                if (bottomSheetBehavior != null) {
+                    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                }
+            });
+        }
 
-        findViewById(R.id.btn_copy_log).setOnClickListener(v -> {
-            ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm != null) {
-                cm.setPrimaryClip(ClipData.newPlainText("Build Log", tvSheetLog.getText()));
-                Toast.makeText(this, "Log copied to clipboard", Toast.LENGTH_SHORT).show();
-            }
-        });
+        View btnCopy = findViewById(R.id.btn_copy_terminal_log);
+        if (btnCopy != null) {
+            btnCopy.setOnClickListener(v -> {
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                if (cm != null && tvSheetLog != null) {
+                    cm.setPrimaryClip(ClipData.newPlainText("Build Log", tvSheetLog.getText()));
+                    Toast.makeText(this, "Log copied to clipboard", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     private void setupTree() {
@@ -270,7 +280,7 @@ public class CodeEditorActivity extends AppCompatActivity {
         activeFile = file;
         String content = fileContentCache.get(file.getAbsolutePath());
         if (content == null) {
-            content = FileUtil.readFile(file);
+            content = FileUtil.readFile(file.getAbsolutePath());
             fileContentCache.put(file.getAbsolutePath(), content);
         }
 
@@ -286,7 +296,7 @@ public class CodeEditorActivity extends AppCompatActivity {
     private void saveCurrentFile() {
         if (activeFile != null) {
             String content = codeEditor.getText().toString();
-            FileUtil.writeFile(activeFile, content);
+            FileUtil.writeFile(activeFile.getAbsolutePath(), content);
             fileContentCache.put(activeFile.getAbsolutePath(), content);
             Toast.makeText(this, "Saved: " + activeFile.getName(), Toast.LENGTH_SHORT).show();
         }
@@ -295,31 +305,38 @@ public class CodeEditorActivity extends AppCompatActivity {
     private void runBuild() {
         saveCurrentFile();
 
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-        tvSheetTitle.setText("Building APK...");
-        tvSheetLog.setText("");
+        if (bottomSheetBehavior != null) {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        }
+        if (tvSheetTitle != null) tvSheetTitle.setText("Building APK...");
+        if (tvSheetLog != null) tvSheetLog.setText("");
 
         CompilerAsyncTask task = new CompilerAsyncTask(this, currentProject, new CompilerAsyncTask.CompilerCallback() {
             @Override
             public void onProgress(String message, int step, int totalSteps) {
                 runOnUiThread(() -> {
-                    tvSheetLog.append(message + "\n");
-                    svSheetLog.post(() -> svSheetLog.fullScroll(View.FOCUS_DOWN));
+                    if (tvSheetLog != null) tvSheetLog.append(message + "\n");
+                    if (svSheetLog != null) svSheetLog.post(() -> svSheetLog.fullScroll(View.FOCUS_DOWN));
                 });
+            }
+
+            @Override
+            public void onComplete(CompilerResult result) {
+                onCompleted(result);
             }
 
             @Override
             public void onCompleted(CompilerResult result) {
                 runOnUiThread(() -> {
                     if (result.isSuccess()) {
-                        tvSheetTitle.setText("Build Succeeded!");
-                        tvSheetLog.append("\n=== BUILD SUCCESSFUL ===\nOutput: " + result.getApkFile().getAbsolutePath() + "\n");
-                        DialogUtil.showApkUtilityDialog(CodeEditorActivity.this, result.getApkFile(), currentProject.getName());
+                        if (tvSheetTitle != null) tvSheetTitle.setText("Build Succeeded!");
+                        if (tvSheetLog != null) tvSheetLog.append("\n=== BUILD SUCCESSFUL ===\nOutput: " + result.getOutputApk().getAbsolutePath() + "\n");
+                        DialogUtil.showApkUtilityDialog(CodeEditorActivity.this, result.getOutputApk(), currentProject.getName());
                     } else {
-                        tvSheetTitle.setText("Build Failed");
-                        tvSheetLog.append("\n=== BUILD FAILED ===\n" + result.getErrorMessage() + "\n");
+                        if (tvSheetTitle != null) tvSheetTitle.setText("Build Failed");
+                        if (tvSheetLog != null) tvSheetLog.append("\n=== BUILD FAILED ===\n" + result.getErrorMessage() + "\n");
                     }
-                    svSheetLog.post(() -> svSheetLog.fullScroll(View.FOCUS_DOWN));
+                    if (svSheetLog != null) svSheetLog.post(() -> svSheetLog.fullScroll(View.FOCUS_DOWN));
                 });
             }
         });
@@ -458,7 +475,9 @@ public class CodeEditorActivity extends AppCompatActivity {
             TextView tvName;
             TreeViewHolder(View v) {
                 super(v);
-                tvName = v.findViewById(R.id.tv_node_name);
+                TextView dir = v.findViewById(R.id.tv_dir_name);
+                TextView file = v.findViewById(R.id.tv_file_name);
+                tvName = dir != null ? dir : file;
             }
         }
     }
