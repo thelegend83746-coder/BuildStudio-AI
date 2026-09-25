@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
   <LinearLayout android:orientation="vertical" android:id="@+id/linear1" android:background="#ffffffff" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="10.0dp">
-    <LinearLayout android:gravity="0x13" android:orientation="horizontal" android:id="@+id/linear6" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout android:gravity="center_vertical|start" android:orientation="horizontal" android:id="@+id/linear6" android:layout_width="match_parent" android:layout_height="wrap_content">
       <TextView android:textSize="16.0sp" android:textColor="#ff2196f3" android:id="@+id/textview2" android:focusable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="7.0dp" android:text="Create New File and Folder">
       </TextView>
     </LinearLayout>
@@ -15,7 +15,7 @@
     </LinearLayout>
     <LinearLayout android:orientation="horizontal" android:id="@+id/linear7" android:background="#ff2196f3" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="1.0dp">
     </LinearLayout>
-    <LinearLayout android:gravity="0x31" android:orientation="horizontal" android:id="@+id/linear3" android:layout_width="match_parent" android:layout_height="30.0dp">
+    <LinearLayout android:gravity="top|center_horizontal" android:orientation="horizontal" android:id="@+id/linear3" android:layout_width="match_parent" android:layout_height="30.0dp">
     </LinearLayout>
     <LinearLayout android:orientation="vertical" android:id="@+id/linear4" android:layout_width="match_parent" android:layout_height="wrap_content">
       <TextView android:textSize="16.0sp" android:textColor="#ff2196f3" android:id="@+id/textview1" android:paddingLeft="10.0dp" android:focusable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="File Name">
@@ -23,7 +23,7 @@
       <EditText android:textSize="14.0sp" android:textColor="#ff000000" android:textColorHint="#ff2196f3" android:id="@+id/javaEdit" android:padding="8.0dp" android:focusable="true" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginLeft="5.0dp" android:layout_marginRight="5.0dp" android:hint="Name">
       </EditText>
     </LinearLayout>
-    <LinearLayout android:gravity="0x15" android:orientation="horizontal" android:id="@+id/linear5" android:background="#ff2196f3" android:layout_width="match_parent" android:layout_height="50.0dp" android:layout_marginTop="20.0dp">
+    <LinearLayout android:gravity="center_vertical|end" android:orientation="horizontal" android:id="@+id/linear5" android:background="#ff2196f3" android:layout_width="match_parent" android:layout_height="50.0dp" android:layout_marginTop="20.0dp">
       <TextView android:textSize="18.0sp" android:textColor="#ffffffff" android:gravity="center" android:id="@+id/cancelT" android:focusable="true" android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_marginRight="30.0dp" android:text="Cancel">
       </TextView>
       <TextView android:textSize="18.0sp" android:textColor="#ffffffff" android:gravity="center" android:id="@+id/saveT" android:focusable="true" android:layout_width="wrap_content" android:layout_height="match_parent" android:layout_marginRight="15.0dp" android:text="Save">

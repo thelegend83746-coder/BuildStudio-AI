@@ -6,6 +6,6 @@
   </com.google.android.material.appbar.AppBarLayout>
   <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent" app:layout_behavior="@string/appbar_scrolling_view_behavior">
   </LinearLayout>
-  <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_gravity="0x55" android:id="@+id/_fab" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="16.0dp" app:srcCompat="@drawable/ic_add_black">
+  <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_gravity="bottom|end" android:id="@+id/_fab" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="16.0dp" app:srcCompat="@drawable/ic_add_black">
   </com.google.android.material.floatingactionbutton.FloatingActionButton>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

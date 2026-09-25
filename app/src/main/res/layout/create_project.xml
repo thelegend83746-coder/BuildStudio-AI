@@ -71,19 +71,19 @@
                 </LinearLayout>
               </LinearLayout>
               <com.google.android.material.textfield.TextInputLayout android:id="@+id/textinputlayout1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" style="@style/TextInputLayoutStyle">
-                <EditText android:textSize="16.0sp" android:textColor="@color/text_slate_900" android:textColorHint="@color/text_slate_400" android:id="@+id/edittext1" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="App Name" android:singleLine="true" android:imeOptions="0x5">
+                <EditText android:textSize="16.0sp" android:textColor="@color/text_slate_900" android:textColorHint="@color/text_slate_400" android:id="@+id/edittext1" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="App Name" android:singleLine="true" android:imeOptions="actionNext">
                 </EditText>
               </com.google.android.material.textfield.TextInputLayout>
               <com.google.android.material.textfield.TextInputLayout android:id="@+id/textinputlayout2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" style="@style/TextInputLayoutStyle">
-                <EditText android:textSize="16.0sp" android:textColor="@color/text_slate_900" android:textColorHint="@color/text_slate_400" android:id="@+id/edittext2" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Package Name" android:singleLine="true" android:imeOptions="0x5">
+                <EditText android:textSize="16.0sp" android:textColor="@color/text_slate_900" android:textColorHint="@color/text_slate_400" android:id="@+id/edittext2" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Package Name" android:singleLine="true" android:imeOptions="actionNext">
                 </EditText>
               </com.google.android.material.textfield.TextInputLayout>
               <com.google.android.material.textfield.TextInputLayout android:id="@+id/textinputlayout_minsdk" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" style="@style/TextInputLayoutStyle">
-                <EditText android:textSize="16.0sp" android:textColor="@color/text_slate_900" android:textColorHint="@color/text_slate_400" android:id="@+id/edittext_minsdk" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="21" android:hint="Minimum SDK" android:singleLine="true" android:inputType="0x2" android:imeOptions="0x5">
+                <EditText android:textSize="16.0sp" android:textColor="@color/text_slate_900" android:textColorHint="@color/text_slate_400" android:id="@+id/edittext_minsdk" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="21" android:hint="Minimum SDK" android:singleLine="true" android:inputType="number" android:imeOptions="actionNext">
                 </EditText>
               </com.google.android.material.textfield.TextInputLayout>
               <com.google.android.material.textfield.TextInputLayout android:id="@+id/textinputlayout_targetsdk" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" style="@style/TextInputLayoutStyle">
-                <EditText android:textSize="16.0sp" android:textColor="@color/text_slate_900" android:textColorHint="@color/text_slate_400" android:id="@+id/edittext_targetsdk" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="30" android:hint="Target SDK" android:singleLine="true" android:inputType="0x2" android:imeOptions="0x5">
+                <EditText android:textSize="16.0sp" android:textColor="@color/text_slate_900" android:textColorHint="@color/text_slate_400" android:id="@+id/edittext_targetsdk" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="30" android:hint="Target SDK" android:singleLine="true" android:inputType="number" android:imeOptions="actionNext">
                 </EditText>
               </com.google.android.material.textfield.TextInputLayout>
               <com.google.android.material.textfield.TextInputLayout android:id="@+id/textinputlayout3" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" style="@style/TextInputLayoutStyle">

@@ -14,7 +14,7 @@
     <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="#ff10b981" android:id="@+id/tv_latest_version" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:text="Latest Version: v2.0">
     </TextView>
   </LinearLayout>
-  <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff111827" android:layout_gravity="0x800003" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24.0dp" android:text="What's New" android:layout_marginStart="8.0dp">
+  <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff111827" android:layout_gravity="start" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24.0dp" android:text="What's New" android:layout_marginStart="8.0dp">
   </TextView>
   <ScrollView android:background="#fffafafa" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_marginTop="8.0dp" android:layout_weight="1065353216" android:layout_marginStart="8.0dp" android:layout_marginEnd="8.0dp">
     <TextView android:textSize="14.0sp" android:textColor="#ff4b5563" android:id="@+id/tv_changelog" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="- Bug fixes

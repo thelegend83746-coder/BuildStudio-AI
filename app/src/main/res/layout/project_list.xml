@@ -20,6 +20,6 @@
       </TextView>
     </LinearLayout>
   </LinearLayout>
-  <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_gravity="0x55" android:id="@+id/_fab" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="16.0dp" app:shapeAppearanceOverlay="@style/fab_square" app:srcCompat="@drawable/ic_add_white2">
+  <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_gravity="bottom|end" android:id="@+id/_fab" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="16.0dp" app:shapeAppearanceOverlay="@style/fab_square" app:srcCompat="@drawable/ic_add_white2">
   </com.google.android.material.floatingactionbutton.FloatingActionButton>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

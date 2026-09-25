@@ -19,7 +19,7 @@
       <TextView android:textSize="12.0sp" android:textColor="#ff4b5563" android:id="@+id/textview3" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Note: This system does not automatically download inner dependencies. If the library has dependencies, you will need to add them separately." android:fontFamily="sans-serif">
       </TextView>
     </LinearLayout>
-    <LinearLayout android:gravity="0x800005" android:orientation="horizontal" android:id="@+id/linear6" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout android:gravity="end" android:orientation="horizontal" android:id="@+id/linear6" android:layout_width="match_parent" android:layout_height="wrap_content">
       <LinearLayout android:gravity="center" android:id="@+id/linear8" android:background="@drawable/btn_primary" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_marginRight="4.0dp" android:layout_weight="1065353216">
         <TextView android:textSize="14.0sp" android:textColor="#ffffffff" android:id="@+id/textview4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Start" android:singleLine="true" android:fontFamily="sans-serif-medium">
         </TextView>

@@ -30,7 +30,7 @@
       </io.github.rosemoe.sora.widget.CodeEditor>
     </LinearLayout>
   </androidx.coordinatorlayout.widget.CoordinatorLayout>
-  <LinearLayout android:layout_gravity="0x800003" android:id="@+id/_nav_view" android:background="#ffeeeeee" android:layout_width="320.0dp" android:layout_height="match_parent">
+  <LinearLayout android:layout_gravity="start" android:id="@+id/_nav_view" android:background="#ffeeeeee" android:layout_width="320.0dp" android:layout_height="match_parent">
     <include android:id="@+id/drawer" layout="@layout/_drawer_editor">
     </include>
   </LinearLayout>
