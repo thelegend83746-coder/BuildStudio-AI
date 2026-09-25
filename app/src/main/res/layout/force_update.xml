@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:gravity="center_horizontal" android:orientation="vertical" android:background="#ffffffff" android:padding="24.0dp" android:layout_width="match_parent" android:layout_height="match_parent">
+  <View android:layout_width="0.0dp" android:layout_height="48.0dp">
+  </View>
+  <ImageView android:layout_width="96.0dp" android:layout_height="96.0dp" android:src="@android:ref/0x01080081" android:tint="#ff4f46e5" android:contentDescription="Update Icon">
+  </ImageView>
+  <TextView android:textSize="22.0sp" android:textStyle="bold" android:textColor="#ff111827" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24.0dp" android:text="Mandatory Update Required">
+  </TextView>
+  <TextView android:textSize="14.0sp" android:textColor="#ff4b5563" android:gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:text="A new version of Build Studio is available. Please update the application to continue." android:layout_marginStart="16.0dp" android:layout_marginEnd="16.0dp">
+  </TextView>
+  <LinearLayout android:orientation="vertical" android:background="#fff3f4f6" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24.0dp" android:layout_marginStart="8.0dp" android:layout_marginEnd="8.0dp">
+    <TextView android:textSize="13.0sp" android:textColor="#ff374151" android:id="@id/tv_current_version" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Current Version: v1.0">
+    </TextView>
+    <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="#ff10b981" android:id="@id/tv_latest_version" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:text="Latest Version: v2.0">
+    </TextView>
+  </LinearLayout>
+  <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff111827" android:layout_gravity="0x800003" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24.0dp" android:text="What's New" android:layout_marginStart="8.0dp">
+  </TextView>
+  <ScrollView android:background="#fffafafa" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_marginTop="8.0dp" android:layout_weight="1065353216" android:layout_marginStart="8.0dp" android:layout_marginEnd="8.0dp">
+    <TextView android:textSize="14.0sp" android:textColor="#ff4b5563" android:id="@id/tv_changelog" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="- Bug fixes
+- Performance improvements" android:lineSpacingExtra="4.0dp">
+    </TextView>
+  </ScrollView>
+  <Button android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:id="@id/btn_download" android:layout_width="match_parent" android:layout_height="54.0dp" android:layout_marginTop="16.0dp" android:layout_marginBottom="16.0dp" android:text="Download Update" android:backgroundTint="#ff4f46e5">
+  </Button>
+</LinearLayout>

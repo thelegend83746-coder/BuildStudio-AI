@@ -19,4 +19,9 @@
     <string name="close">Close</string>
     <string name="copy_error">Copy Error</string>
     <string name="fix_with_ai">Fix with Build AI</string>
+    <string name="copy">Copy</string>
+    <string name="cut">Cut</string>
+    <string name="paste">Paste</string>
+    <string name="selectAll">Select All</string>
+    <string name="more">More</string>
 </resources>

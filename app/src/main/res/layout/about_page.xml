@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:background="@color/bg_slate_50" android:layout_width="match_parent" android:layout_height="match_parent">
+  <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/toolbar" android:background="@color/bg_white" android:paddingLeft="8.0dp" android:paddingRight="16.0dp" android:layout_width="match_parent" android:layout_height="60.0dp" android:elevation="4.0dp">
+    <ImageView android:id="@id/imageview1" android:background="?android:attr/selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="48.0dp" android:layout_height="48.0dp" android:src="@drawable/ic_arrow_back_black" android:scaleType="5">
+    </ImageView>
+    <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@id/textview1" android:paddingLeft="8.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="About Us">
+    </TextView>
+  </LinearLayout>
+  <View android:background="#ffe2e8f0" android:layout_width="match_parent" android:layout_height="1.0dp">
+  </View>
+  <ScrollView android:id="@id/vscroll1" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
+    <LinearLayout android:orientation="vertical" android:id="@id/linear3" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+      <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp" app:cardBackgroundColor="@color/colorPrimary" app:cardCornerRadius="20.0dp" app:cardElevation="4.0dp">
+        <LinearLayout android:gravity="center_horizontal" android:orientation="vertical" android:id="@id/abt" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+          <androidx.cardview.widget.CardView android:layout_width="80.0dp" android:layout_height="80.0dp" app:cardBackgroundColor="#ffffffff" app:cardCornerRadius="40.0dp" app:cardElevation="0.0dp">
+            <ImageView android:id="@id/ic2" android:padding="14.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/default_image" android:scaleType="7">
+            </ImageView>
+          </androidx.cardview.widget.CardView>
+          <TextView android:textSize="22.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:id="@id/textview14" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12.0dp" android:text="BUILD STUDIO">
+          </TextView>
+          <TextView android:textSize="14.0sp" android:textColor="#ffe0e7ff" android:id="@id/textview15" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:text="Copyright © 2026 SUN-LEY CODER">
+          </TextView>
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+      <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp" app:cardBackgroundColor="@color/bg_white" app:cardCornerRadius="16.0dp" app:cardElevation="2.0dp">
+        <LinearLayout android:orientation="vertical" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+          <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/linear7" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <ImageView android:id="@id/imageview3" android:layout_width="32.0dp" android:layout_height="32.0dp" android:src="@drawable/ic_info_black" android:scaleType="7" app:tint="@color/colorPrimary">
+            </ImageView>
+            <LinearLayout android:orientation="vertical" android:id="@id/linear8" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="14.0dp">
+              <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@id/textview4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Version">
+              </TextView>
+              <TextView android:textSize="12.0sp" android:textColor="@color/text_slate_500" android:id="@id/textview5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="v1.1">
+              </TextView>
+            </LinearLayout>
+          </LinearLayout>
+          <LinearLayout android:id="@id/l1" android:visibility="2" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:id="@id/textview6" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            </TextView>
+            <ImageView android:id="@id/imageview4" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            </ImageView>
+          </LinearLayout>
+          <LinearLayout android:id="@id/l2" android:visibility="2" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:id="@id/textview7" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            </TextView>
+            <ImageView android:id="@id/imageview5" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            </ImageView>
+          </LinearLayout>
+          <LinearLayout android:id="@id/l3" android:visibility="2" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:id="@id/textview8" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            </TextView>
+            <ImageView android:id="@id/imageview6" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            </ImageView>
+          </LinearLayout>
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+      <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp" app:cardBackgroundColor="@color/bg_white" app:cardCornerRadius="16.0dp" app:cardElevation="2.0dp">
+        <LinearLayout android:orientation="vertical" android:id="@id/community" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+          <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@id/textview9" android:padding="12.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Join Community">
+          </TextView>
+          <LinearLayout android:id="@id/l4" android:visibility="2" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView android:id="@id/textview10" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            </TextView>
+            <ImageView android:id="@id/imageview7" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            </ImageView>
+          </LinearLayout>
+          <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/l5" android:padding="12.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="wrap_content" android:foreground="?android:attr/selectableItemBackground">
+            <ImageView android:id="@id/imageview8" android:layout_width="30.0dp" android:layout_height="30.0dp" android:src="@drawable/media_2" android:scaleType="3">
+            </ImageView>
+            <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@id/textview11" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="14.0dp" android:text="Instagram">
+            </TextView>
+          </LinearLayout>
+          <View android:background="#fff1f5f9" android:layout_width="match_parent" android:layout_height="1.0dp" android:layout_marginLeft="44.0dp">
+          </View>
+          <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/l6" android:padding="12.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="wrap_content" android:foreground="?android:attr/selectableItemBackground">
+            <ImageView android:id="@id/imageview9" android:layout_width="30.0dp" android:layout_height="30.0dp" android:src="@drawable/media_3" android:scaleType="3">
+            </ImageView>
+            <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@id/textview12" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="14.0dp" android:text="Telegram Group">
+            </TextView>
+          </LinearLayout>
+          <View android:background="#fff1f5f9" android:layout_width="match_parent" android:layout_height="1.0dp" android:layout_marginLeft="44.0dp">
+          </View>
+          <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/l7" android:padding="12.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="wrap_content" android:foreground="?android:attr/selectableItemBackground">
+            <ImageView android:id="@id/imageview10" android:layout_width="30.0dp" android:layout_height="30.0dp" android:src="@drawable/media_4" android:scaleType="3">
+            </ImageView>
+            <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@id/textview13" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="14.0dp" android:text="YouTube Channel">
+            </TextView>
+          </LinearLayout>
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+      <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp" app:cardBackgroundColor="@color/bg_white" app:cardCornerRadius="16.0dp" app:cardElevation="2.0dp">
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/inc2" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+          <androidx.cardview.widget.CardView android:layout_width="50.0dp" android:layout_height="50.0dp" app:cardBackgroundColor="#fff1f5f9" app:cardCornerRadius="25.0dp" app:cardElevation="0.0dp">
+            <ImageView android:id="@id/ic" android:padding="6.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/default_image" android:scaleType="3">
+            </ImageView>
+          </androidx.cardview.widget.CardView>
+          <LinearLayout android:orientation="vertical" android:id="@id/linear6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="14.0dp">
+            <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@id/textview2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BUILD STUDIO">
+            </TextView>
+            <TextView android:textSize="12.0sp" android:textColor="@color/text_slate_500" android:id="@id/textview3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:text="Java Code Editor And Source Maker + This Also Lets You To Make An Source Of Android Library.">
+            </TextView>
+          </LinearLayout>
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+    </LinearLayout>
+  </ScrollView>
+</LinearLayout>

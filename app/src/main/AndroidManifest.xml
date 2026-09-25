@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.build.studio">
 
+    <!-- Permissions for local Android IDE operations, network AI, and package installs -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -25,9 +26,9 @@
         android:usesCleartextTraffic="true"
         android:extractNativeLibs="true">
 
-        <!-- Splash Activity (Launcher) -->
+        <!-- Splash Activity (Launcher Entry Point) -->
         <activity
-            android:name="com.apk.builder.SplashActivity"
+            android:name="com.build.studio.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.BuildStudio.CyberDark">
@@ -37,74 +38,68 @@
             </intent-filter>
         </activity>
 
-        <!-- Main Activity & Dashboard -->
+        <!-- Projects Dashboard -->
         <activity
-            android:name="com.apk.builder.MainActivity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.BuildStudio.CyberDark" />
-
-        <activity
-            android:name="com.apk.builder.CreateProjectActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.BuildStudio.CyberDark" />
-
-        <activity
-            android:name="com.apk.builder.CodeEditorActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.BuildStudio.CyberDark" />
-
-        <activity
-            android:name="com.apk.builder.SettingActivity"
-            android:exported="false"
-            android:theme="@style/Theme.BuildStudio.CyberDark" />
-
-        <service
-            android:name="com.apk.builder.BuildService"
-            android:exported="false" />
-
-        <!-- Backward Compatibility Aliases for com.build.studio -->
-        <activity
-            android:name="com.build.studio.HomeActivity"
+            android:name="com.build.studio.ProjectListActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.BuildStudio.CyberDark" />
 
-        <activity
-            android:name="com.build.studio.MainActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.BuildStudio.CyberDark" />
-
+        <!-- Project Creation Wizard -->
         <activity
             android:name="com.build.studio.CreateProjectActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.BuildStudio.CyberDark" />
 
-        <activity
-            android:name="com.build.studio.CodeEditorActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.BuildStudio.CyberDark" />
-
+        <!-- High-Performance Code Editor -->
         <activity
             android:name="com.build.studio.EditorActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.BuildStudio.CyberDark" />
 
-        <activity
-            android:name="com.build.studio.BuildSettingsActivity"
-            android:exported="false"
-            android:theme="@style/Theme.BuildStudio.CyberDark" />
-
+        <!-- Build Studio AI Assistant Screen -->
         <activity
             android:name="com.build.studio.BuildAiActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <!-- Settings Activities matching exact APK layouts -->
+        <activity
+            android:name="com.build.studio.SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.ApplicationSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.EditorSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.BuildRunSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.AboutPageActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.AboutUsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.build.studio.SettingsMenuActivity"
+            android:exported="false"
             android:theme="@style/Theme.BuildStudio.CyberDark" />
 
         <activity
@@ -113,17 +108,39 @@
             android:theme="@style/Theme.BuildStudio.CyberDark" />
 
         <activity
-            android:name="com.build.studio.ProjectListActivity"
+            android:name="com.build.studio.BuildSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <!-- Compatibility Aliases for apk.builder namespace -->
+        <activity
+            android:name="com.apk.builder.SplashActivity"
             android:exported="false"
             android:theme="@style/Theme.BuildStudio.CyberDark" />
 
         <activity
-            android:name="com.build.studio.SettingsActivity"
+            android:name="com.apk.builder.MainActivity"
             android:exported="false"
             android:theme="@style/Theme.BuildStudio.CyberDark" />
 
+        <activity
+            android:name="com.apk.builder.CreateProjectActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.apk.builder.CodeEditorActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <activity
+            android:name="com.apk.builder.SettingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BuildStudio.CyberDark" />
+
+        <!-- Background Build Service -->
         <service
-            android:name="com.tyron.compiler.BuildService"
+            android:name="com.apk.builder.BuildService"
             android:exported="false" />
 
         <!-- FileProvider for APK Installation Dispatches -->
