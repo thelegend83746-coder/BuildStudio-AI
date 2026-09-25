@@ -57,13 +57,53 @@ public class MainActivity extends AppCompatActivity {
             overridePendingTransition(R.anim.animate_slide_left_enter, R.anim.animate_slide_left_exit);
         });
 
-        View btnSettings = findViewById(R.id.btn_top_settings);
-        if (btnSettings != null) {
-            btnSettings.setOnClickListener(v -> {
-                Intent intent = new Intent(MainActivity.this, SettingActivity.class);
+        View btnTopAi = findViewById(R.id.btn_top_ai);
+        if (btnTopAi != null) {
+            btnTopAi.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, com.build.studio.BuildAiActivity.class);
                 startActivity(intent);
+                overridePendingTransition(R.anim.animate_slide_left_enter, R.anim.animate_slide_left_exit);
             });
         }
+
+        View btnSettings = findViewById(R.id.btn_top_settings);
+        if (btnSettings != null) {
+            btnSettings.setOnClickListener(v -> showTopPopupMenu(v));
+        }
+    }
+
+    private void showTopPopupMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenu().add("Settings");
+        popup.getMenu().add("Build Studio AI Settings");
+        popup.getMenu().add("About Build Studio");
+        popup.setOnMenuItemClickListener(item -> {
+            if ("Settings".equals(item.getTitle())) {
+                Intent intent = new Intent(MainActivity.this, SettingActivity.class);
+                startActivity(intent);
+            } else if ("Build Studio AI Settings".equals(item.getTitle())) {
+                Intent intent = new Intent(MainActivity.this, com.build.studio.OllamaSettingsActivity.class);
+                startActivity(intent);
+            } else if ("About Build Studio".equals(item.getTitle())) {
+                showAboutDialog();
+            }
+            return true;
+        });
+        popup.show();
+    }
+
+    private void showAboutDialog() {
+        new AlertDialog.Builder(this, R.style.CyberDialogTheme)
+                .setTitle("Build Studio")
+                .setIcon(R.drawable.ic_launcher)
+                .setMessage("Build Studio - Native Mobile App Development & AI App Builder\n\n" +
+                        "• Developed by: SUN LEY CODER\n" +
+                        "• Version: 1.0 (Native Release)\n" +
+                        "• Build on-device Android Apps with Native AAPT2, ECJ, & D8\n" +
+                        "• AI-assisted coding powered by Ollama Cloud (Qwen Coder & GLM)\n\n" +
+                        "YouTube: SUN LEY CODER\nTelegram: @SUNLEYCODER")
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     @Override

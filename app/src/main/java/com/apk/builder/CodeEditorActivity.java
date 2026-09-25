@@ -100,13 +100,7 @@ public class CodeEditorActivity extends AppCompatActivity {
 
         View btnSettings = findViewById(R.id.btn_settings);
         if (btnSettings != null) {
-            btnSettings.setOnClickListener(v -> {
-                Intent intent = new Intent(this, SettingActivity.class);
-                intent.putExtra("project_path", currentProject.getRootPath());
-                intent.putExtra("project_name", currentProject.getName());
-                intent.putExtra("package_name", currentProject.getPackageName());
-                startActivity(intent);
-            });
+            btnSettings.setOnClickListener(v -> openBuildAi());
         }
 
         findViewById(R.id.btn_run).setOnClickListener(v -> runBuild());
@@ -131,8 +125,12 @@ public class CodeEditorActivity extends AppCompatActivity {
     }
 
     private void setupEditor() {
+        android.content.SharedPreferences sp = getSharedPreferences("build_studio_settings", Context.MODE_PRIVATE);
+        int fontSize = sp.getInt("editor_font_size", 14);
+        boolean wordWrap = sp.getBoolean("editor_word_wrap", false);
         codeEditor.setEditorLanguage(new JavaLanguage());
-        codeEditor.setTextSize(14f);
+        codeEditor.setTextSize(fontSize);
+        codeEditor.setWordwrap(wordWrap);
 
         codeEditor.post(() -> {
             codeEditor.subscribeEvent(io.github.rosemoe.sora.event.SelectionChangeEvent.class, (event, unsubscribe) -> {
@@ -330,11 +328,14 @@ public class CodeEditorActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (result.isSuccess()) {
                         if (tvSheetTitle != null) tvSheetTitle.setText("Build Succeeded!");
-                        if (tvSheetLog != null) tvSheetLog.append("\n=== BUILD SUCCESSFUL ===\nOutput: " + result.getOutputApk().getAbsolutePath() + "\n");
+                        if (tvSheetLog != null) {
+                            tvSheetLog.append("\n✓ BUILD SUCCESSFUL\n✓ COMPILE SUCCESSFUL\n✓ APK READY FOR INSTALL\nOutput: " + result.getOutputApk().getAbsolutePath() + "\n");
+                        }
                         DialogUtil.showApkUtilityDialog(CodeEditorActivity.this, result.getOutputApk(), currentProject.getName());
                     } else {
                         if (tvSheetTitle != null) tvSheetTitle.setText("Build Failed");
                         if (tvSheetLog != null) tvSheetLog.append("\n=== BUILD FAILED ===\n" + result.getErrorMessage() + "\n");
+                        DialogUtil.showCompilerErrorDialog(CodeEditorActivity.this, result.getErrorMessage(), currentProject.getRootPath(), activeFile != null ? activeFile.getAbsolutePath() : "");
                     }
                     if (svSheetLog != null) svSheetLog.post(() -> svSheetLog.fullScroll(View.FOCUS_DOWN));
                 });
@@ -346,19 +347,32 @@ public class CodeEditorActivity extends AppCompatActivity {
 
     private void showPopupMenu(View anchor) {
         PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenu().add("Add Library");
+        popup.getMenu().add("Java File");
+        popup.getMenu().add("Resource File");
+        popup.getMenu().add("Build AI");
         popup.getMenu().add("Build Settings");
         popup.getMenu().add("Close Tab");
         popup.getMenu().add("Reload File");
         popup.setOnMenuItemClickListener(item -> {
-            if ("Build Settings".equals(item.getTitle())) {
+            String title = item.getTitle().toString();
+            if ("Add Library".equals(title)) {
+                DialogUtil.showAddLibraryDialog(this, currentProject);
+            } else if ("Java File".equals(title)) {
+                DialogUtil.showNewJavaFileDialog(this, currentProject, this::setupTree);
+            } else if ("Resource File".equals(title)) {
+                DialogUtil.showNewResourceFileDialog(this, currentProject, this::setupTree);
+            } else if ("Build AI".equals(title)) {
+                openBuildAi();
+            } else if ("Build Settings".equals(title)) {
                 Intent intent = new Intent(this, SettingActivity.class);
                 intent.putExtra("project_path", currentProject.getRootPath());
                 intent.putExtra("project_name", currentProject.getName());
                 intent.putExtra("package_name", currentProject.getPackageName());
                 startActivity(intent);
-            } else if ("Close Tab".equals(item.getTitle())) {
+            } else if ("Close Tab".equals(title)) {
                 closeCurrentTab();
-            } else if ("Reload File".equals(item.getTitle())) {
+            } else if ("Reload File".equals(title)) {
                 if (activeFile != null) {
                     fileContentCache.remove(activeFile.getAbsolutePath());
                     switchToFile(activeFile);
@@ -367,6 +381,14 @@ public class CodeEditorActivity extends AppCompatActivity {
             return true;
         });
         popup.show();
+    }
+
+    private void openBuildAi() {
+        Intent intent = new Intent(this, com.build.studio.BuildAiActivity.class);
+        intent.putExtra("project_path", currentProject.getRootPath());
+        if (activeFile != null) intent.putExtra("active_file", activeFile.getAbsolutePath());
+        startActivity(intent);
+        overridePendingTransition(R.anim.animate_slide_left_enter, R.anim.animate_slide_left_exit);
     }
 
     private void closeCurrentTab() {

@@ -176,6 +176,132 @@ public class DialogUtil {
         dialog.show();
     }
 
+    public static void showCompilerErrorDialog(Context context, String errorMessage, String projectPath, String activeFilePath) {
+        Dialog dialog = new Dialog(context);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.compiler_error_dialog);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        TextView tvError = dialog.findViewById(R.id.tv_error_details);
+        View btnClose = dialog.findViewById(R.id.btn_close_error);
+        View btnCopy = dialog.findViewById(R.id.btn_copy_error);
+        View btnFixAi = dialog.findViewById(R.id.btn_fix_ai);
+
+        if (tvError != null) tvError.setText(errorMessage != null ? errorMessage : "Unknown compiler error");
+        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
+        if (btnCopy != null) {
+            btnCopy.setOnClickListener(v -> {
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                if (cm != null) {
+                    cm.setPrimaryClip(android.content.ClipData.newPlainText("Compiler Error", errorMessage));
+                    Toast.makeText(context, "Error copied to clipboard", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        if (btnFixAi != null) {
+            btnFixAi.setOnClickListener(v -> {
+                dialog.dismiss();
+                Intent intent = new Intent(context, com.build.studio.BuildAiActivity.class);
+                intent.putExtra("project_path", projectPath);
+                intent.putExtra("active_file", activeFilePath);
+                intent.putExtra("error_log", errorMessage);
+                context.startActivity(intent);
+            });
+        }
+
+        dialog.show();
+    }
+
+    public static void showNewJavaFileDialog(Context context, com.apk.builder.model.Project project, Runnable onCreated) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CyberDialogTheme);
+        builder.setTitle("New Java Class");
+        final EditText input = new EditText(context);
+        input.setHint("ClassName (e.g. MyHelper)");
+        input.setTextColor(0xFFFFFFFF);
+        input.setHintTextColor(0xFF8B949E);
+        input.setBackgroundResource(R.drawable.edittext_bg);
+        int pad = (int) (14 * context.getResources().getDisplayMetrics().density);
+        input.setPadding(pad, pad, pad, pad);
+        android.widget.FrameLayout container = new android.widget.FrameLayout(context);
+        container.setPadding(pad, pad, pad, pad);
+        container.addView(input);
+        builder.setView(container);
+
+        builder.setPositiveButton("Create", (d, w) -> {
+            String name = input.getText().toString().trim();
+            if (name.isEmpty()) return;
+            if (name.endsWith(".java")) name = name.substring(0, name.length() - 5);
+            File pkgDir = new File(project.getSrcDir(), "java/" + project.getPackageName().replace(".", "/"));
+            if (!pkgDir.exists()) pkgDir = new File(project.getRootPath(), "app/src/main/java/" + project.getPackageName().replace(".", "/"));
+            pkgDir.mkdirs();
+            File javaFile = new File(pkgDir, name + ".java");
+            String content = "package " + project.getPackageName() + ";\n\npublic class " + name + " {\n\n    public " + name + "() {\n    }\n}\n";
+            FileUtil.writeFile(javaFile.getAbsolutePath(), content);
+            Toast.makeText(context, "Created: " + javaFile.getName(), Toast.LENGTH_SHORT).show();
+            if (onCreated != null) onCreated.run();
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    public static void showNewResourceFileDialog(Context context, com.apk.builder.model.Project project, Runnable onCreated) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CyberDialogTheme);
+        builder.setTitle("New Resource File");
+        final EditText input = new EditText(context);
+        input.setHint("filename.xml (e.g. custom_layout.xml)");
+        input.setTextColor(0xFFFFFFFF);
+        input.setHintTextColor(0xFF8B949E);
+        input.setBackgroundResource(R.drawable.edittext_bg);
+        int pad = (int) (14 * context.getResources().getDisplayMetrics().density);
+        input.setPadding(pad, pad, pad, pad);
+        android.widget.FrameLayout container = new android.widget.FrameLayout(context);
+        container.setPadding(pad, pad, pad, pad);
+        container.addView(input);
+        builder.setView(container);
+
+        builder.setPositiveButton("Create", (d, w) -> {
+            String name = input.getText().toString().trim();
+            if (name.isEmpty()) return;
+            if (!name.endsWith(".xml")) name = name + ".xml";
+            File resDir = new File(project.getSrcDir(), "res/layout");
+            if (!resDir.exists()) resDir = new File(project.getRootPath(), "app/src/main/res/layout");
+            resDir.mkdirs();
+            File xmlFile = new File(resDir, name);
+            String content = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:background=\"#0D1117\"\n    android:orientation=\"vertical\">\n\n</LinearLayout>\n";
+            FileUtil.writeFile(xmlFile.getAbsolutePath(), content);
+            Toast.makeText(context, "Created: " + xmlFile.getName(), Toast.LENGTH_SHORT).show();
+            if (onCreated != null) onCreated.run();
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    public static void showAddLibraryDialog(Context context, com.apk.builder.model.Project project) {
+        File libsDir = new File(project.getRootPath(), "app/libs");
+        if (!libsDir.exists()) libsDir = new File(project.getRootPath(), "libs");
+        libsDir.mkdirs();
+
+        File[] existing = libsDir.listFiles();
+        StringBuilder sb = new StringBuilder("Libraries in project:\n");
+        if (existing != null && existing.length > 0) {
+            for (File f : existing) {
+                sb.append("• ").append(f.getName()).append(" (").append(f.length() / 1024).append(" KB)\n");
+            }
+        } else {
+            sb.append("No external libraries added yet.\n");
+        }
+        sb.append("\nPlace additional .jar or .aar files into 'app/libs/' folder to link them.");
+
+        new AlertDialog.Builder(context, R.style.CyberDialogTheme)
+                .setTitle("Library Manager")
+                .setMessage(sb.toString())
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
     public static class ApkToolItem {
         public String title;
         public String description;

@@ -13,7 +13,7 @@
         <!-- Top Header Bar -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="64dp"
             android:background="@color/dark_canvas"
             android:elevation="4dp"
             android:gravity="center_vertical"
@@ -22,30 +22,34 @@
             android:paddingEnd="12dp">
 
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_launcher" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/en_bold"
                     android:text="BUILD STUDIO"
                     android:textColor="@color/text_primary"
-                    android:textSize="17sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Native On-Device Android IDE &amp; Compiler"
-                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="1dp"
+                    android:fontFamily="@font/opensans_semibold"
+                    android:text="BUILD • COMPILE • INSTALL"
+                    android:textColor="@color/primary_accent"
                     android:textSize="11sp" />
             </LinearLayout>
 
@@ -55,6 +59,8 @@
                 android:layout_height="40dp"
                 android:layout_marginEnd="4dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_ai" />
 
@@ -63,9 +69,11 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_more_vert_black"
-                app:tint="@color/text_secondary" />
+                app:tint="@color/text_primary" />
         </LinearLayout>
 
         <!-- Subtitle & Section Header -->
@@ -83,17 +91,24 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:fontFamily="@font/en_bold"
                 android:text="Projects"
                 android:textColor="@color/text_primary"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="@drawable/btn_symbol_chip"
+                android:fontFamily="@font/en_medium"
+                android:paddingStart="8dp"
+                android:paddingTop="3dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="3dp"
                 android:text="On-Device Storage"
                 android:textColor="@color/primary_accent"
-                android:textSize="12sp" />
+                android:textSize="11sp" />
         </LinearLayout>
 
         <!-- Projects Recycler List -->
@@ -109,11 +124,11 @@
             android:id="@+id/tv_empty_projects"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:fontFamily="@font/opensans_regular"
             android:gravity="center"
             android:lineSpacingExtra="4dp"
             android:padding="32dp"
-            android:text="No projects created yet.
-Tap '+' below to launch the New Project Wizard."
+            android:text="No projects created yet.\nTap '+' below to launch the New Project Wizard."
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:visibility="gone" />
@@ -127,7 +142,7 @@ Tap '+' below to launch the New Project Wizard."
         android:layout_gravity="bottom|end"
         android:layout_margin="20dp"
         android:contentDescription="Create Project"
-        android:src="@drawable/round_save_20"
+        android:src="@drawable/ic_add_white"
         app:backgroundTint="@color/primary_accent"
         app:tint="#FFFFFF" />
 
