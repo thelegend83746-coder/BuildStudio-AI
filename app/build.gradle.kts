@@ -73,7 +73,5 @@ dependencies {
     implementation("org.eclipse.jdt:ecj:3.26.0")
     implementation("com.android.tools:r8:8.2.33")
 
-    compileOnly(files("libs/cp.jar"))
     implementation(files("libs/apksig-8.2.2.jar"))
-    implementation(files("src/main/assets/libs/androidx-stubs.jar"))
 }
