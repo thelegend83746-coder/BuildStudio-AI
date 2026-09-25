@@ -147,7 +147,7 @@ class CodeEditorActivity : AppCompatActivity() {
         val fontSize = prefs.getInt("editor_font_size", 14).toFloat()
         val wordWrap = prefs.getBoolean("editor_word_wrap", false)
 
-        codeEditor.textSize = fontSize
+        codeEditor.setTextSize(fontSize)
         codeEditor.isWordwrap = wordWrap
         codeEditor.isLineNumberEnabled = true
 

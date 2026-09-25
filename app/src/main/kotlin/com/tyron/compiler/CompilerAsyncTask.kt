@@ -15,7 +15,6 @@ class CompilerAsyncTask(
 ) {
 
     fun interface CompilerCallback {
-        fun onProgress(message: String, step: Int, total: Int)
         fun onCompleted(result: CompilerResult)
     }
 
@@ -78,6 +77,6 @@ class CompilerAsyncTask(
     }
 
     private fun postProgress(msg: String, s: Int, t: Int) {
-        mainHandler.post { callback.onProgress(msg, s, t) }
+        Logger.log("[$s/$t] $msg")
     }
 }

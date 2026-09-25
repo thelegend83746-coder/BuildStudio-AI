@@ -55,6 +55,11 @@ object FileUtil {
     }
 
     @JvmStatic
+    fun copyFile(sourcePath: String, destPath: String) {
+        copyFile(File(sourcePath), File(destPath))
+    }
+
+    @JvmStatic
     fun copyAsset(inputStream: InputStream, dest: File) {
         dest.parentFile?.mkdirs()
         inputStream.use { input ->

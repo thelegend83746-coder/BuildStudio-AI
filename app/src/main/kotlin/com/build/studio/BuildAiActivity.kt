@@ -397,9 +397,9 @@ TAG FORMATS:
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             val inflater = LayoutInflater.from(parent.context)
             return if (viewType == 1) {
-                UserViewHolder(inflater.inflate(R.layout.chat_user_bubble, parent, false))
+                UserViewHolder(inflater.inflate(R.layout.chat_item_user, parent, false))
             } else {
-                AssistantViewHolder(inflater.inflate(R.layout.chat_assistant_bubble, parent, false))
+                AssistantViewHolder(inflater.inflate(R.layout.chat_item_assistant, parent, false))
             }
         }
 
@@ -415,7 +415,7 @@ TAG FORMATS:
                     holder.containerPlan.visibility = View.VISIBLE
                     holder.containerPlan.removeAllViews()
                     val planCard = LayoutInflater.from(this@BuildAiActivity).inflate(R.layout.chat_plan_card, holder.containerPlan, false)
-                    val tvPlanText = planCard.findViewById<TextView>(R.id.tv_plan_text)
+                    val tvPlanText = planCard.findViewById<TextView>(R.id.tv_plan_text) ?: planCard.findViewById<TextView>(R.id.tv_plan_body)
                     tvPlanText?.text = msg.plan
                     holder.containerPlan.addView(planCard)
                 } else {
@@ -429,9 +429,9 @@ TAG FORMATS:
                     for (act in msg.actions) {
                         val card = LayoutInflater.from(this@BuildAiActivity).inflate(R.layout.chat_action_card, holder.containerActions, false)
                         val tvType = card.findViewById<TextView>(R.id.tv_action_type)
-                        val tvPath = card.findViewById<TextView>(R.id.tv_action_path)
+                        val tvPath = card.findViewById<TextView>(R.id.tv_action_path) ?: card.findViewById<TextView>(R.id.tv_file_path)
                         val layoutButtons = card.findViewById<View>(R.id.layout_buttons)
-                        val btnApprove = card.findViewById<Button>(R.id.btn_approve)
+                        val btnApprove = card.findViewById<Button>(R.id.btn_approve) ?: card.findViewById<Button>(R.id.btn_apply_action)
                         val btnReject = card.findViewById<Button>(R.id.btn_reject)
                         val tvStatus = card.findViewById<TextView>(R.id.tv_status)
 
@@ -533,7 +533,7 @@ TAG FORMATS:
         val backupDir = File(root, ".build_ai_backups")
         backupDir.mkdirs()
         val bkp = File(backupDir, "${f.name}.${System.currentTimeMillis()}.bak")
-        FileUtil.copyFile(f.absolutePath, bkp.absolutePath)
+        FileUtil.copyFile(f, bkp)
     }
 
     private fun deleteRecursive(fileOrDir: File) {

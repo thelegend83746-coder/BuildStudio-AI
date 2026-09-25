@@ -67,13 +67,14 @@ class EditorActivity : AppCompatActivity() {
 
             val pkg = intent.getStringExtra("package_name") ?: "com.example.app"
 
-            if (path.isNullOrEmpty()) {
+            var safePath = path
+            if (safePath.isNullOrEmpty()) {
                 val fallbackBase = File("/storage/emulated/0/.BUILD STUDIO")
                 val existing = fallbackBase.listFiles { f -> f.isDirectory }?.firstOrNull()
-                path = existing?.absolutePath ?: File(fallbackBase, "MyApplication").apply { mkdirs() }.absolutePath
+                safePath = existing?.absolutePath ?: File(fallbackBase, "MyApplication").apply { mkdirs() }.absolutePath
             }
 
-            currentProject = Project(name, pkg, path)
+            currentProject = Project(name, pkg, safePath ?: "")
 
             initViews()
             setupGestures()
@@ -146,11 +147,11 @@ class EditorActivity : AppCompatActivity() {
 
             override fun onFling(
                 e1: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 velocityX: Float,
                 velocityY: Float
             ): Boolean {
-                if (e1 == null || e2 == null) return false
+                if (e1 == null) return false
                 val diffY = e2.y - e1.y
                 val diffX = e2.x - e1.x
 
@@ -233,7 +234,7 @@ class EditorActivity : AppCompatActivity() {
 
     private fun setupEditor() {
         try {
-            codeEditor.textSize = 14f
+            codeEditor.setTextSize(14f)
             codeEditor.isLineNumberEnabled = true
             codeEditor.isWordwrap = false
 
@@ -514,11 +515,8 @@ class EditorActivity : AppCompatActivity() {
                     } else {
                         val defaultJava = File(currentProject.srcDir, "MainActivity.java")
                         defaultJava.parentFile?.mkdirs()
-                        FileUtil.writeFile(defaultJava.absolutePath, "package ${currentProject.packageName};
-
-public class MainActivity {
-}
-")
+                        val defaultContent = "package ${currentProject.packageName};\n\npublic class MainActivity {\n}\n"
+                        FileUtil.writeFile(defaultJava.absolutePath, defaultContent)
                         openFileInEditor(defaultJava)
                     }
                 }
