@@ -36,8 +36,15 @@ class ProjectListActivity : AppCompatActivity() {
         val fab = findViewById<FloatingActionButton>(R.id._fab)
         val threeDotMenu = findViewById<ImageView>(R.id.three_dot_menu_image)
 
+        val btnTopAi = findViewById<ImageView>(R.id.btn_top_ai)
+
         adapter = ProjectListAdapter(this, projectList)
         listView.adapter = adapter
+
+        btnTopAi?.setOnClickListener {
+            startActivity(Intent(this, BuildAiActivity::class.java))
+            Animatoo.animateSlideLeft(this)
+        }
 
         fab.setOnClickListener {
             startActivity(Intent(this, CreateProjectActivity::class.java))
@@ -50,19 +57,29 @@ class ProjectListActivity : AppCompatActivity() {
 
         listView.setOnItemClickListener { _, _, position, _ ->
             if (position in projectList.indices) {
-                val proj = projectList[position]
-                val intent = Intent(this, EditorActivity::class.java).apply {
-                    putExtra("project_path", proj.rootPath)
-                    putExtra("path", proj.rootPath)
-                    putExtra("fullPath", proj.rootPath)
-                    putExtra("project_name", proj.name)
-                    putExtra("project", proj.name)
-                    putExtra("package_name", proj.packageName)
-                }
-                startActivity(intent)
-                Animatoo.animateSlideUp(this)
+                openProject(projectList[position])
             }
         }
+
+        listView.setOnItemLongClickListener { _, _, position, _ ->
+            if (position in projectList.indices) {
+                showProjectOptionsMenu(projectList[position])
+                true
+            } else false
+        }
+    }
+
+    private fun openProject(proj: Project) {
+        val intent = Intent(this, EditorActivity::class.java).apply {
+            putExtra("project_path", proj.rootPath)
+            putExtra("path", proj.rootPath)
+            putExtra("fullPath", proj.rootPath)
+            putExtra("project_name", proj.name)
+            putExtra("project", proj.name)
+            putExtra("package_name", proj.packageName)
+        }
+        startActivity(intent)
+        Animatoo.animateSlideUp(this)
     }
 
     override fun onResume() {
@@ -113,6 +130,12 @@ class ProjectListActivity : AppCompatActivity() {
             isOutsideTouchable = true
         }
 
+        popupView.findViewById<View>(R.id.b_ai)?.setOnClickListener {
+            popupWindow.dismiss()
+            startActivity(Intent(this, BuildAiActivity::class.java))
+            Animatoo.animateSlideLeft(this)
+        }
+
         popupView.findViewById<View>(R.id.b1)?.setOnClickListener {
             popupWindow.dismiss()
             startActivity(Intent(this, SettingsActivity::class.java))
@@ -132,6 +155,112 @@ class ProjectListActivity : AppCompatActivity() {
         }
 
         popupWindow.showAsDropDown(anchor, 0, 0, Gravity.END)
+    }
+
+    private fun showProjectOptionsMenu(project: Project) {
+        val options = arrayOf("1. Open", "2. Rename", "3. Backup (.zip)", "4. Delete")
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(project.name)
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> openProject(project)
+                    1 -> promptRenameProject(project)
+                    2 -> backupProject(project)
+                    3 -> promptDeleteProject(project)
+                }
+            }
+            .show()
+    }
+
+    private fun promptRenameProject(project: Project) {
+        val input = android.widget.EditText(this).apply {
+            setText(project.name)
+            setSelection(project.name.length)
+        }
+        val container = android.widget.FrameLayout(this).apply {
+            setPadding(50, 20, 50, 20)
+            addView(input)
+        }
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Rename Project")
+            .setView(container)
+            .setPositiveButton("Rename") { _, _ ->
+                val newName = input.text.toString().trim()
+                if (newName.isNotEmpty() && newName != project.name) {
+                    val oldDir = File(project.rootPath)
+                    val newDir = File(oldDir.parentFile, newName)
+                    if (newDir.exists()) {
+                        android.widget.Toast.makeText(this, "Project with this name already exists", android.widget.Toast.LENGTH_SHORT).show()
+                    } else {
+                        if (oldDir.renameTo(newDir)) {
+                            val pJson = File(newDir, "project.json")
+                            if (pJson.exists()) {
+                                try {
+                                    val content = pJson.readText()
+                                    val updated = content.replaceFirst(Regex("\"name\"\\s*:\\s*\"[^\"]+\""), "\"name\": \"$newName\"")
+                                    pJson.writeText(updated)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                            android.widget.Toast.makeText(this, "Renamed to $newName", android.widget.Toast.LENGTH_SHORT).show()
+                            loadProjects()
+                        } else {
+                            android.widget.Toast.makeText(this, "Failed to rename", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun backupProject(project: Project) {
+        val backupDir = File("/storage/emulated/0/test-folder")
+        if (!backupDir.exists()) backupDir.mkdirs()
+        val zipFile = File(backupDir, "${project.name}_backup.zip")
+
+        try {
+            val rootDir = File(project.rootPath)
+            java.util.zip.ZipOutputStream(java.io.FileOutputStream(zipFile)).use { zos ->
+                rootDir.walkTopDown().forEach { f ->
+                    val relPath = f.relativeTo(rootDir).path
+                    if (relPath.isNotEmpty() && !relPath.startsWith("build") && !relPath.startsWith(".gradle")) {
+                        if (f.isDirectory) {
+                            if (!relPath.endsWith("/")) {
+                                zos.putNextEntry(java.util.zip.ZipEntry("$relPath/"))
+                                zos.closeEntry()
+                            }
+                        } else {
+                            zos.putNextEntry(java.util.zip.ZipEntry(relPath))
+                            f.inputStream().use { it.copyTo(zos) }
+                            zos.closeEntry()
+                        }
+                    }
+                }
+            }
+            android.widget.Toast.makeText(this, "Backup saved: ${zipFile.name}", android.widget.Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            android.widget.Toast.makeText(this, "Backup failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun promptDeleteProject(project: Project) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Delete Project")
+            .setMessage("Are you sure you want to delete '${project.name}'?\nThis cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
+                val dir = File(project.rootPath)
+                if (dir.deleteRecursively()) {
+                    android.widget.Toast.makeText(this, "Deleted ${project.name}", android.widget.Toast.LENGTH_SHORT).show()
+                    loadProjects()
+                } else {
+                    android.widget.Toast.makeText(this, "Failed to delete project", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     class ProjectListAdapter(

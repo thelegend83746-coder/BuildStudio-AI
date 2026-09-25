@@ -2,8 +2,10 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/_coordinator" android:layout_width="match_parent" android:layout_height="match_parent">
   <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
     <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/toolbar" android:background="@color/bg_white" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:layout_width="match_parent" android:layout_height="60.0dp" android:elevation="4.0dp">
-      <TextView android:textSize="22.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@+id/textview111" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="BUILD STUDIO" android:layout_weight="1065353216">
+      <TextView android:textSize="22.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@+id/textview111" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="BUILD STUDIO" android:layout_weight="1">
       </TextView>
+      <ImageView android:id="@+id/btn_top_ai" android:background="?android:attr/selectableItemBackgroundBorderless" android:focusable="true" android:clickable="true" android:layout_width="44.0dp" android:layout_height="44.0dp" android:layout_marginEnd="6.0dp" android:src="@drawable/ic_ai" android:scaleType="centerInside" android:contentDescription="Build AI">
+      </ImageView>
       <ImageView android:id="@+id/three_dot_menu_image" android:background="?android:attr/selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="48.0dp" android:layout_height="48.0dp" android:src="@drawable/ic_more_vert_black" android:scaleType="center">
       </ImageView>
     </LinearLayout>

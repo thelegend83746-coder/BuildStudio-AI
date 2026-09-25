@@ -39,7 +39,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         // 5. Build AI Settings
-        findViewById<View>(R.id.ai_settings)?.setOnClickListener {
+        (findViewById<View>(R.id.card_ai_settings) ?: findViewById<View>(R.id.ai_settings))?.setOnClickListener {
             startActivity(Intent(this, OllamaSettingsActivity::class.java))
             Animatoo.animateSlideLeft(this)
         }

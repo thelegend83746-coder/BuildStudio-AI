@@ -378,7 +378,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/en_bold"
-                            android:text="Build Studio"
+                            android:text="IDE STUDIO"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -388,7 +388,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/opensans_semibold"
-                            android:text="Created by SUN LEY CODER"
+                            android:text="Created by krishna"
                             android:textColor="@color/primary_accent"
                             android:textSize="12sp" />
 
@@ -397,7 +397,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/opensans_regular"
-                            android:text="Official Release • YouTube @SUN-LEY_CODER"
+                            android:text="Official Release • Developed by krishna"
                             android:textColor="@color/text_secondary"
                             android:textSize="11sp" />
                     </LinearLayout>

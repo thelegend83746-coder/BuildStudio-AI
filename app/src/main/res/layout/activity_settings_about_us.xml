@@ -71,7 +71,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="BUILD STUDIO"
+                        android:text="IDE STUDIO"
                         android:textColor="@color/card_background"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -80,7 +80,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Made for Android Developers"
+                        android:text="Developed by krishna"
                         android:textColor="#E0E7FF"
                         android:textSize="12sp" />
                 </LinearLayout>

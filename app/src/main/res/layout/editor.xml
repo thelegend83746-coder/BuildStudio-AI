@@ -24,13 +24,12 @@
       </com.google.android.material.tabs.TabLayout>
       <LinearLayout android:orientation="horizontal" android:id="@+id/linear1" android:background="#ffffffff" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="10.0dp">
       </LinearLayout>
-      <io.github.rosemoe.sora.widget.CodeEditor
-          android:id="@+id/editor"
+      <FrameLayout
+          android:id="@+id/editor_container"
           android:layout_width="match_parent"
           android:layout_height="0dp"
           android:layout_weight="1"
-          android:background="#ffffffff"
-          android:padding="8.0dp" />
+          android:background="#ffffffff" />
     </LinearLayout>
   </androidx.coordinatorlayout.widget.CoordinatorLayout>
   <LinearLayout android:layout_gravity="start" android:id="@+id/_nav_view" android:background="#ffeeeeee" android:layout_width="320.0dp" android:layout_height="match_parent">

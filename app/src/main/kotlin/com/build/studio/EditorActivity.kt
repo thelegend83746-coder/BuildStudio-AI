@@ -92,7 +92,14 @@ class EditorActivity : AppCompatActivity() {
 
     private fun initViews() {
         drawerLayout = findViewById(R.id._drawer) ?: DrawerLayout(this)
-        codeEditor = findViewById(R.id.editor)
+        val editorContainer = findViewById<FrameLayout>(R.id.editor_container)
+        codeEditor = CodeEditor(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+        editorContainer?.addView(codeEditor)
         tabLayout = findViewById(R.id.tablayout1)
         tvPrjName = findViewById(R.id.prj_name)
         toolbarLayout = findViewById(R.id.toolbar) ?: LinearLayout(this)
