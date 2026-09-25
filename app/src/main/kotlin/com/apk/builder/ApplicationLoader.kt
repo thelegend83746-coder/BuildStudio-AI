@@ -73,7 +73,7 @@ class ApplicationLoader : Application() {
 
                 if (toolchainJars.isNotEmpty()) {
                     val dexOptDir = File(cacheDir, "dex_opt").apply { mkdirs() }
-                    toolchainClassLoader = DexClassLoader(
+                    toolchainClassLoaderInternal = DexClassLoader(
                         toolchainJars.joinToString(File.pathSeparator),
                         dexOptDir.absolutePath,
                         applicationInfo.nativeLibraryDir,
@@ -137,7 +137,7 @@ class ApplicationLoader : Application() {
     }
 
     fun getToolchainClassLoader(): ClassLoader {
-        return toolchainClassLoader ?: classLoader
+        return toolchainClassLoaderInternal ?: classLoader
     }
 
     fun checkCompilerToolchainStatus(targetSdk: Int): Map<String, Boolean> {
@@ -173,8 +173,7 @@ class ApplicationLoader : Application() {
         lateinit var instance: ApplicationLoader
             private set
 
-        @JvmStatic
-        var toolchainClassLoader: ClassLoader? = null
+        private var toolchainClassLoaderInternal: ClassLoader? = null
 
         @JvmStatic
         fun getContext(): Context? {
