@@ -40,12 +40,26 @@ class ApplicationLoader : Application() {
                 val pk8 = File(keysDir, "testkey.pk8")
                 val pem = File(keysDir, "testkey.x509.pem")
                 if (!pk8.exists() || pk8.length() == 0L) {
-                    val extPk8 = File(extEngineDir, "testkey.pk8")
-                    if (extPk8.exists()) FileUtil.copyFile(extPk8, pk8)
+                    try {
+                        assets.open("keys/testkey.pk8").use { input ->
+                            pk8.outputStream().use { output -> input.copyTo(output) }
+                        }
+                    } catch (_: Exception) {}
+                    if (!pk8.exists() || pk8.length() == 0L) {
+                        val extPk8 = File(extEngineDir, "testkey.pk8")
+                        if (extPk8.exists()) FileUtil.copyFile(extPk8, pk8)
+                    }
                 }
                 if (!pem.exists() || pem.length() == 0L) {
-                    val extPem = File(extEngineDir, "testkey.x509.pem")
-                    if (extPem.exists()) FileUtil.copyFile(extPem, pem)
+                    try {
+                        assets.open("keys/testkey.x509.pem").use { input ->
+                            pem.outputStream().use { output -> input.copyTo(output) }
+                        }
+                    } catch (_: Exception) {}
+                    if (!pem.exists() || pem.length() == 0L) {
+                        val extPem = File(extEngineDir, "testkey.x509.pem")
+                        if (extPem.exists()) FileUtil.copyFile(extPem, pem)
+                    }
                 }
 
                 // 3. AAPT2 binary
