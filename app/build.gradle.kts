@@ -75,5 +75,5 @@ dependencies {
 
     compileOnly(files("libs/cp.jar"))
     implementation(files("libs/apksig-8.2.2.jar"))
-    implementation(files("libs/androidx-stubs.jar"))
+    implementation(files("src/main/assets/libs/androidx-stubs.jar"))
 }

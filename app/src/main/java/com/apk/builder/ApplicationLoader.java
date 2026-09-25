@@ -136,22 +136,21 @@ public class ApplicationLoader extends Application {
             return internalBinary;
         }
 
-        // Priority 3: Extract from assets/toolchain/aapt2/ based on CPU ABI
+        // Priority 3: Extract from installed APK's lib directory based on CPU ABI
         String[] supportedAbis = Build.SUPPORTED_ABIS;
-        for (String abi : supportedAbis) {
-            String assetPath = "toolchain/aapt2/" + abi;
-            try (InputStream is = getAssets().open(assetPath)) {
-                FileUtil.copyAsset(is, internalBinary);
-                internalBinary.setExecutable(true, false);
-                return internalBinary;
-            } catch (Exception ignored) {}
-        }
-
-        // Priority 4: Try generic asset libaapt2.so
-        try (InputStream is = getAssets().open("libaapt2.so")) {
-            FileUtil.copyAsset(is, internalBinary);
-            internalBinary.setExecutable(true, false);
-            return internalBinary;
+        try (java.util.zip.ZipFile apkZip = new java.util.zip.ZipFile(getApplicationInfo().sourceDir)) {
+            for (String abi : supportedAbis) {
+                java.util.zip.ZipEntry entry = apkZip.getEntry("lib/" + abi + "/libaapt2.so");
+                if (entry != null) {
+                    try (InputStream is = apkZip.getInputStream(entry)) {
+                        boolean ok = FileUtil.copyAsset(is, internalBinary);
+                        if (ok && internalBinary.exists() && internalBinary.length() > 1000000) {
+                            internalBinary.setExecutable(true, false);
+                            return internalBinary;
+                        }
+                    }
+                }
+            }
         } catch (Exception ignored) {}
 
         if (nativeLib.exists()) {
