@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Window
@@ -11,6 +12,7 @@ import android.view.GestureDetector
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
@@ -29,7 +31,9 @@ import com.apk.builder.model.Project
 import com.blogspot.atifsoftwares.animatoolib.Animatoo
 import com.google.android.material.tabs.TabLayout
 import com.tyron.compiler.CompilerAsyncTask
+import io.github.rosemoe.sora.lang.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.EditorColorScheme
 import java.io.File
 import kotlin.math.abs
 
@@ -48,6 +52,8 @@ class EditorActivity : AppCompatActivity() {
     private val fileContentCache = mutableMapOf<String, String>()
 
     private lateinit var gestureDetector: GestureDetectorCompat
+    private lateinit var scaleGestureDetector: ScaleGestureDetector
+    private var currentFontSize = 14f
     private var isToolbarVisible = true
     private val fileNodes = mutableListOf<FileNode>()
     private val expandedPaths = HashSet<String>()
@@ -127,6 +133,8 @@ class EditorActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             setTextSize(14f)
+            typefaceText = Typeface.MONOSPACE
+            typefaceLineNumber = Typeface.MONOSPACE
             isLineNumberEnabled = true
             isWordwrap = false
         }
@@ -222,7 +230,11 @@ class EditorActivity : AppCompatActivity() {
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         try {
-            gestureDetector.onTouchEvent(ev)
+            if (ev.pointerCount > 1 && ::scaleGestureDetector.isInitialized) {
+                scaleGestureDetector.onTouchEvent(ev)
+            } else {
+                gestureDetector.onTouchEvent(ev)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -275,9 +287,54 @@ class EditorActivity : AppCompatActivity() {
 
     private fun setupEditor() {
         try {
-            codeEditor.setTextSize(14f)
-            codeEditor.isLineNumberEnabled = true
-            codeEditor.isWordwrap = false
+            val prefs = getSharedPreferences("build_studio_settings", Context.MODE_PRIVATE)
+            currentFontSize = prefs.getInt("editor_font_size", 14).toFloat().coerceIn(10f, 38f)
+            val wordWrap = prefs.getBoolean("editor_word_wrap", false)
+
+            codeEditor.apply {
+                setTextSize(currentFontSize)
+                typefaceText = Typeface.MONOSPACE
+                typefaceLineNumber = Typeface.MONOSPACE
+                isLineNumberEnabled = true
+                isWordwrap = wordWrap
+            }
+
+            applyEditorTheme()
+
+            // Smooth code pinch-to-zoom (Code Zooming)
+            scaleGestureDetector = ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                private var baseSize = currentFontSize
+
+                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+                    baseSize = currentFontSize
+                    return true
+                }
+
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    val factor = detector.scaleFactor
+                    if (factor > 0.01f && factor < 100.0f) {
+                        val newSize = (baseSize * factor).coerceIn(10f, 38f)
+                        if (abs(newSize - currentFontSize) >= 0.25f) {
+                            currentFontSize = newSize
+                            codeEditor.setTextSize(currentFontSize)
+                        }
+                    }
+                    return true
+                }
+
+                override fun onScaleEnd(detector: ScaleGestureDetector) {
+                    prefs.edit().putInt("editor_font_size", currentFontSize.toInt()).apply()
+                }
+            })
+
+            codeEditor.setOnTouchListener { _, event ->
+                if (event.pointerCount > 1) {
+                    scaleGestureDetector.onTouchEvent(event)
+                    true
+                } else {
+                    false
+                }
+            }
 
             tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
                 override fun onTabSelected(tab: TabLayout.Tab) {
@@ -291,6 +348,33 @@ class EditorActivity : AppCompatActivity() {
                 override fun onTabReselected(tab: TabLayout.Tab) {}
             })
         } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun applyEditorTheme() {
+        try {
+            val scheme = codeEditor.colorScheme
+            val clazz = scheme.javaClass
+            for (field in clazz.fields) {
+                if (field.type == Int::class.javaPrimitiveType && java.lang.reflect.Modifier.isStatic(field.modifiers)) {
+                    val name = field.name.uppercase()
+                    val id = field.getInt(null)
+                    when {
+                        name.contains("LINE_NUMBER_BACKGROUND") || name.contains("LINE_NUMBER_PANEL") -> scheme.setColor(id, Color.parseColor("#F8FAFC"))
+                        name.contains("LINE_NUMBER") || name.contains("LINENUMBER") -> scheme.setColor(id, Color.parseColor("#8A9BA8"))
+                        name.contains("LINE_DIVIDER") || name.contains("DIVIDER") -> scheme.setColor(id, Color.parseColor("#E2E8F0"))
+                        name.contains("WHOLE_BACKGROUND") || (name.contains("BACKGROUND") && !name.contains("SELECTION") && !name.contains("LINE")) -> scheme.setColor(id, Color.parseColor("#FFFFFF"))
+                        name.contains("TEXT_NORMAL") || name == "TEXT" -> scheme.setColor(id, Color.parseColor("#1E293B"))
+                        name.contains("KEYWORD") -> scheme.setColor(id, Color.parseColor("#5B53FE"))
+                        name.contains("LITERAL") || name.contains("STRING") -> scheme.setColor(id, Color.parseColor("#059669"))
+                        name.contains("COMMENT") -> scheme.setColor(id, Color.parseColor("#94A3B8"))
+                        name.contains("IDENTIFIER") -> scheme.setColor(id, Color.parseColor("#1E293B"))
+                        name.contains("OPERATOR") -> scheme.setColor(id, Color.parseColor("#334155"))
+                    }
+                }
+            }
+        } catch (e: Throwable) {
             e.printStackTrace()
         }
     }
@@ -747,6 +831,15 @@ class EditorActivity : AppCompatActivity() {
             activeFile = file
             val content = fileContentCache[file.absolutePath] ?: FileUtil.readFile(file.absolutePath)
             fileContentCache[file.absolutePath] = content
+
+            if (file.name.endsWith(".java", ignoreCase = true) || file.name.endsWith(".kt", ignoreCase = true)) {
+                try {
+                    codeEditor.setEditorLanguage(JavaLanguage())
+                } catch (e: Throwable) {
+                    e.printStackTrace()
+                }
+            }
+
             codeEditor.setText(content)
             tvPrjName.text = "${currentProject.name} — ${file.name}"
             codeEditor.startAnimation(AnimationUtils.loadAnimation(this, R.anim.animate_fade_enter))
