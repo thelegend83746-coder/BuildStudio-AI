@@ -219,31 +219,37 @@ class ProjectListActivity : AppCompatActivity() {
         val backupDir = File("/storage/emulated/0/test-folder")
         if (!backupDir.exists()) backupDir.mkdirs()
         val zipFile = File(backupDir, "${project.name}_backup.zip")
+        android.widget.Toast.makeText(this, "Creating backup...", android.widget.Toast.LENGTH_SHORT).show()
 
-        try {
-            val rootDir = File(project.rootPath)
-            java.util.zip.ZipOutputStream(java.io.FileOutputStream(zipFile)).use { zos ->
-                rootDir.walkTopDown().forEach { f ->
-                    val relPath = f.relativeTo(rootDir).path
-                    if (relPath.isNotEmpty() && !relPath.startsWith("build") && !relPath.startsWith(".gradle")) {
-                        if (f.isDirectory) {
-                            if (!relPath.endsWith("/")) {
-                                zos.putNextEntry(java.util.zip.ZipEntry("$relPath/"))
+        Thread {
+            try {
+                val rootDir = File(project.rootPath)
+                java.util.zip.ZipOutputStream(java.io.FileOutputStream(zipFile)).use { zos ->
+                    rootDir.walkTopDown().forEach { f ->
+                        val relPath = f.relativeTo(rootDir).path
+                        if (relPath.isNotEmpty() && !relPath.startsWith("build") && !relPath.startsWith(".gradle")) {
+                            if (f.isDirectory) {
+                                val dirEntry = if (relPath.endsWith("/")) relPath else "$relPath/"
+                                zos.putNextEntry(java.util.zip.ZipEntry(dirEntry))
+                                zos.closeEntry()
+                            } else {
+                                zos.putNextEntry(java.util.zip.ZipEntry(relPath))
+                                f.inputStream().use { it.copyTo(zos) }
                                 zos.closeEntry()
                             }
-                        } else {
-                            zos.putNextEntry(java.util.zip.ZipEntry(relPath))
-                            f.inputStream().use { it.copyTo(zos) }
-                            zos.closeEntry()
                         }
                     }
                 }
+                runOnUiThread {
+                    android.widget.Toast.makeText(this, "Backup saved to: ${zipFile.absolutePath}", android.widget.Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    android.widget.Toast.makeText(this, "Backup failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
-            android.widget.Toast.makeText(this, "Backup saved: ${zipFile.name}", android.widget.Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            android.widget.Toast.makeText(this, "Backup failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
-        }
+        }.start()
     }
 
     private fun promptDeleteProject(project: Project) {

@@ -57,7 +57,11 @@ class EditorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         try {
             setContentView(R.layout.editor)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
 
+        try {
             var path = intent.getStringExtra("project_path")
                 ?: intent.getStringExtra("path")
                 ?: intent.getStringExtra("fullPath")
@@ -78,15 +82,39 @@ class EditorActivity : AppCompatActivity() {
             }
 
             currentProject = Project(name, pkg, safePath ?: "")
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            currentProject = Project("Project", "com.example.app", "/storage/emulated/0/.BUILD STUDIO/MyApplication")
+        }
 
+        try {
             initViews()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
+        try {
             setupGestures()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
+        try {
             setupEditor()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
+        try {
             setupTree()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
+        try {
             openDefaultFile()
         } catch (e: Throwable) {
             e.printStackTrace()
-            Toast.makeText(this, "Editor loaded with fallback: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -98,6 +126,9 @@ class EditorActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
+            setTextSize(14f)
+            isLineNumberEnabled = true
+            isWordwrap = false
         }
         editorContainer?.addView(codeEditor)
         tabLayout = findViewById(R.id.tablayout1)
@@ -665,13 +696,13 @@ class EditorActivity : AppCompatActivity() {
             if (!rootDir.exists()) {
                 rootDir.mkdirs()
             }
-            val mainKt = File(currentProject.srcDir, "MainActivity.kt")
-            val mainJava = File(currentProject.srcDir, "MainActivity.java")
+            val mainFile = rootDir.walkTopDown().firstOrNull {
+                it.isFile && (it.name == "MainActivity.kt" || it.name == "MainActivity.java")
+            }
             val manifest = currentProject.manifestFile
 
             when {
-                mainKt.exists() -> openFileInEditor(mainKt)
-                mainJava.exists() -> openFileInEditor(mainJava)
+                mainFile != null && mainFile.exists() -> openFileInEditor(mainFile)
                 manifest.exists() -> openFileInEditor(manifest)
                 else -> {
                     val firstFile = rootDir.walkTopDown().firstOrNull { it.isFile && it.name != "project.json" }
