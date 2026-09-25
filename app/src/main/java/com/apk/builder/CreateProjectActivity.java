@@ -14,6 +14,7 @@ import android.widget.*;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import com.google.android.material.card.MaterialCardView;
 import com.apk.builder.model.Project;
 import com.build.studio.R;
 import java.io.*;
@@ -33,13 +34,13 @@ public class CreateProjectActivity extends AppCompatActivity {
     private TextView tvHeaderTitle, tvStepIndicator;
 
     // Step 1: Templates
-    private CardView cardTemplateSimple, cardTemplateFab, cardTemplateNav;
+    private MaterialCardView cardTemplateSimple, cardTemplateFab, cardTemplateNav;
     private RadioButton rbTemplateSimple, rbTemplateFab, rbTemplateNav;
     private Button btnNextStep;
     private ProjectTemplate selectedTemplate = ProjectTemplate.SIMPLE;
 
     // Step 2: Project Details & Icon
-    private CardView cardAppIcon;
+    private MaterialCardView cardAppIcon;
     private ImageView ivAppIcon;
     private TextView tvPickIconLabel;
     private EditText etAppName, etPackageName, etVersionName, etVersionCode;

@@ -97,7 +97,7 @@
                         android:textSize="13sp" />
 
                     <!-- Template 1: Simple Project -->
-                    <androidx.cardview.widget.CardView
+                    <com.google.android.material.card.MaterialCardView
                         android:id="@+id/card_template_simple"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -157,10 +157,10 @@
                                 android:checked="true"
                                 android:clickable="false" />
                         </LinearLayout>
-                    </androidx.cardview.widget.CardView>
+                    </com.google.android.material.card.MaterialCardView>
 
                     <!-- Template 2: FAB (Floating Action Button) -->
-                    <androidx.cardview.widget.CardView
+                    <com.google.android.material.card.MaterialCardView
                         android:id="@+id/card_template_fab"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -220,10 +220,10 @@
                                 android:checked="false"
                                 android:clickable="false" />
                         </LinearLayout>
-                    </androidx.cardview.widget.CardView>
+                    </com.google.android.material.card.MaterialCardView>
 
                     <!-- Template 3: Navigation Drawer -->
-                    <androidx.cardview.widget.CardView
+                    <com.google.android.material.card.MaterialCardView
                         android:id="@+id/card_template_nav"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -283,7 +283,7 @@
                                 android:checked="false"
                                 android:clickable="false" />
                         </LinearLayout>
-                    </androidx.cardview.widget.CardView>
+                    </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
             </ScrollView>
 
@@ -338,7 +338,7 @@
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
-                    <androidx.cardview.widget.CardView
+                    <com.google.android.material.card.MaterialCardView
                         android:id="@+id/card_app_icon"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -400,7 +400,7 @@
                                 android:src="@drawable/arrow"
                                 app:tint="@color/text_secondary" />
                         </LinearLayout>
-                    </androidx.cardview.widget.CardView>
+                    </com.google.android.material.card.MaterialCardView>
 
                     <!-- App Name Input -->
                     <TextView
@@ -457,7 +457,7 @@
                         android:textSize="14sp" />
 
                     <!-- Advanced Settings Section -->
-                    <androidx.cardview.widget.CardView
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
@@ -578,7 +578,7 @@
                                 </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
-                    </androidx.cardview.widget.CardView>
+                    </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
             </ScrollView>
 
