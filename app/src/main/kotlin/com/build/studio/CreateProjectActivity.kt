@@ -145,15 +145,15 @@ class CreateProjectActivity : AppCompatActivity() {
         val gd = GradientDrawable().apply {
             cornerRadius = radius
             if (isSelected) {
-                setColor(Color.parseColor("#EEF2FF")) // Light indigo tint
-                setStroke((2.5f * density).toInt(), Color.parseColor("#4F46E5")) // Vibrant Indigo Border
+                setColor(Color.parseColor("#F5F3FF")) // Soft light purple tint
+                setStroke((2.5f * density).toInt(), Color.parseColor("#5B53FE")) // Vibrant Purple Border
             } else {
                 setColor(Color.WHITE)
                 setStroke((1f * density).toInt(), Color.parseColor("#E2E8F0")) // Slate light border
             }
         }
         view.background = gd
-        view.elevation = if (isSelected) 8f * density else 2f * density
+        view.elevation = if (isSelected) 6f * density else 1f * density
     }
 
     private fun setupBottomNavigation() {
@@ -252,24 +252,30 @@ class CreateProjectActivity : AppCompatActivity() {
 
     private fun validateAndCreateProject() {
         val appName = etAppName.text.toString().trim()
-        val pkgName = etPackageName.text.toString().trim()
+        var pkgName = etPackageName.text.toString().trim()
         val minSdkStr = etMinSdk.text.toString().trim()
         val targetSdkStr = etTargetSdk.text.toString().trim()
 
+        tilAppName.error = null
+        tilPackageName.error = null
+        tilMinSdk.error = null
+        tilTargetSdk.error = null
+
         if (appName.isEmpty()) {
-            tilAppName.error = "Not A Valid AppName"
+            tilAppName.error = "Please enter an Application Name"
+            etAppName.requestFocus()
             return
         }
-        if (pkgName.isEmpty() || !pkgName.contains(".")) {
-            tilPackageName.error = "Not A Valid PackageName"
-            return
+
+        if (pkgName.isEmpty()) {
+            val clean = appName.lowercase().replace("[^a-z0-9]".toRegex(), "")
+            pkgName = "com.example." + (if (clean.isNotEmpty()) clean else "app")
+            etPackageName.setText(pkgName)
         }
-        if (minSdkStr.isEmpty()) {
-            tilMinSdk.error = "Not A Valid Min SDK"
-            return
-        }
-        if (targetSdkStr.isEmpty()) {
-            tilTargetSdk.error = "Not A Valid Target SDK"
+
+        if (!pkgName.contains(".") || pkgName.endsWith(".") || pkgName.startsWith(".")) {
+            tilPackageName.error = "Enter a valid package name (e.g. com.example.app)"
+            etPackageName.requestFocus()
             return
         }
 
@@ -286,49 +292,85 @@ class CreateProjectActivity : AppCompatActivity() {
         targetSdk: Int,
         template: String
     ) {
-        val saveBase = File("/storage/emulated/0/.BUILD STUDIO")
-        if (!saveBase.exists()) saveBase.mkdirs()
-
-        val projectDir = File(saveBase, appName)
-        if (projectDir.exists()) {
-            Toast.makeText(this, "Project with this name already exists", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        projectDir.mkdirs()
-
-        // Android folder structure
-        val srcDir = File(projectDir, "app/src/main/java/" + pkgName.replace(".", "/")).apply { mkdirs() }
-        val resDir = File(projectDir, "app/src/main/res").apply { mkdirs() }
-        val layoutDir = File(resDir, "layout").apply { mkdirs() }
-        val valuesDir = File(resDir, "values").apply { mkdirs() }
-        val drawableDir = File(resDir, "drawable").apply { mkdirs() }
-
-        // Save optional custom icon
-        if (pickedLogoBitmap != null) {
-            try {
-                val iconFile = File(projectDir, "icon.png")
-                FileOutputStream(iconFile).use { fos ->
-                    pickedLogoBitmap?.compress(Bitmap.CompressFormat.PNG, 100, fos)
+        try {
+            // Determine best writable storage directory
+            var saveBase = File("/storage/emulated/0/.BUILD STUDIO")
+            if (!saveBase.exists()) {
+                val ok = saveBase.mkdirs()
+                if (!ok && !saveBase.canWrite()) {
+                    saveBase = File("/storage/emulated/0/test-folder/projects").apply { mkdirs() }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
-        }
+            if (!saveBase.canWrite()) {
+                saveBase = File(getExternalFilesDir(null), "projects").apply { mkdirs() }
+            }
 
-        // strings.xml
-        FileUtil.writeFile(
-            File(valuesDir, "strings.xml").absolutePath,
-            """<?xml version="1.0" encoding="utf-8"?>
+            val projectDir = File(saveBase, appName)
+            if (projectDir.exists()) {
+                Toast.makeText(this, "A project named '$appName' already exists", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            projectDir.mkdirs()
+
+            // Standard Android folders
+            val srcDir = File(projectDir, "app/src/main/java/" + pkgName.replace(".", "/")).apply { mkdirs() }
+            val resDir = File(projectDir, "app/src/main/res").apply { mkdirs() }
+            val layoutDir = File(resDir, "layout").apply { mkdirs() }
+            val valuesDir = File(resDir, "values").apply { mkdirs() }
+            val drawableDir = File(resDir, "drawable").apply { mkdirs() }
+
+            // Save optional custom icon
+            if (pickedLogoBitmap != null) {
+                try {
+                    val iconFile = File(projectDir, "icon.png")
+                    FileOutputStream(iconFile).use { fos ->
+                        pickedLogoBitmap?.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // strings.xml
+            FileUtil.writeFile(
+                File(valuesDir, "strings.xml").absolutePath,
+                """<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">$appName</string>
 </resources>
 """
-        )
+            )
 
-        // Generate Layout based on template
-        val layoutContent = when (template) {
-            "fab" -> """<?xml version="1.0" encoding="utf-8"?>
+            // colors.xml
+            FileUtil.writeFile(
+                File(valuesDir, "colors.xml").absolutePath,
+                """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#5B53FE</color>
+    <color name="colorPrimaryDark">#4841D6</color>
+    <color name="colorAccent">#5B53FE</color>
+</resources>
+"""
+            )
+
+            // styles.xml
+            FileUtil.writeFile(
+                File(valuesDir, "styles.xml").absolutePath,
+                """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/colorPrimary</item>
+        <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="android:colorAccent">@color/colorAccent</item>
+    </style>
+</resources>
+"""
+            )
+
+            // Layout based on template
+            val layoutContent = when (template) {
+                "fab" -> """<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -359,7 +401,7 @@ class CreateProjectActivity : AppCompatActivity() {
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 """
-            "nav_drawer" -> """<?xml version="1.0" encoding="utf-8"?>
+                "nav_drawer" -> """<?xml version="1.0" encoding="utf-8"?>
 <androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
@@ -397,7 +439,7 @@ class CreateProjectActivity : AppCompatActivity() {
 
 </androidx.drawerlayout.widget.DrawerLayout>
 """
-            "fullscreen" -> """<?xml version="1.0" encoding="utf-8"?>
+                "fullscreen" -> """<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -414,7 +456,7 @@ class CreateProjectActivity : AppCompatActivity() {
 
 </FrameLayout>
 """
-            else -> """<?xml version="1.0" encoding="utf-8"?>
+                else -> """<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -431,16 +473,15 @@ class CreateProjectActivity : AppCompatActivity() {
 
 </LinearLayout>
 """
-        }
+            }
 
-        FileUtil.writeFile(File(layoutDir, "activity_main.xml").absolutePath, layoutContent)
+            FileUtil.writeFile(File(layoutDir, "activity_main.xml").absolutePath, layoutContent)
 
-        // Generate MainActivity.java
-        val javaContent = """package $pkgName;
+            // Generate MainActivity.java
+            val javaContent = """package $pkgName;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
@@ -451,10 +492,10 @@ public class MainActivity extends Activity {
     }
 }
 """
-        FileUtil.writeFile(File(srcDir, "MainActivity.java").absolutePath, javaContent)
+            FileUtil.writeFile(File(srcDir, "MainActivity.java").absolutePath, javaContent)
 
-        // AndroidManifest.xml
-        val manifestContent = """<?xml version="1.0" encoding="utf-8"?>
+            // AndroidManifest.xml
+            val manifestContent = """<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="$pkgName">
 
@@ -473,30 +514,78 @@ public class MainActivity extends Activity {
     </application>
 </manifest>
 """
-        FileUtil.writeFile(File(projectDir, "app/src/main/AndroidManifest.xml").absolutePath, manifestContent)
+            FileUtil.writeFile(File(projectDir, "app/src/main/AndroidManifest.xml").absolutePath, manifestContent)
 
-        // Save project metadata via project.json
-        val project = Project(appName, pkgName, projectDir.absolutePath).apply {
-            this.minSdk = minSdk
-            this.targetSdk = targetSdk
-            this.language = "Java"
-            saveConfig()
+            // Root build.gradle
+            FileUtil.writeFile(
+                File(projectDir, "build.gradle").absolutePath,
+                """buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+"""
+            )
+
+            // app/build.gradle
+            FileUtil.writeFile(
+                File(projectDir, "app/build.gradle").absolutePath,
+                """apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 34
+    defaultConfig {
+        applicationId "$pkgName"
+        minSdkVersion $minSdk
+        targetSdkVersion $targetSdk
+        versionCode 1
+        versionName "1.0"
+    }
+}
+"""
+            )
+
+            // settings.gradle
+            FileUtil.writeFile(
+                File(projectDir, "settings.gradle").absolutePath,
+                """include ':app'
+rootProject.name = "$appName"
+"""
+            )
+
+            // Save project metadata via project.json
+            val project = Project(appName, pkgName, projectDir.absolutePath).apply {
+                this.minSdk = minSdk
+                this.targetSdk = targetSdk
+                this.language = "Java"
+                saveConfig()
+            }
+
+            Toast.makeText(this, "Project '$appName' created successfully! 🚀", Toast.LENGTH_SHORT).show()
+
+            // Directly open EditorActivity with all necessary extras
+            val intent = Intent(this, EditorActivity::class.java).apply {
+                putExtra("project_path", projectDir.absolutePath)
+                putExtra("path", projectDir.absolutePath)
+                putExtra("fullPath", projectDir.absolutePath)
+                putExtra("project_name", appName)
+                putExtra("project", appName)
+                putExtra("package_name", pkgName)
+            }
+            startActivity(intent)
+            Animatoo.animateSlideUp(this)
+            finish()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Error creating project: ${e.message}", Toast.LENGTH_LONG).show()
         }
-
-        Toast.makeText(this, "Project created successfully! 🚀", Toast.LENGTH_SHORT).show()
-
-        // Directly open EditorActivity with all necessary extras
-        val intent = Intent(this, EditorActivity::class.java).apply {
-            putExtra("project_path", projectDir.absolutePath)
-            putExtra("path", projectDir.absolutePath)
-            putExtra("fullPath", projectDir.absolutePath)
-            putExtra("project_name", appName)
-            putExtra("project", appName)
-            putExtra("package_name", pkgName)
-        }
-        startActivity(intent)
-        Animatoo.animateSlideUp(this)
-        finish()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

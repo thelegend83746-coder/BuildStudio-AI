@@ -1,73 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark / Modern IDE Cyber Theme Palette -->
-    <color name="primary_accent">#2979FF</color>
-    <color name="colorPrimary">#2979FF</color>
-    <color name="colorPrimaryDark">#1565C0</color>
-    <color name="colorAccent">#2979FF</color>
+    <!-- BUILD STUDIO Brand Colors (Vibrant Purple & Clean Light UI) -->
+    <color name="colorPrimary">#5B53FE</color>
+    <color name="colorPrimaryDark">#4841D6</color>
+    <color name="colorAccent">#5B53FE</color>
+    <color name="primary_accent">#5B53FE</color>
+    <color name="primary_purple">#5B53FE</color>
+    <color name="ai_sparkle_purple">#5B53FE</color>
 
-    <!-- Dark Background / Canvas -->
-    <color name="dark_background">#0D1117</color>
-    <color name="dark_canvas">#121820</color>
-    <color name="bg_slate_50">#0D1117</color>
-    <color name="bg_slate_100">#121820</color>
-    <color name="bg_slate_200">#2D3B4E</color>
-    <color name="bg_white">#1A222D</color>
+    <!-- Light Backgrounds / Canvas -->
+    <color name="window_background">#FFFFFF</color>
+    <color name="dark_background">#FFFFFF</color>
+    <color name="dark_canvas">#FFFFFF</color>
+    <color name="bg_white">#FFFFFF</color>
+    <color name="bg_slate_50">#F8FAFC</color>
+    <color name="bg_slate_100">#F1F5F9</color>
+    <color name="bg_slate_200">#E2E8F0</color>
 
-    <!-- Surface / Cards & Secondary Surface -->
-    <color name="surface_card">#1A222D</color>
-    <color name="surface_secondary">#222E3C</color>
-    <color name="cardview_dark_background">#1A222D</color>
-    <color name="cardview_light_background">#1A222D</color>
+    <!-- Surface / Cards -->
+    <color name="surface_card">#FFFFFF</color>
+    <color name="surface_secondary">#F8FAFC</color>
+    <color name="cardview_dark_background">#FFFFFF</color>
+    <color name="cardview_light_background">#FFFFFF</color>
+    <color name="card_background">#FFFFFF</color>
 
     <!-- Outlines & Borders -->
-    <color name="outline_border">#2D3B4E</color>
+    <color name="outline_border">#E2E8F0</color>
+    <color name="border_light">#E2E8F0</color>
 
     <!-- Status & Indicators -->
-    <color name="indicator_success">#00E676</color>
-    <color name="status_green">#00E676</color>
+    <color name="indicator_success">#00C853</color>
+    <color name="status_green">#00C853</color>
     <color name="indicator_error">#FF5252</color>
     <color name="status_red">#FF5252</color>
-    <color name="indicator_warning">#FFD600</color>
-    <color name="status_amber">#FFD600</color>
+    <color name="indicator_warning">#FFB300</color>
+    <color name="status_amber">#FFB300</color>
 
-    <!-- Typography -->
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#8B949E</color>
-    <color name="text_slate_900">#FFFFFF</color>
-    <color name="text_slate_600">#8B949E</color>
-    <color name="text_slate_500">#8B949E</color>
-    <color name="text_slate_400">#6E7681</color>
-    <color name="textActionNameColor">#FFFFFF</color>
+    <!-- Typography (Clear High-Contrast Slate) -->
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_slate_900">#0F172A</color>
+    <color name="text_slate_600">#475569</color>
+    <color name="text_slate_500">#64748B</color>
+    <color name="text_slate_400">#94A3B8</color>
+    <color name="text_muted">#64748B</color>
+    <color name="textActionNameColor">#0F172A</color>
 
     <!-- Log Terminal Text -->
-    <color name="terminal_log_text">#A9B7C6</color>
+    <color name="terminal_log_text">#1E293B</color>
 
     <!-- Code Editor UI Colors -->
-    <color name="editor_background">#0D1117</color>
-    <color name="editor_gutter_bg">#121820</color>
-    <color name="editor_gutter_text">#6E7681</color>
-    <color name="editor_selected_line">#161B22</color>
-    <color name="editor_selection">#264F78</color>
-    <color name="editor_cursor">#2979FF</color>
-    <color name="editor_tab_indicator">#2979FF</color>
-    <color name="editor_tab_text_selected">#2979FF</color>
-    <color name="editor_tab_text_normal">#8B949E</color>
+    <color name="editor_background">#FFFFFF</color>
+    <color name="editor_gutter_bg">#F8FAFC</color>
+    <color name="editor_gutter_text">#94A3B8</color>
+    <color name="editor_selected_line">#F1F5F9</color>
+    <color name="editor_selection">#E0E7FF</color>
+    <color name="editor_cursor">#5B53FE</color>
+    <color name="editor_tab_indicator">#5B53FE</color>
+    <color name="editor_tab_text_selected">#5B53FE</color>
+    <color name="editor_tab_text_normal">#64748B</color>
 
-    <!-- AI Sparkle Purple -->
-    <color name="ai_sparkle_purple">#8B5CF6</color>
-    <color name="primary_purple">#8B5CF6</color>
-    <color name="ai_card_bg">#1A222D</color>
-    <color name="ai_bubble_user">#2979FF</color>
-    <color name="ai_bubble_assistant">#222E3C</color>
+    <!-- AI Chat Colors -->
+    <color name="ai_card_bg">#FFFFFF</color>
+    <color name="ai_bubble_user">#5B53FE</color>
+    <color name="ai_bubble_assistant">#F1F5F9</color>
 
-    <!-- Additional Layout Colors -->
-    <color name="card_background">#1A222D</color>
-    <color name="window_background">#0D1117</color>
-    <color name="border_light">#2D3B4E</color>
-    <color name="text_muted">#8B949E</color>
-    <color name="btn_run_green">#00E676</color>
+    <!-- Action Buttons -->
+    <color name="btn_run_green">#00C853</color>
     <color name="btn_stop_red">#FF5252</color>
     <color name="status_error_border">#FF5252</color>
-    <color name="status_error_bg">#26FF5252</color>
+    <color name="status_error_bg">#1AFF5252</color>
 </resources>

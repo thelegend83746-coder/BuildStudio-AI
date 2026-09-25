@@ -196,8 +196,11 @@ TAG FORMATS:
 
         val prefs = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
         val apiKey = prefs.getString("api_key", "") ?: ""
-        val baseUrl = prefs.getString("base_url", "https://api.deepseek.com/v1/chat/completions") ?: "https://api.deepseek.com/v1/chat/completions"
-        val model = prefs.getString("model_name", "deepseek-coder") ?: "deepseek-coder"
+        val baseUrl = prefs.getString("base_url", "http://localhost:11434/v1/chat/completions")
+            ?.ifEmpty { "http://localhost:11434/v1/chat/completions" } ?: "http://localhost:11434/v1/chat/completions"
+        val model = prefs.getString("model_name", "")?.ifEmpty {
+            prefs.getString("model", "qwen2.5-coder:latest")
+        } ?: "qwen2.5-coder:latest"
 
         val jsonBody = JSONObject().apply {
             put("model", model)
@@ -223,10 +226,15 @@ TAG FORMATS:
             put("temperature", 0.2)
         }
 
-        val request = Request.Builder()
+        val reqBuilder = Request.Builder()
             .url(baseUrl)
-            .addHeader("Authorization", "Bearer $apiKey")
             .addHeader("Content-Type", "application/json")
+
+        if (apiKey.isNotEmpty()) {
+            reqBuilder.addHeader("Authorization", "Bearer $apiKey")
+        }
+
+        val request = reqBuilder
             .post(jsonBody.toString().toRequestBody("application/json".toMediaTypeOrNull()))
             .build()
 
