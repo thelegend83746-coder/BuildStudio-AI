@@ -68,4 +68,6 @@
     <color name="text_muted">#8B949E</color>
     <color name="btn_run_green">#00E676</color>
     <color name="btn_stop_red">#FF5252</color>
+    <color name="status_error_border">#FF5252</color>
+    <color name="status_error_bg">#26FF5252</color>
 </resources>

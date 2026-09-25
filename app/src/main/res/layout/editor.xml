@@ -22,7 +22,7 @@
         <ImageView android:id="@+id/menu" android:background="?android:attr/selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="40.0dp" android:layout_height="40.0dp" android:layout_marginLeft="4.0dp" android:src="@drawable/ic_more_vert_black" android:scaleType="center">
         </ImageView>
       </LinearLayout>
-      <com.google.android.material.tabs.TabLayout android:orientation="horizontal" android:id="@+id/tablayout1" android:background="#ffffffff" android:layout_width="match_parent" android:layout_height="wrap_content" android:elevation="5.0dp" app:tabIndicator="@drawable/tabindicator" app:tabIndicatorColor="#ffd50000" app:tabIndicatorFullWidth="false" app:tabIndicatorHeight="4.0dp" app:tabMode="0" app:tabSelectedTextColor="#fff44336" app:tabTextColor="#ff424242">
+      <com.google.android.material.tabs.TabLayout android:orientation="horizontal" android:id="@+id/tablayout1" android:background="#ffffffff" android:layout_width="match_parent" android:layout_height="wrap_content" android:elevation="5.0dp" app:tabIndicator="@drawable/tabindicator" app:tabIndicatorColor="#ffd50000" app:tabIndicatorFullWidth="false" app:tabIndicatorHeight="4.0dp" app:tabMode="scrollable" app:tabSelectedTextColor="#fff44336" app:tabTextColor="#ff424242">
       </com.google.android.material.tabs.TabLayout>
       <LinearLayout android:orientation="horizontal" android:id="@+id/linear1" android:background="#ffffffff" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="10.0dp">
       </LinearLayout>
