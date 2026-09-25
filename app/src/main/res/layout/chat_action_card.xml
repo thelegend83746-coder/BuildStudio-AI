@@ -57,11 +57,12 @@
             android:id="@+id/tv_action_desc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="8dp"
             android:textColor="@color/text_slate_600"
             android:textSize="13sp" />
 
         <HorizontalScrollView
+            android:id="@+id/scroll_code_preview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#1E1E2E"
@@ -77,25 +78,58 @@
                 android:textSize="11sp" />
         </HorizontalScrollView>
 
+        <!-- Action Buttons (Reject / Approve) -->
         <LinearLayout
+            android:id="@+id/layout_buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="end"
             android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btn_apply_action"
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_reject"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginRight="8dp"
+                android:background="@drawable/btn_outline"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:text="Reject"
+                android:textAllCaps="false"
+                android:textColor="@color/text_slate_600"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_approve"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:background="@drawable/btn_primary"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
-                android:text="Apply Change"
+                android:text="Approve"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <!-- Status Badge when Applied -->
+        <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:background="@drawable/bg_applied_badge"
+            android:paddingLeft="12dp"
+            android:paddingTop="6dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="6dp"
+            android:text="✓ Applied"
+            android:textColor="#16A34A"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

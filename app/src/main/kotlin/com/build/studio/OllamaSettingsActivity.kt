@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit
 
 class OllamaSettingsActivity : AppCompatActivity() {
 
-    private lateinit var etEndpoint: EditText
     private lateinit var etApiKey: EditText
     private lateinit var etModelCustom: EditText
     private lateinit var etSystemPrompt: EditText
@@ -38,7 +37,6 @@ class OllamaSettingsActivity : AppCompatActivity() {
         val backBtn = findViewById<View>(R.id.back_btn) ?: findViewById<View>(R.id.btn_back)
         backBtn?.setOnClickListener { finish(); Animatoo.animateSlideRight(this) }
 
-        etEndpoint = findViewById(R.id.et_endpoint)
         etApiKey = findViewById(R.id.et_api_key)
         etModelCustom = findViewById(R.id.et_model_custom) ?: findViewById(R.id.et_model_name)
         etSystemPrompt = findViewById(R.id.et_system_prompt)
@@ -59,11 +57,6 @@ class OllamaSettingsActivity : AppCompatActivity() {
 
     private fun loadPreferences() {
         val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
-        val savedEndpoint = sp.getString("endpoint", "")?.ifEmpty {
-            sp.getString("base_url", "http://localhost:11434")
-        } ?: "http://localhost:11434"
-        etEndpoint.setText(savedEndpoint)
-
         etApiKey.setText(sp.getString("api_key", ""))
 
         val savedModel = sp.getString("model_name", "")?.ifEmpty {
@@ -97,63 +90,132 @@ class OllamaSettingsActivity : AppCompatActivity() {
         }
     }
 
+    data class EndpointCandidate(
+        val name: String,
+        val testUrl: String,
+        val endpoint: String,
+        val baseUrl: String
+    )
+
     private fun testConnection() {
         tvStatus.text = "Testing connection..."
         tvStatus.setTextColor(Color.parseColor("#64748B"))
 
-        var endpoint = etEndpoint.text.toString().trim()
         val apiKey = etApiKey.text.toString().trim()
 
-        if (endpoint.isEmpty()) {
-            endpoint = if (apiKey.isEmpty()) "http://localhost:11434" else "https://api.deepseek.com/v1"
-            etEndpoint.setText(endpoint)
+        val candidates = mutableListOf<EndpointCandidate>()
+        if (apiKey.isNotEmpty()) {
+            // If API key is provided, test DeepSeek, OpenAI, Groq, and local Ollama
+            candidates.add(
+                EndpointCandidate(
+                    name = "DeepSeek",
+                    testUrl = "https://api.deepseek.com/v1/models",
+                    endpoint = "https://api.deepseek.com",
+                    baseUrl = "https://api.deepseek.com/v1/chat/completions"
+                )
+            )
+            candidates.add(
+                EndpointCandidate(
+                    name = "OpenAI",
+                    testUrl = "https://api.openai.com/v1/models",
+                    endpoint = "https://api.openai.com",
+                    baseUrl = "https://api.openai.com/v1/chat/completions"
+                )
+            )
+            candidates.add(
+                EndpointCandidate(
+                    name = "Local Ollama",
+                    testUrl = "http://127.0.0.1:11434/api/tags",
+                    endpoint = "http://127.0.0.1:11434",
+                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions"
+                )
+            )
+            candidates.add(
+                EndpointCandidate(
+                    name = "Groq",
+                    testUrl = "https://api.groq.com/openai/v1/models",
+                    endpoint = "https://api.groq.com/openai",
+                    baseUrl = "https://api.groq.com/openai/v1/chat/completions"
+                )
+            )
+        } else {
+            // Local Ollama endpoints
+            candidates.add(
+                EndpointCandidate(
+                    name = "Local Ollama (127.0.0.1)",
+                    testUrl = "http://127.0.0.1:11434/api/tags",
+                    endpoint = "http://127.0.0.1:11434",
+                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions"
+                )
+            )
+            candidates.add(
+                EndpointCandidate(
+                    name = "Local Ollama (localhost)",
+                    testUrl = "http://localhost:11434/api/tags",
+                    endpoint = "http://localhost:11434",
+                    baseUrl = "http://localhost:11434/v1/chat/completions"
+                )
+            )
+            candidates.add(
+                EndpointCandidate(
+                    name = "Emulator Ollama (10.0.2.2)",
+                    testUrl = "http://10.0.2.2:11434/api/tags",
+                    endpoint = "http://10.0.2.2:11434",
+                    baseUrl = "http://10.0.2.2:11434/v1/chat/completions"
+                )
+            )
         }
 
-        val clean = endpoint.trimEnd('/')
-        val isOllama = clean.contains("11434") || clean.contains("ollama")
+        testNextCandidate(candidates, 0, apiKey, null)
+    }
 
-        // Build target test URL
-        val testUrl = when {
-            isOllama -> {
-                if (clean.endsWith("/api/tags") || clean.endsWith("/api/version") || clean.endsWith("/v1/models")) {
-                    clean
-                } else if (clean.endsWith("/api")) {
-                    "$clean/tags"
-                } else {
-                    "$clean/api/tags"
-                }
+    private fun testNextCandidate(
+        candidates: List<EndpointCandidate>,
+        index: Int,
+        apiKey: String,
+        lastError: String?
+    ) {
+        if (index >= candidates.size) {
+            runOnUiThread {
+                tvStatus.text = lastError ?: "Failed: Could not connect to any endpoint"
+                tvStatus.setTextColor(Color.parseColor("#FF5252"))
             }
-            clean.endsWith("/models") -> clean
-            clean.endsWith("/v1") -> "$clean/models"
-            clean.contains("/v1/") -> "$clean/models"
-            else -> "$clean/v1/models"
+            return
         }
 
+        val candidate = candidates[index]
         val client = OkHttpClient.Builder()
-            .connectTimeout(8, TimeUnit.SECONDS)
-            .readTimeout(8, TimeUnit.SECONDS)
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
             .build()
 
-        val reqBuilder = Request.Builder().url(testUrl).get()
+        val reqBuilder = Request.Builder().url(candidate.testUrl).get()
         if (apiKey.isNotEmpty()) {
             reqBuilder.addHeader("Authorization", "Bearer $apiKey")
         }
 
         client.newCall(reqBuilder.build()).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                runOnUiThread {
-                    tvStatus.text = "Failed: ${e.localizedMessage ?: "Connection Refused"}"
-                    tvStatus.setTextColor(Color.parseColor("#FF5252"))
-                }
+                // Try next candidate
+                testNextCandidate(candidates, index + 1, apiKey, "Failed: ${e.localizedMessage ?: "Connection Refused"}")
             }
 
             override fun onResponse(call: Call, response: Response) {
                 val code = response.code
                 val bodyStr = response.body?.string() ?: ""
-                runOnUiThread {
-                    if (response.isSuccessful) {
-                        tvStatus.text = "✓ Connected Successfully! (HTTP $code)"
+
+                if (response.isSuccessful) {
+                    runOnUiThread {
+                        tvStatus.text = "✓ Connected to ${candidate.name}! (HTTP $code)"
                         tvStatus.setTextColor(Color.parseColor("#00C853"))
+
+                        // Auto-save the working endpoint and baseUrl in preferences
+                        val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
+                        sp.edit()
+                            .putString("endpoint", candidate.endpoint)
+                            .putString("base_url", candidate.baseUrl)
+                            .putString("api_key", apiKey)
+                            .apply()
 
                         // Parse discovered models
                         try {
@@ -181,21 +243,22 @@ class OllamaSettingsActivity : AppCompatActivity() {
                                 modelAdapter.notifyDataSetChanged()
                                 etModelCustom.setText(discovered[0])
                                 spModels.setSelection(0)
-                                Toast.makeText(this@OllamaSettingsActivity, "Loaded ${discovered.size} models! 🎯", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}! Loaded ${discovered.size} models 🎯", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}!", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
-                            // Valid response code is enough
+                            Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}!", Toast.LENGTH_SHORT).show()
                         }
-                    } else if (code == 401) {
-                        tvStatus.text = "HTTP 401: Invalid API Key or Unauthorized"
-                        tvStatus.setTextColor(Color.parseColor("#FF5252"))
-                    } else if (code == 404) {
-                        tvStatus.text = "HTTP 404: Endpoint Not Found"
-                        tvStatus.setTextColor(Color.parseColor("#FF5252"))
-                    } else {
-                        tvStatus.text = "Response: HTTP $code"
+                    }
+                } else if (code == 401) {
+                    runOnUiThread {
+                        tvStatus.text = "HTTP 401: Invalid API Key for ${candidate.name}"
                         tvStatus.setTextColor(Color.parseColor("#FF5252"))
                     }
+                } else {
+                    // Try next candidate
+                    testNextCandidate(candidates, index + 1, apiKey, "${candidate.name} returned HTTP $code")
                 }
             }
         })
@@ -203,19 +266,21 @@ class OllamaSettingsActivity : AppCompatActivity() {
 
     private fun savePreferences() {
         val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
-        val endpoint = etEndpoint.text.toString().trim()
         val apiKey = etApiKey.text.toString().trim()
         val model = etModelCustom.text.toString().trim().ifEmpty { "qwen2.5-coder:latest" }
         val prompt = etSystemPrompt.text.toString().trim()
 
-        val clean = endpoint.trimEnd('/')
-        val isOllama = clean.contains("11434") || clean.contains("ollama")
-        val baseUrl = when {
-            clean.endsWith("/chat/completions") -> clean
-            clean.endsWith("/v1") -> "$clean/chat/completions"
-            isOllama -> "$clean/v1/chat/completions"
-            clean.isEmpty() -> "http://localhost:11434/v1/chat/completions"
-            else -> "$clean/v1/chat/completions"
+        var endpoint = sp.getString("endpoint", "") ?: ""
+        var baseUrl = sp.getString("base_url", "") ?: ""
+
+        if (endpoint.isEmpty() || baseUrl.isEmpty()) {
+            if (apiKey.startsWith("sk-")) {
+                endpoint = "https://api.deepseek.com"
+                baseUrl = "https://api.deepseek.com/v1/chat/completions"
+            } else {
+                endpoint = "http://127.0.0.1:11434"
+                baseUrl = "http://127.0.0.1:11434/v1/chat/completions"
+            }
         }
 
         sp.edit()
@@ -228,7 +293,8 @@ class OllamaSettingsActivity : AppCompatActivity() {
             .apply()
 
         Toast.makeText(this, "AI Settings saved! 🚀", Toast.LENGTH_SHORT).show()
-        finish(); Animatoo.animateSlideRight(this)
+        finish()
+        Animatoo.animateSlideRight(this)
     }
 
     override fun onBackPressed() {

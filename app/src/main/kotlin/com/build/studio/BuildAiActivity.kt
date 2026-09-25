@@ -3,8 +3,6 @@ package com.build.studio
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -115,7 +113,7 @@ TAG FORMATS:
         tvThinkingStatus = findViewById(R.id.tv_status_text) ?: findViewById(R.id.tv_thinking_status)
         tvActiveModel = findViewById(R.id.tv_model_info) ?: findViewById(R.id.tv_active_model)
 
-        tvActiveModel?.text = "Build AI (DeepSeek / Gemini)"
+        updateActiveModelDisplay()
 
         (findViewById<View>(R.id.back_btn) ?: findViewById<View>(R.id.btn_back))?.setOnClickListener {
             finish()
@@ -158,6 +156,19 @@ TAG FORMATS:
         chatAdapter.notifyItemInserted(0)
     }
 
+    override fun onResume() {
+        super.onResume()
+        updateActiveModelDisplay()
+    }
+
+    private fun updateActiveModelDisplay() {
+        val prefs = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
+        val model = prefs.getString("model_name", "")?.ifEmpty {
+            prefs.getString("model", "qwen2.5-coder")
+        } ?: "qwen2.5-coder"
+        tvActiveModel?.text = "Build AI ($model)"
+    }
+
     private fun confirmClearChat() {
         AlertDialog.Builder(this)
             .setTitle("Clear Chat")
@@ -196,18 +207,33 @@ TAG FORMATS:
 
         val prefs = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
         val apiKey = prefs.getString("api_key", "") ?: ""
-        val baseUrl = prefs.getString("base_url", "http://localhost:11434/v1/chat/completions")
-            ?.ifEmpty { "http://localhost:11434/v1/chat/completions" } ?: "http://localhost:11434/v1/chat/completions"
+        var baseUrl = prefs.getString("base_url", "") ?: ""
+
+        if (baseUrl.isEmpty() || (baseUrl.contains("localhost") && apiKey.startsWith("sk-"))) {
+            baseUrl = if (apiKey.startsWith("sk-")) {
+                "https://api.deepseek.com/v1/chat/completions"
+            } else {
+                "http://127.0.0.1:11434/v1/chat/completions"
+            }
+        }
+
         val model = prefs.getString("model_name", "")?.ifEmpty {
             prefs.getString("model", "qwen2.5-coder:latest")
         } ?: "qwen2.5-coder:latest"
+
+        val userInstructions = prefs.getString("system_prompt", "")?.trim()
+        val finalSystemPrompt = if (!userInstructions.isNullOrEmpty()) {
+            "$userInstructions\n\n$systemPrompt"
+        } else {
+            systemPrompt
+        }
 
         val jsonBody = JSONObject().apply {
             put("model", model)
             val jsonMsgs = JSONArray()
             jsonMsgs.put(JSONObject().apply {
                 put("role", "system")
-                put("content", "$systemPrompt\n\n$contextPayload")
+                put("content", "$finalSystemPrompt\n\n$contextPayload")
             })
             // Pass last 4 messages for conversation continuity
             val startIdx = maxOf(0, messages.size - 6)
@@ -334,7 +360,7 @@ TAG FORMATS:
         }
 
         // 2. Parse <write_file path="...">...</write_file>
-        val writePattern = Pattern.compile("<write_file\\s+path=\"([^\"]+)\">(.*?)</write_file>", Pattern.DOTALL)
+        val writePattern = Pattern.compile("<write_file\\s+path=[\"']([^\"']+)[\"']>(.*?)</write_file>", Pattern.DOTALL)
         val writeMatcher = writePattern.matcher(cleanText)
         while (writeMatcher.find()) {
             val p = writeMatcher.group(1)?.trim() ?: ""
@@ -345,7 +371,7 @@ TAG FORMATS:
 
         // 3. Parse <replace_code path="..."> <target>...</target> <replacement>...</replacement> </replace_code>
         val replacePattern = Pattern.compile(
-            "<replace_code\\s+path=\"([^\"]+)\">\\s*<target>(.*?)</target>\\s*<replacement>(.*?)</replacement>\\s*</replace_code>",
+            "<replace_code\\s+path=[\"']([^\"']+)[\"']>\\s*<target>(.*?)</target>\\s*<replacement>(.*?)</replacement>\\s*</replace_code>",
             Pattern.DOTALL
         )
         val replaceMatcher = replacePattern.matcher(cleanText)
@@ -357,8 +383,8 @@ TAG FORMATS:
         }
         cleanText = replaceMatcher.replaceAll("").trim()
 
-        // 4. Parse <create_dir path="..."/>
-        val dirPattern = Pattern.compile("<create_dir\\s+path=\"([^\"]+)\"\\s*/>")
+        // 4. Parse <create_dir path="..."/> or <create_dir path="...">...</create_dir>
+        val dirPattern = Pattern.compile("<create_dir\\s+path=[\"']([^\"']+)[\"']\\s*(?:/>|>.*?</create_dir>)", Pattern.DOTALL)
         val dirMatcher = dirPattern.matcher(cleanText)
         while (dirMatcher.find()) {
             val p = dirMatcher.group(1)?.trim() ?: ""
@@ -367,7 +393,7 @@ TAG FORMATS:
         cleanText = dirMatcher.replaceAll("").trim()
 
         // 5. Parse <rename path="..." new_path="..."/>
-        val renamePattern = Pattern.compile("<rename\\s+path=\"([^\"]+)\"\\s+new_path=\"([^\"]+)\"\\s*/>")
+        val renamePattern = Pattern.compile("<rename\\s+path=[\"']([^\"']+)[\"']\\s+(?:new_path|to)=[\"']([^\"']+)[\"']\\s*(?:/>|>.*?</rename>)", Pattern.DOTALL)
         val renameMatcher = renamePattern.matcher(cleanText)
         while (renameMatcher.find()) {
             val p = renameMatcher.group(1)?.trim() ?: ""
@@ -377,7 +403,7 @@ TAG FORMATS:
         cleanText = renameMatcher.replaceAll("").trim()
 
         // 6. Parse <move path="..." dest_path="..."/>
-        val movePattern = Pattern.compile("<move\\s+path=\"([^\"]+)\"\\s+dest_path=\"([^\"]+)\"\\s*/>")
+        val movePattern = Pattern.compile("<move\\s+path=[\"']([^\"']+)[\"']\\s+(?:dest_path|to)=[\"']([^\"']+)[\"']\\s*(?:/>|>.*?</move>)", Pattern.DOTALL)
         val moveMatcher = movePattern.matcher(cleanText)
         while (moveMatcher.find()) {
             val p = moveMatcher.group(1)?.trim() ?: ""
@@ -387,13 +413,24 @@ TAG FORMATS:
         cleanText = moveMatcher.replaceAll("").trim()
 
         // 7. Parse <delete path="..."/>
-        val deletePattern = Pattern.compile("<delete\\s+path=\"([^\"]+)\"\\s*/>")
+        val deletePattern = Pattern.compile("<delete\\s+path=[\"']([^\"']+)[\"']\\s*(?:/>|>.*?</delete>)", Pattern.DOTALL)
         val deleteMatcher = deletePattern.matcher(cleanText)
         while (deleteMatcher.find()) {
             val p = deleteMatcher.group(1)?.trim() ?: ""
             msg.actions.add(FileAction(ActionType.DELETE, filePath = p))
         }
         cleanText = deleteMatcher.replaceAll("").trim()
+
+        // Fallback: Markdown code block parser with file path header if no actions found
+        if (msg.actions.isEmpty()) {
+            val codeBlockPattern = Pattern.compile("```(?:xml|java|kt|gradle|json)?\\s*(?://|<!--|#)\\s*(?:File:\\s*)?([a-zA-Z0-9_/.-]+\\.[a-zA-Z0-9]+)\\s*(?:-->)?\n([\\s\\S]*?)```")
+            val cbMatcher = codeBlockPattern.matcher(cleanText)
+            while (cbMatcher.find()) {
+                val p = cbMatcher.group(1)?.trim() ?: ""
+                val code = cbMatcher.group(2) ?: ""
+                msg.actions.add(FileAction(ActionType.WRITE_FILE, filePath = p, code = code))
+            }
+        }
 
         msg.text = cleanText
     }
@@ -437,14 +474,55 @@ TAG FORMATS:
                     for (act in msg.actions) {
                         val card = LayoutInflater.from(this@BuildAiActivity).inflate(R.layout.chat_action_card, holder.containerActions, false)
                         val tvType = card.findViewById<TextView>(R.id.tv_action_type)
-                        val tvPath = card.findViewById<TextView>(R.id.tv_action_path) ?: card.findViewById<TextView>(R.id.tv_file_path)
+                        val tvPath = card.findViewById<TextView>(R.id.tv_file_path) ?: card.findViewById<TextView>(R.id.tv_action_path)
+                        val tvDesc = card.findViewById<TextView>(R.id.tv_action_desc)
+                        val tvCodePreview = card.findViewById<TextView>(R.id.tv_code_preview)
+                        val scrollPreview = card.findViewById<View>(R.id.scroll_code_preview)
                         val layoutButtons = card.findViewById<View>(R.id.layout_buttons)
                         val btnApprove = card.findViewById<Button>(R.id.btn_approve) ?: card.findViewById<Button>(R.id.btn_apply_action)
                         val btnReject = card.findViewById<Button>(R.id.btn_reject)
                         val tvStatus = card.findViewById<TextView>(R.id.tv_status)
 
-                        tvType.text = act.type.name.replace("_", " ")
-                        tvPath.text = act.filePath
+                        tvPath?.text = act.filePath
+
+                        when (act.type) {
+                            ActionType.WRITE_FILE -> {
+                                tvType?.text = "CREATE / WRITE FILE"
+                                tvDesc?.text = "Write code to ${act.filePath}"
+                                tvCodePreview?.text = act.code.trim()
+                                scrollPreview?.visibility = if (act.code.isNotBlank()) View.VISIBLE else View.GONE
+                            }
+                            ActionType.REPLACE_CODE -> {
+                                tvType?.text = "UPDATE CODE"
+                                tvDesc?.text = "Update code in ${act.filePath}"
+                                tvCodePreview?.text = "<<<<<<< TARGET\n${act.target.trim()}\n=======\n${act.replacement.trim()}\n>>>>>>> REPLACEMENT"
+                                scrollPreview?.visibility = View.VISIBLE
+                            }
+                            ActionType.CREATE_DIR -> {
+                                tvType?.text = "CREATE FOLDER"
+                                tvDesc?.text = "Create folder: ${act.filePath}"
+                                tvCodePreview?.text = "mkdir -p ${act.filePath}"
+                                scrollPreview?.visibility = View.VISIBLE
+                            }
+                            ActionType.RENAME -> {
+                                tvType?.text = "RENAME"
+                                tvDesc?.text = "Rename to: ${act.destPath}"
+                                tvCodePreview?.text = "${act.filePath}  ->  ${act.destPath}"
+                                scrollPreview?.visibility = View.VISIBLE
+                            }
+                            ActionType.MOVE -> {
+                                tvType?.text = "MOVE"
+                                tvDesc?.text = "Move to: ${act.destPath}"
+                                tvCodePreview?.text = "${act.filePath}  ->  ${act.destPath}"
+                                scrollPreview?.visibility = View.VISIBLE
+                            }
+                            ActionType.DELETE -> {
+                                tvType?.text = "DELETE"
+                                tvDesc?.text = "Delete: ${act.filePath}"
+                                tvCodePreview?.text = "rm -rf ${act.filePath}"
+                                scrollPreview?.visibility = View.VISIBLE
+                            }
+                        }
 
                         if (act.applied) {
                             layoutButtons?.visibility = View.GONE
@@ -461,7 +539,8 @@ TAG FORMATS:
                             }
 
                             btnReject?.setOnClickListener {
-                                card.visibility = View.GONE
+                                holder.containerActions.removeView(card)
+                                Toast.makeText(this@BuildAiActivity, "Action rejected", Toast.LENGTH_SHORT).show()
                             }
                         }
                         holder.containerActions.addView(card)
@@ -486,7 +565,11 @@ TAG FORMATS:
     }
 
     private fun executeAction(act: FileAction) {
-        val root = projectPath ?: return
+        val root = projectPath
+        if (root.isNullOrEmpty()) {
+            Toast.makeText(this, "Error: No project path available", Toast.LENGTH_SHORT).show()
+            return
+        }
         val targetFile = File(root, act.filePath)
 
         try {
@@ -495,7 +578,7 @@ TAG FORMATS:
                     targetFile.parentFile?.mkdirs()
                     backupFile(targetFile)
                     FileUtil.writeFile(targetFile.absolutePath, act.code)
-                    Toast.makeText(this, "Created/Updated ${targetFile.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Applied action: ${act.filePath}", Toast.LENGTH_SHORT).show()
                 }
                 ActionType.REPLACE_CODE -> {
                     if (targetFile.exists()) {
@@ -504,30 +587,45 @@ TAG FORMATS:
                         if (current.contains(act.target)) {
                             val updated = current.replace(act.target, act.replacement)
                             FileUtil.writeFile(targetFile.absolutePath, updated)
-                            Toast.makeText(this, "Patched ${targetFile.name}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Applied action: ${act.filePath}", Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(this, "Target code not found in ${targetFile.name}", Toast.LENGTH_LONG).show()
+                            val targetTrimmed = act.target.trim()
+                            if (current.contains(targetTrimmed)) {
+                                val updated = current.replace(targetTrimmed, act.replacement.trim())
+                                FileUtil.writeFile(targetFile.absolutePath, updated)
+                                Toast.makeText(this, "Applied action: ${act.filePath}", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(this, "Target code not found in ${targetFile.name}", Toast.LENGTH_LONG).show()
+                            }
                         }
+                    } else {
+                        Toast.makeText(this, "File not found: ${act.filePath}", Toast.LENGTH_LONG).show()
                     }
                 }
                 ActionType.CREATE_DIR -> {
                     targetFile.mkdirs()
-                    Toast.makeText(this, "Directory created: ${targetFile.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Applied action: ${act.filePath}", Toast.LENGTH_SHORT).show()
                 }
                 ActionType.RENAME -> {
                     val newFile = File(root, act.destPath)
+                    newFile.parentFile?.mkdirs()
                     targetFile.renameTo(newFile)
-                    Toast.makeText(this, "Renamed to ${newFile.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Applied action: ${act.filePath}", Toast.LENGTH_SHORT).show()
                 }
                 ActionType.MOVE -> {
                     val destFile = File(root, act.destPath)
                     destFile.parentFile?.mkdirs()
                     targetFile.renameTo(destFile)
-                    Toast.makeText(this, "Moved to ${destFile.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Applied action: ${act.filePath}", Toast.LENGTH_SHORT).show()
                 }
                 ActionType.DELETE -> {
-                    deleteRecursive(targetFile)
-                    Toast.makeText(this, "Deleted ${targetFile.name}", Toast.LENGTH_SHORT).show()
+                    if (targetFile.exists()) {
+                        backupFile(targetFile)
+                        deleteRecursive(targetFile)
+                        Toast.makeText(this, "Applied action: ${act.filePath}", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "File not found: ${act.filePath}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         } catch (e: Exception) {
