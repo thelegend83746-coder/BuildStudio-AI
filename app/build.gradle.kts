@@ -47,6 +47,7 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            pickFirsts += "**"
         }
     }
 }
@@ -72,5 +73,7 @@ dependencies {
     implementation("org.eclipse.jdt:ecj:3.26.0")
     implementation("com.android.tools:r8:8.2.33")
 
+    compileOnly(files("libs/cp.jar"))
     implementation(files("libs/apksig-8.2.2.jar"))
+    implementation(files("libs/androidx-stubs.jar"))
 }
