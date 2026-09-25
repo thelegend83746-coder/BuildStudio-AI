@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
-  <LinearLayout android:orientation="vertical" android:id="@id/linear1" android:background="#ffffffff" android:padding="2.0dp" android:layout_width="match_parent" android:layout_height="match_parent">
-    <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/linear3" android:layout_width="match_parent" android:layout_height="match_parent" android:weightSum="1065353216" android:layout_weight="1065353216">
-      <LinearLayout android:orientation="vertical" android:id="@id/logo_bg" android:background="@drawable/ic_launcher" android:layout_width="150.0dp" android:layout_height="150.0dp">
+  <LinearLayout android:orientation="vertical" android:id="@+id/linear1" android:background="#ffffffff" android:padding="2.0dp" android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@+id/linear3" android:layout_width="match_parent" android:layout_height="match_parent" android:weightSum="1065353216" android:layout_weight="1065353216">
+      <LinearLayout android:orientation="vertical" android:id="@+id/logo_bg" android:background="@drawable/ic_launcher" android:layout_width="150.0dp" android:layout_height="150.0dp">
       </LinearLayout>
     </LinearLayout>
-    <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@id/linear2" android:layout_width="match_parent" android:layout_height="wrap_content">
-      <TextView android:textSize="16.0sp" android:textColor="#ff263238" android:id="@id/textview1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="version v1.1">
+    <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@+id/linear2" android:layout_width="match_parent" android:layout_height="wrap_content">
+      <TextView android:textSize="16.0sp" android:textColor="#ff263238" android:id="@+id/textview1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="version v1.1">
       </TextView>
     </LinearLayout>
   </LinearLayout>

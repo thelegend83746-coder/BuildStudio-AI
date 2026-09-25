@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@id/_coordinator" android:layout_width="match_parent" android:layout_height="match_parent">
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/_coordinator" android:layout_width="match_parent" android:layout_height="match_parent">
   <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/toolbar" android:background="@color/bg_white" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:layout_width="match_parent" android:layout_height="60.0dp" android:elevation="4.0dp">
-      <TextView android:textSize="22.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@id/textview111" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="BUILD STUDIO" android:layout_weight="1065353216">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/toolbar" android:background="@color/bg_white" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:layout_width="match_parent" android:layout_height="60.0dp" android:elevation="4.0dp">
+      <TextView android:textSize="22.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:id="@+id/textview111" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="BUILD STUDIO" android:layout_weight="1065353216">
       </TextView>
-      <ImageView android:id="@id/three_dot_menu_image" android:background="?android:attr/selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="48.0dp" android:layout_height="48.0dp" android:src="@drawable/ic_more_vert_black" android:scaleType="5">
+      <ImageView android:id="@+id/three_dot_menu_image" android:background="?android:attr/selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="48.0dp" android:layout_height="48.0dp" android:src="@drawable/ic_more_vert_black" android:scaleType="center">
       </ImageView>
     </LinearLayout>
     <View android:background="#ffe2e8f0" android:layout_width="match_parent" android:layout_height="1.0dp">
     </View>
-    <LinearLayout android:orientation="vertical" android:id="@id/main" android:background="@color/bg_slate_50" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:weightSum="1065353216" android:layout_weight="1065353216">
-      <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="#ff000000" android:id="@id/textview455" android:padding="8.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:text="Projects">
+    <LinearLayout android:orientation="vertical" android:id="@+id/main" android:background="@color/bg_slate_50" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:weightSum="1065353216" android:layout_weight="1065353216">
+      <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="#ff000000" android:id="@+id/textview455" android:padding="8.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:text="Projects">
       </TextView>
-      <LinearLayout android:orientation="horizontal" android:id="@id/ads" android:layout_width="match_parent" android:layout_height="wrap_content">
+      <LinearLayout android:orientation="horizontal" android:id="@+id/ads" android:layout_width="match_parent" android:layout_height="wrap_content">
       </LinearLayout>
-      <ListView android:id="@id/listview1" android:layout_width="match_parent" android:layout_height="wrap_content" android:choiceMode="0">
+      <ListView android:id="@+id/listview1" android:layout_width="match_parent" android:layout_height="wrap_content" android:choiceMode="none">
       </ListView>
-      <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff000000" android:gravity="center" android:id="@id/no_projects_found" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="No Projects Found">
+      <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff000000" android:gravity="center" android:id="@+id/no_projects_found" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="No Projects Found">
       </TextView>
     </LinearLayout>
   </LinearLayout>
-  <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_gravity="0x55" android:id="@id/_fab" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="16.0dp" app:shapeAppearanceOverlay="@style/fab_square" app:srcCompat="@drawable/ic_add_white2">
+  <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_gravity="0x55" android:id="@+id/_fab" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="16.0dp" app:shapeAppearanceOverlay="@style/fab_square" app:srcCompat="@drawable/ic_add_white2">
   </com.google.android.material.floatingactionbutton.FloatingActionButton>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

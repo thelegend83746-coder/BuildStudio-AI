@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.gms.ads.nativead.NativeAdView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content">
-  <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@id/linear1" android:background="#ffffffff" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="0.0dp">
-    <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="#ff424242" android:layout_gravity="0x3" android:id="@id/textview6" android:paddingBottom="8.0dp" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Advertisement">
+  <LinearLayout android:gravity="center" android:orientation="vertical" android:id="@+id/linear1" android:background="#ffffffff" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="0.0dp">
+    <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="#ff424242" android:layout_gravity="0x3" android:id="@+id/textview6" android:paddingBottom="8.0dp" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Advertisement">
     </TextView>
-    <com.google.android.gms.ads.nativead.MediaView android:orientation="horizontal" android:id="@id/linear2" android:paddingTop="0.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="0.0dp">
+    <com.google.android.gms.ads.nativead.MediaView android:orientation="horizontal" android:id="@+id/linear2" android:paddingTop="0.0dp" android:paddingBottom="8.0dp" android:layout_width="match_parent" android:layout_height="0.0dp">
     </com.google.android.gms.ads.nativead.MediaView>
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/linear3" android:padding="0.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-      <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/imgLinear" android:padding="0.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content">
-        <ImageView android:id="@id/imageview1" android:focusable="false" android:layout_width="70.0dp" android:layout_height="70.0dp" android:src="@drawable/default_image" android:scaleType="1">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/linear3" android:padding="0.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+      <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/imgLinear" android:padding="0.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <ImageView android:id="@+id/imageview1" android:focusable="false" android:layout_width="70.0dp" android:layout_height="70.0dp" android:src="@drawable/default_image" android:scaleType="fitXY">
         </ImageView>
       </LinearLayout>
-      <LinearLayout android:gravity="center_vertical" android:orientation="vertical" android:id="@id/ayoub1" android:paddingLeft="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff666666" android:id="@id/textview1" android:background="@android:color/transparent" android:padding="0.0dp" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="name">
+      <LinearLayout android:gravity="center_vertical" android:orientation="vertical" android:id="@+id/ayoub1" android:paddingLeft="8.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff666666" android:id="@+id/textview1" android:background="@android:color/transparent" android:padding="0.0dp" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="name">
         </TextView>
-        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/ayoubLin6" android:padding="0.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-          <LinearLayout android:gravity="center_vertical" android:orientation="vertical" android:id="@id/ayoubLin5" android:padding="0.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1065353216">
-            <RatingBar android:enabled="false" android:id="@id/ratingbar1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp" android:max="5" android:numStars="5" android:isIndicator="true" android:progressTint="#ff1a73e8" android:progressBackgroundTint="#ff505055" android:secondaryProgressTint="#ff505055" style="@style/Widget.AppCompat.RatingBar.Small">
+        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/ayoubLin6" android:padding="0.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+          <LinearLayout android:gravity="center_vertical" android:orientation="vertical" android:id="@+id/ayoubLin5" android:padding="0.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1065353216">
+            <RatingBar android:enabled="false" android:id="@+id/ratingbar1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp" android:max="5" android:numStars="5" android:isIndicator="true" android:progressTint="#ff1a73e8" android:progressBackgroundTint="#ff505055" android:secondaryProgressTint="#ff505055" style="@style/Widget.AppCompat.RatingBar.Small">
             </RatingBar>
-            <LinearLayout android:orientation="horizontal" android:id="@id/linear5" android:padding="0.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-              <TextView android:textSize="10.0sp" android:textStyle="0x0" android:textColor="#ff666666" android:id="@id/textview4" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Free" android:layout_weight="0">
+            <LinearLayout android:orientation="horizontal" android:id="@+id/linear5" android:padding="0.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+              <TextView android:textSize="10.0sp" android:textStyle="0x0" android:textColor="#ff666666" android:id="@+id/textview4" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Free" android:layout_weight="0">
               </TextView>
-              <TextView android:textSize="10.0sp" android:textStyle="0x0" android:textColor="#ff666666" android:id="@id/ayoub4" android:paddingLeft="4.0dp" android:paddingRight="4.0dp" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="•" android:layout_weight="0">
+              <TextView android:textSize="10.0sp" android:textStyle="0x0" android:textColor="#ff666666" android:id="@+id/ayoub4" android:paddingLeft="4.0dp" android:paddingRight="4.0dp" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="•" android:layout_weight="0">
               </TextView>
-              <TextView android:textSize="10.0sp" android:textStyle="0x0" android:textColor="#ff666666" android:id="@id/textview5" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google play" android:layout_weight="1065353216">
+              <TextView android:textSize="10.0sp" android:textStyle="0x0" android:textColor="#ff666666" android:id="@+id/textview5" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google play" android:layout_weight="1065353216">
               </TextView>
             </LinearLayout>
           </LinearLayout>
-          <Button android:textSize="12.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:layout_gravity="0x5" android:id="@id/button1" android:background="#ff1a73e8" android:paddingLeft="8.0dp" android:paddingRight="8.0dp" android:layout_width="wrap_content" android:layout_height="35.0dp" android:layout_marginTop="4.0dp" android:text="Button">
+          <Button android:textSize="12.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:layout_gravity="0x5" android:id="@+id/button1" android:background="#ff1a73e8" android:paddingLeft="8.0dp" android:paddingRight="8.0dp" android:layout_width="wrap_content" android:layout_height="35.0dp" android:layout_marginTop="4.0dp" android:text="Button">
           </Button>
         </LinearLayout>
       </LinearLayout>
     </LinearLayout>
-    <LinearLayout android:orientation="horizontal" android:id="@id/linear4" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="0.0dp">
-      <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="#ff212121" android:id="@id/textview2" android:focusable="false" android:layout_width="0.0dp" android:layout_height="0.0dp" android:text="" android:layout_weight="1065353216">
+    <LinearLayout android:orientation="horizontal" android:id="@+id/linear4" android:padding="8.0dp" android:layout_width="match_parent" android:layout_height="0.0dp">
+      <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="#ff212121" android:id="@+id/textview2" android:focusable="false" android:layout_width="0.0dp" android:layout_height="0.0dp" android:text="" android:layout_weight="1065353216">
       </TextView>
-      <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="#ff666666" android:id="@id/textview3" android:focusable="false" android:layout_width="wrap_content" android:layout_height="0.0dp" android:text="TextView" android:layout_weight="1065353216">
+      <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="#ff666666" android:id="@+id/textview3" android:focusable="false" android:layout_width="wrap_content" android:layout_height="0.0dp" android:text="TextView" android:layout_weight="1065353216">
       </TextView>
     </LinearLayout>
   </LinearLayout>

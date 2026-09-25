@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
-  <LinearLayout android:orientation="vertical" android:id="@id/bg" android:background="#ffffffff" android:paddingTop="8.0dp" android:paddingBottom="8.0dp" android:layout_width="150.0dp" android:layout_height="wrap_content" android:layout_margin="5.0dp">
-    <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff000000" android:id="@id/b1" android:padding="8.0dp" android:focusable="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Settings">
+  <LinearLayout android:orientation="vertical" android:id="@+id/bg" android:background="#ffffffff" android:paddingTop="8.0dp" android:paddingBottom="8.0dp" android:layout_width="150.0dp" android:layout_height="wrap_content" android:layout_margin="5.0dp">
+    <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff000000" android:id="@+id/b1" android:padding="8.0dp" android:focusable="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Settings">
     </TextView>
-    <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff000000" android:id="@id/b2" android:padding="8.0dp" android:focusable="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="About Us">
+    <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff000000" android:id="@+id/b2" android:padding="8.0dp" android:focusable="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="About Us">
     </TextView>
-    <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff000000" android:id="@id/b3" android:padding="8.0dp" android:focusable="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Import Project">
+    <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ff000000" android:id="@+id/b3" android:padding="8.0dp" android:focusable="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Import Project">
     </TextView>
   </LinearLayout>
 </LinearLayout>

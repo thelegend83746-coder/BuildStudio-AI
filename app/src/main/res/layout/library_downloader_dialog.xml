@@ -1,39 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:padding="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent">
-  <LinearLayout android:orientation="vertical" android:id="@id/linear1" android:background="@drawable/popup_bg" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:elevation="8.0dp">
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/linear2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp">
+  <LinearLayout android:orientation="vertical" android:id="@+id/linear1" android:background="@drawable/popup_bg" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:elevation="8.0dp">
+    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/linear2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp">
       <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginRight="10.0dp" android:src="@drawable/ic_local_library_black" app:tint="#ff4f46e5">
       </ImageView>
-      <TextView android:textSize="18.0sp" android:textColor="#ff1f2937" android:id="@id/textview1" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="Add Library Dependency" android:singleLine="true" android:layout_weight="1065353216" android:fontFamily="sans-serif-medium">
+      <TextView android:textSize="18.0sp" android:textColor="#ff1f2937" android:id="@+id/textview1" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="Add Library Dependency" android:singleLine="true" android:layout_weight="1065353216" android:fontFamily="sans-serif-medium">
       </TextView>
     </LinearLayout>
-    <LinearLayout android:orientation="vertical" android:id="@id/linear3" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp">
-      <ProgressBar android:id="@id/progressbar1" android:layout_width="match_parent" android:layout_height="8.0dp" android:indeterminate="false" android:progressDrawable="@android:drawable/progress_horizontal" style="?android:attr/progressBarStyleHorizontal">
+    <LinearLayout android:orientation="vertical" android:id="@+id/linear3" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp">
+      <ProgressBar android:id="@+id/progressbar1" android:layout_width="match_parent" android:layout_height="8.0dp" android:indeterminate="false" android:progressDrawable="@android:drawable/progress_horizontal" style="?android:attr/progressBarStyleHorizontal">
       </ProgressBar>
     </LinearLayout>
-    <LinearLayout android:orientation="vertical" android:id="@id/linear4" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp">
-      <EditText android:textSize="14.0sp" android:textColor="#ff1f2937" android:textColorHint="#ff9ca3af" android:id="@id/edittext1" android:background="@drawable/edittext_bg" android:padding="12.0dp" android:focusable="true" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="com.google.code.gson:gson:2.10.1" android:lines="1" android:singleLine="true" android:fontFamily="sans-serif">
+    <LinearLayout android:orientation="vertical" android:id="@+id/linear4" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp">
+      <EditText android:textSize="14.0sp" android:textColor="#ff1f2937" android:textColorHint="#ff9ca3af" android:id="@+id/edittext1" android:background="@drawable/edittext_bg" android:padding="12.0dp" android:focusable="true" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="com.google.code.gson:gson:2.10.1" android:lines="1" android:singleLine="true" android:fontFamily="sans-serif">
       </EditText>
     </LinearLayout>
-    <LinearLayout android:orientation="horizontal" android:id="@id/linear5" android:background="#fff3f4f6" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="20.0dp">
-      <TextView android:textSize="12.0sp" android:textColor="#ff4b5563" android:id="@id/textview3" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Note: This system does not automatically download inner dependencies. If the library has dependencies, you will need to add them separately." android:fontFamily="sans-serif">
+    <LinearLayout android:orientation="horizontal" android:id="@+id/linear5" android:background="#fff3f4f6" android:padding="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="20.0dp">
+      <TextView android:textSize="12.0sp" android:textColor="#ff4b5563" android:id="@+id/textview3" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Note: This system does not automatically download inner dependencies. If the library has dependencies, you will need to add them separately." android:fontFamily="sans-serif">
       </TextView>
     </LinearLayout>
-    <LinearLayout android:gravity="0x800005" android:orientation="horizontal" android:id="@id/linear6" android:layout_width="match_parent" android:layout_height="wrap_content">
-      <LinearLayout android:gravity="center" android:id="@id/linear8" android:background="@drawable/btn_primary" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_marginRight="4.0dp" android:layout_weight="1065353216">
-        <TextView android:textSize="14.0sp" android:textColor="#ffffffff" android:id="@id/textview4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Start" android:singleLine="true" android:fontFamily="sans-serif-medium">
+    <LinearLayout android:gravity="0x800005" android:orientation="horizontal" android:id="@+id/linear6" android:layout_width="match_parent" android:layout_height="wrap_content">
+      <LinearLayout android:gravity="center" android:id="@+id/linear8" android:background="@drawable/btn_primary" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_marginRight="4.0dp" android:layout_weight="1065353216">
+        <TextView android:textSize="14.0sp" android:textColor="#ffffffff" android:id="@+id/textview4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Start" android:singleLine="true" android:fontFamily="sans-serif-medium">
         </TextView>
       </LinearLayout>
-      <LinearLayout android:gravity="center" android:id="@id/linear9" android:background="@drawable/btn_outline" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_marginLeft="4.0dp" android:layout_marginRight="4.0dp" android:layout_weight="1065353216">
-        <TextView android:textSize="14.0sp" android:textColor="#ff4f46e5" android:id="@id/textview5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pause" android:singleLine="true" android:fontFamily="sans-serif-medium">
+      <LinearLayout android:gravity="center" android:id="@+id/linear9" android:background="@drawable/btn_outline" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_marginLeft="4.0dp" android:layout_marginRight="4.0dp" android:layout_weight="1065353216">
+        <TextView android:textSize="14.0sp" android:textColor="#ff4f46e5" android:id="@+id/textview5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pause" android:singleLine="true" android:fontFamily="sans-serif-medium">
         </TextView>
       </LinearLayout>
-      <LinearLayout android:gravity="center" android:id="@id/linear10" android:background="@drawable/btn_primary" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_marginLeft="4.0dp" android:layout_marginRight="4.0dp" android:layout_weight="1065353216">
-        <TextView android:textSize="14.0sp" android:textColor="#ffffffff" android:id="@id/textview6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Resume" android:singleLine="true" android:fontFamily="sans-serif-medium">
+      <LinearLayout android:gravity="center" android:id="@+id/linear10" android:background="@drawable/btn_primary" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_marginLeft="4.0dp" android:layout_marginRight="4.0dp" android:layout_weight="1065353216">
+        <TextView android:textSize="14.0sp" android:textColor="#ffffffff" android:id="@+id/textview6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Resume" android:singleLine="true" android:fontFamily="sans-serif-medium">
         </TextView>
       </LinearLayout>
-      <LinearLayout android:gravity="center" android:id="@id/linear11" android:background="@drawable/btn_outline" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_marginLeft="4.0dp" android:layout_weight="1065353216">
-        <TextView android:textSize="14.0sp" android:textColor="#ffef4444" android:id="@id/textview7" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cancel" android:singleLine="true" android:fontFamily="sans-serif-medium">
+      <LinearLayout android:gravity="center" android:id="@+id/linear11" android:background="@drawable/btn_outline" android:focusable="true" android:clickable="true" android:layout_width="0.0dp" android:layout_height="40.0dp" android:layout_marginLeft="4.0dp" android:layout_weight="1065353216">
+        <TextView android:textSize="14.0sp" android:textColor="#ffef4444" android:id="@+id/textview7" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cancel" android:singleLine="true" android:fontFamily="sans-serif-medium">
         </TextView>
       </LinearLayout>
     </LinearLayout>

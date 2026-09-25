@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:background="@android:color/transparent" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
   <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardBackgroundColor="@color/bg_white" app:cardCornerRadius="16.0dp" app:cardElevation="8.0dp">
-    <LinearLayout android:orientation="vertical" android:id="@id/bg" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <LinearLayout android:orientation="vertical" android:id="@+id/bg" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
       <TextView android:textSize="18.0sp" android:textStyle="bold" android:textColor="@color/text_slate_900" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dp" android:text="Delete Project">
       </TextView>
       <TextView android:textSize="14.0sp" android:textColor="@color/text_slate_600" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="24.0dp" android:text="Are you sure you want to delete this project? This will permanently remove all files and cannot be undone.">
       </TextView>
       <LinearLayout android:gravity="0x800005" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_slate_600" android:id="@id/btn_cancel" android:background="?android:attr/selectableItemBackground" android:paddingLeft="16.0dp" android:paddingTop="10.0dp" android:paddingRight="16.0dp" android:paddingBottom="10.0dp" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginRight="8.0dp" android:text="No">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_slate_600" android:id="@+id/btn_cancel" android:background="?android:attr/selectableItemBackground" android:paddingLeft="16.0dp" android:paddingTop="10.0dp" android:paddingRight="16.0dp" android:paddingBottom="10.0dp" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginRight="8.0dp" android:text="No">
         </TextView>
-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:gravity="center" android:id="@id/t1" android:paddingLeft="20.0dp" android:paddingTop="10.0dp" android:paddingRight="20.0dp" android:paddingBottom="10.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Yes, Delete">
+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:gravity="center" android:id="@+id/t1" android:paddingLeft="20.0dp" android:paddingTop="10.0dp" android:paddingRight="20.0dp" android:paddingBottom="10.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Yes, Delete">
         </TextView>
       </LinearLayout>
     </LinearLayout>

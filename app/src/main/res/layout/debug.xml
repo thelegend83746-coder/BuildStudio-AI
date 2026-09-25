@@ -15,7 +15,7 @@
           <View android:background="#ffeeeeee" android:layout_width="match_parent" android:layout_height="1.0dp" android:layout_marginTop="8.0dp" android:layout_marginBottom="8.0dp">
           </View>
           <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content">
-            <TextView android:textSize="12.0sp" android:textColor="#ffe53935" android:id="@id/error_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="No error details" android:textIsSelectable="true" android:fontFamily="monospace">
+            <TextView android:textSize="12.0sp" android:textColor="#ffe53935" android:id="@+id/error_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="No error details" android:textIsSelectable="true" android:fontFamily="monospace">
             </TextView>
           </HorizontalScrollView>
         </LinearLayout>
@@ -23,9 +23,9 @@
     </LinearLayout>
   </ScrollView>
   <LinearLayout android:orientation="horizontal" android:paddingTop="12.0dp" android:paddingBottom="12.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-    <Button android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:id="@id/btn_copy" android:layout_width="0.0dp" android:layout_height="54.0dp" android:text="Copy Report" android:layout_weight="1065353216" android:textAllCaps="false" android:layout_marginEnd="6.0dp" android:backgroundTint="#ffd32f2f" app:cornerRadius="12.0dp">
+    <Button android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:id="@+id/btn_copy" android:layout_width="0.0dp" android:layout_height="54.0dp" android:text="Copy Report" android:layout_weight="1065353216" android:textAllCaps="false" android:layout_marginEnd="6.0dp" android:backgroundTint="#ffd32f2f" app:cornerRadius="12.0dp">
     </Button>
-    <Button android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:id="@id/btn_restart" android:layout_width="0.0dp" android:layout_height="54.0dp" android:text="Restart App" android:layout_weight="1065353216" android:textAllCaps="false" android:layout_marginStart="6.0dp" android:backgroundTint="#ff4caf50" app:cornerRadius="12.0dp">
+    <Button android:textSize="16.0sp" android:textStyle="bold" android:textColor="#ffffffff" android:id="@+id/btn_restart" android:layout_width="0.0dp" android:layout_height="54.0dp" android:text="Restart App" android:layout_weight="1065353216" android:textAllCaps="false" android:layout_marginStart="6.0dp" android:backgroundTint="#ff4caf50" app:cornerRadius="12.0dp">
     </Button>
   </LinearLayout>
 </LinearLayout>

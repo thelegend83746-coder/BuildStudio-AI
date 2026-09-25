@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
-  <LinearLayout android:gravity="0x13" android:orientation="horizontal" android:id="@id/linear1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="10.0dp">
-    <ImageView android:id="@id/imageview1" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/java_96" android:scaleType="5">
+  <LinearLayout android:gravity="0x13" android:orientation="horizontal" android:id="@+id/linear1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="10.0dp">
+    <ImageView android:id="@+id/imageview1" android:focusable="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/java_96" android:scaleType="center">
     </ImageView>
-    <TextView android:textSize="12.0sp" android:textColor="#ff000000" android:id="@id/textview1" android:padding="8.0dp" android:focusable="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="TextView">
+    <TextView android:textSize="12.0sp" android:textColor="#ff000000" android:id="@+id/textview1" android:padding="8.0dp" android:focusable="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="TextView">
     </TextView>
   </LinearLayout>
 </LinearLayout>
