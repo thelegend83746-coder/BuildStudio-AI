@@ -56,7 +56,16 @@
 
     <!-- AI Sparkle Purple -->
     <color name="ai_sparkle_purple">#8B5CF6</color>
+    <color name="primary_purple">#8B5CF6</color>
     <color name="ai_card_bg">#1A222D</color>
     <color name="ai_bubble_user">#2979FF</color>
     <color name="ai_bubble_assistant">#222E3C</color>
+
+    <!-- Additional Layout Colors -->
+    <color name="card_background">#1A222D</color>
+    <color name="window_background">#0D1117</color>
+    <color name="border_light">#2D3B4E</color>
+    <color name="text_muted">#8B949E</color>
+    <color name="btn_run_green">#00E676</color>
+    <color name="btn_stop_red">#FF5252</color>
 </resources>
