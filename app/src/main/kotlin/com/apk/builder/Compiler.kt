@@ -24,17 +24,10 @@ class Compiler(
     fun run() {
         val task = CompilerAsyncTask(
             context,
-            project,
-            object : CompilerAsyncTask.CompilerCallback {
-                override fun onProgress(message: String, step: Int, total: Int) {
-                    callback?.onProgress(message, step, total)
-                }
-
-                override fun onCompleted(result: CompilerResult) {
-                    callback?.onCompleted(result)
-                }
-            }
-        )
+            project
+        ) { result ->
+            callback?.onCompleted(result)
+        }
         task.execute()
     }
 }
