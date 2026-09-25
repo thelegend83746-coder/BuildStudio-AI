@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<set xmlns:android="http://schemas.android.com/apk/res/android">
-  <objectAnimator android:interpolator="?motionEasingEmphasizedInterpolator" android:duration="?motionDurationLong2" android:startOffset="0" android:valueFrom="0.00" android:valueTo="1.00" android:valueType="0" android:propertyName="opacity">
-  </objectAnimator>
-  <objectAnimator android:interpolator="?motionEasingEmphasizedInterpolator" android:duration="?motionDurationLong2" android:startOffset="0" android:valueFrom="0.40" android:valueTo="1.00" android:valueType="0" android:propertyName="scale">
-  </objectAnimator>
-</set>

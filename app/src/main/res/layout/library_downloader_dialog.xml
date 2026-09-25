@@ -8,7 +8,7 @@
       </TextView>
     </LinearLayout>
     <LinearLayout android:orientation="vertical" android:id="@id/linear3" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16.0dp">
-      <ProgressBar android:id="@id/progressbar1" android:layout_width="match_parent" android:layout_height="8.0dp" android:indeterminate="false" android:progressDrawable="@android:ref/0x0108006c" style="?attr/0x01010078">
+      <ProgressBar android:id="@id/progressbar1" android:layout_width="match_parent" android:layout_height="8.0dp" android:indeterminate="false" android:progressDrawable="@android:drawable/progress_horizontal" style="?android:attr/progressBarStyleHorizontal">
       </ProgressBar>
     </LinearLayout>
     <LinearLayout android:orientation="vertical" android:id="@id/linear4" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp">

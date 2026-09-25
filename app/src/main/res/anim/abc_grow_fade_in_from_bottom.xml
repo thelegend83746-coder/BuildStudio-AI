@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<set xmlns:android="http://schemas.android.com/apk/res/android" android:shareInterpolator="false">
-  <scale android:interpolator="@android:ref/0x010a0006" android:duration="@integer/abc_config_activityDefaultDur" android:pivotX="1073741872" android:pivotY="256" android:fromXScale="0.90" android:toXScale="1.00" android:fromYScale="0.90" android:toYScale="1.00">
-  </scale>
-  <alpha android:interpolator="@android:ref/0x010a0006" android:duration="@integer/abc_config_activityShortDur" android:fromAlpha="0.00" android:toAlpha="1.00">
-  </alpha>
-</set>

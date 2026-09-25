@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:background="#fffafafa" android:padding="20.0dp" android:layout_width="match_parent" android:layout_height="match_parent">
   <ScrollView android:scrollbars="0x0" android:layout_width="match_parent" android:layout_height="0.0dp" android:layout_weight="1065353216">
     <LinearLayout android:gravity="center_horizontal" android:orientation="vertical" android:paddingBottom="24.0dp" android:layout_width="match_parent" android:layout_height="wrap_content">
-      <androidx.appcompat.widget.AppCompatImageView android:layout_width="80.0dp" android:layout_height="80.0dp" android:layout_marginTop="32.0dp" android:src="@android:ref/0x01080078" app:tint="#ffd32f2f">
+      <androidx.appcompat.widget.AppCompatImageView android:layout_width="80.0dp" android:layout_height="80.0dp" android:layout_marginTop="32.0dp" android:src="@android:drawable/stat_notify_error" app:tint="#ffd32f2f">
       </androidx.appcompat.widget.AppCompatImageView>
       <TextView android:textSize="22.0sp" android:textStyle="bold" android:textColor="#ff212121" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16.0dp" android:text="Build Studio Crashed">
       </TextView>

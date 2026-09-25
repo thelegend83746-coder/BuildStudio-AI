@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<view xmlns:android="http://schemas.android.com/apk/res/android" android:layout_gravity="0x50" android:layout_width="match_parent" android:layout_height="wrap_content" class="com.google.android.material.snackbar.SnackbarContentLayout">
-  <TextView android:layout_gravity="0x800013" android:id="@id/snackbar_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1065353216" style="?snackbarTextViewStyle">
-  </TextView>
-  <Button android:layout_gravity="0x800015" android:id="@id/snackbar_action" android:visibility="2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="48.0dp" style="?snackbarButtonStyle">
-  </Button>
-</view>

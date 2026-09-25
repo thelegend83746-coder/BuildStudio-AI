@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="32.0dp" android:width="32.0dp" android:viewportWidth="1107296256" android:viewportHeight="1107296256">
-  <group android:name="@string/mtrl_checkbox_button_icon_path_group_name" android:pivotX="1098907648" android:pivotY="1098907648">
-    <path android:name="@string/mtrl_checkbox_button_icon_path_name" android:fillColor="@android:ref/0x0106000b" android:pathData="@string/mtrl_checkbox_button_icon_path_checked">
-    </path>
-  </group>
-</vector>

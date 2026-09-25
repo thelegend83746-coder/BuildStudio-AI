@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android" android:textAppearance="@style/TextAppearance.AppCompat.Body2" android:textColor="?android:attr/colorBackground" android:gravity="0x800013" android:paddingLeft="?listPreferredItemPaddingLeft" android:paddingRight="?listPreferredItemPaddingRight" android:layout_width="match_parent" android:layout_height="?listPreferredItemHeightSmall" android:maxLines="1">
-</TextView>
