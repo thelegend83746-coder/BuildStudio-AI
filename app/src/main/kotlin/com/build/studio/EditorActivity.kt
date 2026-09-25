@@ -1,10 +1,12 @@
 package com.build.studio
 
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.Window
 import android.view.GestureDetector
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -48,6 +50,7 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var gestureDetector: GestureDetectorCompat
     private var isToolbarVisible = true
     private val fileNodes = mutableListOf<FileNode>()
+    private val expandedPaths = HashSet<String>()
     private lateinit var treeAdapter: TreeAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -256,6 +259,15 @@ class EditorActivity : AppCompatActivity() {
 
     private fun setupTree() {
         try {
+            val rootDir = File(currentProject.rootPath)
+            if (expandedPaths.isEmpty() && rootDir.exists()) {
+                expandedPaths.add(rootDir.absolutePath)
+                rootDir.walkTopDown().maxDepth(5).forEach { f ->
+                    if (f.isDirectory) {
+                        expandedPaths.add(f.absolutePath)
+                    }
+                }
+            }
             rvFileTree.layoutManager = LinearLayoutManager(this)
             treeAdapter = TreeAdapter(fileNodes)
             rvFileTree.adapter = treeAdapter
@@ -290,8 +302,9 @@ class EditorActivity : AppCompatActivity() {
         val sorted = files.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
         for (f in sorted) {
             if (f.name == "build" || f.name == ".git" || f.name == ".build_ai_backups") continue
-            list.add(FileNode(f, depth, f.isDirectory))
-            if (f.isDirectory) {
+            val isExpanded = expandedPaths.contains(f.absolutePath)
+            list.add(FileNode(f, depth, f.isDirectory, isExpanded))
+            if (f.isDirectory && isExpanded) {
                 buildFileNodes(f, list, depth + 1)
             }
         }
@@ -317,12 +330,24 @@ class EditorActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             val node = nodes[position]
-            val padLeft = (node.depth * 24) + 12
+            val padLeft = (node.depth * 18) + 12
 
             if (holder is DirViewHolder) {
                 holder.tvName.text = node.file.name
                 holder.itemView.setPadding(padLeft, 0, 12, 0)
+
+                if (node.isExpanded) {
+                    holder.ivArrow?.setImageResource(R.drawable.arrow1)
+                } else {
+                    holder.ivArrow?.setImageResource(R.drawable.arrow)
+                }
+
                 holder.itemView.setOnClickListener {
+                    if (expandedPaths.contains(node.file.absolutePath)) {
+                        expandedPaths.remove(node.file.absolutePath)
+                    } else {
+                        expandedPaths.add(node.file.absolutePath)
+                    }
                     refreshTreeView()
                 }
                 holder.itemView.setOnLongClickListener {
@@ -332,6 +357,14 @@ class EditorActivity : AppCompatActivity() {
             } else if (holder is FileViewHolder) {
                 holder.tvName.text = node.file.name
                 holder.itemView.setPadding(padLeft, 0, 12, 0)
+
+                val nameLower = node.file.name.lowercase()
+                if (nameLower.endsWith(".java")) {
+                    holder.ivIcon.setImageResource(R.drawable.java_96)
+                } else {
+                    holder.ivIcon.setImageResource(R.drawable.file)
+                }
+
                 holder.itemView.setOnClickListener {
                     openFileInEditor(node.file)
                     drawerLayout.closeDrawer(GravityCompat.START)
@@ -347,17 +380,19 @@ class EditorActivity : AppCompatActivity() {
     class DirViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         val tvName: TextView = v.findViewById(R.id.tv_name)
         val ivArrow: ImageView? = v.findViewById(R.id.iv_arrow)
+        val ivIcon: ImageView? = v.findViewById(R.id.imageview2)
     }
 
     class FileViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         val tvName: TextView = v.findViewById(R.id.tv_name)
+        val ivIcon: ImageView = v.findViewById(R.id.imageview1)
     }
 
     private fun showFolderContextMenu(folder: File) {
-        val items = arrayOf("New File", "New Folder", "Rename", "Delete")
+        val options = arrayOf("📄  Create File", "📁  Create Folder", "✏️  Rename", "🗑️  Delete")
         AlertDialog.Builder(this)
             .setTitle(folder.name)
-            .setItems(items) { _, which ->
+            .setItems(options) { _, which ->
                 when (which) {
                     0 -> promptCreateFile(folder)
                     1 -> promptCreateFolder(folder)
@@ -369,10 +404,10 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun showFileContextMenu(file: File) {
-        val items = arrayOf("Rename", "Delete")
+        val options = arrayOf("✏️  Rename", "🗑️  Delete")
         AlertDialog.Builder(this)
             .setTitle(file.name)
-            .setItems(items) { _, which ->
+            .setItems(options) { _, which ->
                 when (which) {
                     0 -> promptRename(file)
                     1 -> promptDelete(file)
@@ -382,76 +417,199 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun promptCreateFile(folder: File) {
-        val et = EditText(this).apply { hint = "filename.java / filename.xml" }
-        AlertDialog.Builder(this)
-            .setTitle("New File")
-            .setView(et)
-            .setPositiveButton("Create") { _, _ ->
-                val name = et.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    val newF = File(folder, name)
-                    newF.createNewFile()
-                    refreshTreeView()
-                    openFileInEditor(newF)
-                }
+        val dialog = Dialog(this).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(R.layout.dialog_input)
+            window?.apply {
+                setBackgroundDrawableResource(android.R.color.transparent)
+                setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        val tvTitle = dialog.findViewById<TextView>(R.id.dialog_title)
+        val etInput = dialog.findViewById<EditText>(R.id.dialog_input)
+        val btnCancel = dialog.findViewById<View>(R.id.btn_cancel)
+        val btnSubmit = dialog.findViewById<View>(R.id.btn_submit)
+
+        tvTitle?.text = "Create File in ${folder.name}"
+        etInput?.hint = "e.g. MyClass.java or layout.xml"
+
+        btnCancel?.setOnClickListener { dialog.dismiss() }
+        btnSubmit?.setOnClickListener {
+            val name = etInput?.text?.toString()?.trim() ?: ""
+            if (name.isEmpty()) {
+                etInput?.error = "File name cannot be empty"
+                return@setOnClickListener
+            }
+            val newFile = File(folder, name)
+            if (newFile.exists()) {
+                etInput?.error = "File already exists"
+                return@setOnClickListener
+            }
+
+            try {
+                if (name.endsWith(".java")) {
+                    val className = name.substringBeforeLast(".")
+                    val javaDir = File(currentProject.rootPath, "app/src/main/java")
+                    val relPath = if (folder.absolutePath.startsWith(javaDir.absolutePath)) {
+                        folder.absolutePath.removePrefix(javaDir.absolutePath).trim(File.separatorChar).replace(File.separatorChar, '.')
+                    } else ""
+                    val pkg = if (relPath.isNotEmpty()) relPath else currentProject.packageName
+                    val template = "package $pkg;\n\npublic class $className {\n    \n}\n"
+                    FileUtil.writeFile(newFile.absolutePath, template)
+                } else if (name.endsWith(".xml")) {
+                    val template = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:layout_width=\"match_parent\"\n    android:layout_height=\"match_parent\"\n    android:orientation=\"vertical\">\n\n</LinearLayout>\n"
+                    FileUtil.writeFile(newFile.absolutePath, template)
+                } else {
+                    newFile.createNewFile()
+                }
+
+                expandedPaths.add(folder.absolutePath)
+                refreshTreeView()
+                openFileInEditor(newFile)
+                drawerLayout.closeDrawer(GravityCompat.START)
+                Toast.makeText(this@EditorActivity, "Created ${newFile.name}", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            } catch (e: Exception) {
+                Toast.makeText(this@EditorActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+        dialog.show()
     }
 
     private fun promptCreateFolder(parent: File) {
-        val et = EditText(this).apply { hint = "Folder name" }
-        AlertDialog.Builder(this)
-            .setTitle("New Folder")
-            .setView(et)
-            .setPositiveButton("Create") { _, _ ->
-                val name = et.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    File(parent, name).mkdirs()
-                    refreshTreeView()
-                }
+        val dialog = Dialog(this).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(R.layout.dialog_input)
+            window?.apply {
+                setBackgroundDrawableResource(android.R.color.transparent)
+                setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        val tvTitle = dialog.findViewById<TextView>(R.id.dialog_title)
+        val etInput = dialog.findViewById<EditText>(R.id.dialog_input)
+        val btnCancel = dialog.findViewById<View>(R.id.btn_cancel)
+        val btnSubmit = dialog.findViewById<View>(R.id.btn_submit)
+
+        tvTitle?.text = "Create Folder in ${parent.name}"
+        etInput?.hint = "Folder name"
+
+        btnCancel?.setOnClickListener { dialog.dismiss() }
+        btnSubmit?.setOnClickListener {
+            val name = etInput?.text?.toString()?.trim() ?: ""
+            if (name.isEmpty()) {
+                etInput?.error = "Folder name cannot be empty"
+                return@setOnClickListener
+            }
+            val newDir = File(parent, name)
+            if (newDir.exists()) {
+                etInput?.error = "Folder already exists"
+                return@setOnClickListener
+            }
+
+            try {
+                newDir.mkdirs()
+                expandedPaths.add(parent.absolutePath)
+                expandedPaths.add(newDir.absolutePath)
+                refreshTreeView()
+                Toast.makeText(this@EditorActivity, "Created ${newDir.name}", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            } catch (e: Exception) {
+                Toast.makeText(this@EditorActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+        dialog.show()
     }
 
     private fun promptRename(target: File) {
-        val et = EditText(this).apply { setText(target.name) }
-        AlertDialog.Builder(this)
-            .setTitle("Rename")
-            .setView(et)
-            .setPositiveButton("Rename") { _, _ ->
-                val newName = et.text.toString().trim()
-                if (newName.isNotEmpty() && newName != target.name) {
-                    val newTarget = File(target.parentFile, newName)
-                    val oldPath = target.absolutePath
-                    if (target.renameTo(newTarget)) {
-                        handleFileRenamedInEditor(oldPath, newTarget.absolutePath)
-                        refreshTreeView()
-                    }
-                }
+        val dialog = Dialog(this).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(R.layout.dialog_input)
+            window?.apply {
+                setBackgroundDrawableResource(android.R.color.transparent)
+                setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        val tvTitle = dialog.findViewById<TextView>(R.id.dialog_title)
+        val etInput = dialog.findViewById<EditText>(R.id.dialog_input)
+        val btnCancel = dialog.findViewById<View>(R.id.btn_cancel)
+        val btnSubmit = dialog.findViewById<View>(R.id.btn_submit)
+
+        tvTitle?.text = "Rename ${target.name}"
+        etInput?.setText(target.name)
+        etInput?.setSelection(target.name.length)
+
+        btnCancel?.setOnClickListener { dialog.dismiss() }
+        btnSubmit?.setOnClickListener {
+            val newName = etInput?.text?.toString()?.trim() ?: ""
+            if (newName.isEmpty()) {
+                etInput?.error = "Name cannot be empty"
+                return@setOnClickListener
+            }
+            if (newName == target.name) {
+                dialog.dismiss()
+                return@setOnClickListener
+            }
+
+            val newTarget = File(target.parentFile, newName)
+            if (newTarget.exists()) {
+                etInput?.error = "Name already exists"
+                return@setOnClickListener
+            }
+
+            val oldPath = target.absolutePath
+            if (target.renameTo(newTarget)) {
+                if (expandedPaths.contains(oldPath)) {
+                    expandedPaths.remove(oldPath)
+                    expandedPaths.add(newTarget.absolutePath)
+                }
+                handleFileRenamedInEditor(oldPath, newTarget.absolutePath)
+                refreshTreeView()
+                Toast.makeText(this@EditorActivity, "Renamed to ${newTarget.name}", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            } else {
+                Toast.makeText(this@EditorActivity, "Failed to rename", Toast.LENGTH_SHORT).show()
+            }
+        }
+        dialog.show()
     }
 
     private fun promptDelete(target: File) {
-        AlertDialog.Builder(this)
-            .setTitle("Delete")
-            .setMessage("Are you sure you want to delete ${target.name}?")
-            .setPositiveButton("Delete") { _, _ ->
-                val path = target.absolutePath
-                if (target.isDirectory) {
-                    target.deleteRecursively()
-                    handleFolderDeletedInEditor(path)
-                } else {
-                    target.delete()
-                    handleFileDeletedInEditor(path)
-                }
-                refreshTreeView()
+        val dialog = Dialog(this).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(R.layout.delete_dialog)
+            window?.apply {
+                setBackgroundDrawableResource(android.R.color.transparent)
+                setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+
+        val tvTitle = dialog.findViewById<TextView>(R.id.dialog_title)
+        val tvMsg = dialog.findViewById<TextView>(R.id.dialog_msg)
+        val btnCancel = dialog.findViewById<View>(R.id.btn_cancel)
+        val btnConfirm = dialog.findViewById<View>(R.id.t1)
+
+        tvTitle?.text = "Delete ${target.name}"
+        tvMsg?.text = "Are you sure you want to delete ${target.name}? This will permanently remove it."
+
+        btnCancel?.setOnClickListener { dialog.dismiss() }
+        btnConfirm?.setOnClickListener {
+            val path = target.absolutePath
+            expandedPaths.remove(path)
+            if (target.isDirectory) {
+                target.deleteRecursively()
+                handleFolderDeletedInEditor(path)
+            } else {
+                target.delete()
+                handleFileDeletedInEditor(path)
+            }
+            refreshTreeView()
+            Toast.makeText(this@EditorActivity, "Deleted ${target.name}", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+        dialog.show()
     }
 
     private fun handleFileDeletedInEditor(deletedPath: String) {

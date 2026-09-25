@@ -71,7 +71,7 @@ class CreateProjectActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        chooseTemplateBg = findViewById(R.id.choose_template_bg)
+        chooseTemplateBg = findViewById(R.id.choose_template_bg) ?: findViewById(R.id.template_bg)
         applicationInfoBg = findViewById(R.id.application_info_bg)
 
         tvExitPrevious = findViewById(R.id.TV_EXIT_PREVIOUS)
