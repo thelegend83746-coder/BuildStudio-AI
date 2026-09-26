@@ -292,7 +292,7 @@ object AiConfigHelper {
                     }
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
         }
 
         // If parsed list is empty, return default verified models for that provider
@@ -303,13 +303,11 @@ object AiConfigHelper {
         return result
     }
 
-    /**
-     * Strips "[FREE...]" and "[PAID...]" tags to return the pure model ID for API payloads.
-     */
+    // Strips Free and Paid tags to return the pure model ID for API payloads.
     fun cleanModelId(modelOrDisplay: String): String {
         return modelOrDisplay
-            .replace(Regex("\\[.*?\\]"), "")
-            .replace(Regex("\\(.*?\\)"), "")
+            .replace(Regex("""\[.*?\]"""), "")
+            .replace(Regex("""\(.*?\)"""), "")
             .trim()
     }
 
