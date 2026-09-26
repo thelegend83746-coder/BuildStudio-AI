@@ -383,10 +383,8 @@ android {
                 isFocusableInTouchMode = true
                 overScrollMode = View.OVER_SCROLL_ALWAYS
                 try {
-                    isOverScrollEnabled = true
-                } catch (_: Throwable) {}
-                try {
-                    setEdgeEffectColor(Color.parseColor("#9E9E9E"))
+                    val method = javaClass.getMethod("setEdgeEffectColor", Int::class.javaPrimitiveType)
+                    method.invoke(this, Color.parseColor("#9E9E9E"))
                 } catch (_: Throwable) {}
 
                 try {

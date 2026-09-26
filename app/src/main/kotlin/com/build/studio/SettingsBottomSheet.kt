@@ -112,6 +112,8 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
         val modelsAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, activeModelsList)
         spModels.adapter = modelsAdapter
 
+        val sp = requireContext().getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
+
         // Load existing AI prefs
         val savedKey = sp.getString("api_key", "") ?: ""
         val savedProvider = sp.getString("provider_name", "") ?: ""
