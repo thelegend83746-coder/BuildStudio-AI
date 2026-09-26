@@ -3,6 +3,8 @@ package com.build.studio
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -19,16 +21,9 @@ class OllamaSettingsActivity : AppCompatActivity() {
     private lateinit var etSystemPrompt: EditText
     private lateinit var spModels: Spinner
     private lateinit var tvStatus: TextView
-    private val modelList = mutableListOf(
-        "qwen2.5-coder:latest",
-        "qwen2.5-coder:7b",
-        "deepseek-coder",
-        "deepseek-chat",
-        "codellama",
-        "llama3",
-        "glm-4.6"
-    )
+    private val modelList = mutableListOf<String>()
     private lateinit var modelAdapter: ArrayAdapter<String>
+    private var isUserTypingModel = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,36 +48,23 @@ class OllamaSettingsActivity : AppCompatActivity() {
 
         btnTest?.setOnClickListener { testConnection() }
         btnSave?.setOnClickListener { savePreferences() }
-    }
 
-    private fun loadPreferences() {
-        val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
-        etApiKey.setText(sp.getString("api_key", ""))
+        // Live provider detection when typing API Key
+        etApiKey.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val key = s?.toString()?.trim() ?: ""
+                val currentModel = etModelCustom.text.toString().trim()
+                val config = AiConfigHelper.detectProvider(key, customModel = currentModel)
 
-        val savedModel = sp.getString("model_name", "")?.ifEmpty {
-            sp.getString("model", "qwen2.5-coder:latest")
-        } ?: "qwen2.5-coder:latest"
-        etModelCustom.setText(savedModel)
-
-        etSystemPrompt.setText(
-            sp.getString(
-                "system_prompt",
-                "You are Build AI, an expert Android and Kotlin developer assistant. Help the user build, debug and compile Android apps."
-            )
-        )
-
-        val pos = modelList.indexOf(savedModel)
-        if (pos >= 0) {
-            spModels.setSelection(pos)
-        } else if (savedModel.isNotEmpty()) {
-            modelList.add(0, savedModel)
-            modelAdapter.notifyDataSetChanged()
-            spModels.setSelection(0)
-        }
+                updateModelList(config.models, config.defaultModel)
+            }
+        })
 
         spModels.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (position in modelList.indices) {
+                if (position in modelList.indices && !isUserTypingModel) {
                     etModelCustom.setText(modelList[position])
                 }
             }
@@ -90,11 +72,59 @@ class OllamaSettingsActivity : AppCompatActivity() {
         }
     }
 
-    data class EndpointCandidate(
+    private fun updateModelList(newModels: List<String>, defaultSelect: String) {
+        modelList.clear()
+        modelList.addAll(newModels)
+        modelAdapter.notifyDataSetChanged()
+
+        val pos = modelList.indexOf(defaultSelect)
+        if (pos >= 0) {
+            spModels.setSelection(pos)
+        } else if (modelList.isNotEmpty()) {
+            spModels.setSelection(0)
+        }
+        etModelCustom.setText(defaultSelect)
+    }
+
+    private fun loadPreferences() {
+        val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
+        val savedKey = sp.getString("api_key", "") ?: ""
+        val savedModel = sp.getString("model_name", "")?.ifEmpty {
+            sp.getString("model", "")
+        } ?: ""
+
+        val config = AiConfigHelper.detectProvider(savedKey, customModel = savedModel)
+
+        etApiKey.setText(savedKey)
+        modelList.clear()
+        modelList.addAll(config.models)
+        if (savedModel.isNotEmpty() && !modelList.contains(savedModel)) {
+            modelList.add(0, savedModel)
+        }
+        modelAdapter.notifyDataSetChanged()
+
+        val activeModel = savedModel.ifEmpty { config.defaultModel }
+        etModelCustom.setText(activeModel)
+
+        val pos = modelList.indexOf(activeModel)
+        if (pos >= 0) {
+            spModels.setSelection(pos)
+        }
+
+        etSystemPrompt.setText(
+            sp.getString(
+                "system_prompt",
+                "You are Build AI, an expert Android and Kotlin developer assistant. Help the user build, debug and compile Android apps."
+            )
+        )
+    }
+
+    data class Candidate(
         val name: String,
         val testUrl: String,
         val endpoint: String,
-        val baseUrl: String
+        val baseUrl: String,
+        val defaultModel: String
     )
 
     private fun testConnection() {
@@ -102,66 +132,95 @@ class OllamaSettingsActivity : AppCompatActivity() {
         tvStatus.setTextColor(Color.parseColor("#64748B"))
 
         val apiKey = etApiKey.text.toString().trim()
+        val currentModel = etModelCustom.text.toString().trim()
+        val detected = AiConfigHelper.detectProvider(apiKey, customModel = currentModel)
 
-        val candidates = mutableListOf<EndpointCandidate>()
+        val candidates = mutableListOf<Candidate>()
+
         if (apiKey.isNotEmpty()) {
-            // If API key is provided, test DeepSeek, OpenAI, Groq, and local Ollama
+            // Put detected candidate first
             candidates.add(
-                EndpointCandidate(
-                    name = "DeepSeek",
-                    testUrl = "https://api.deepseek.com/v1/models",
-                    endpoint = "https://api.deepseek.com",
-                    baseUrl = "https://api.deepseek.com/v1/chat/completions"
+                Candidate(
+                    name = detected.providerName,
+                    testUrl = detected.testUrl,
+                    endpoint = detected.baseUrl.substringBeforeLast("/chat/completions"),
+                    baseUrl = detected.baseUrl,
+                    defaultModel = detected.defaultModel
                 )
             )
-            candidates.add(
-                EndpointCandidate(
-                    name = "OpenAI",
-                    testUrl = "https://api.openai.com/v1/models",
-                    endpoint = "https://api.openai.com",
-                    baseUrl = "https://api.openai.com/v1/chat/completions"
+
+            // Fallback candidates
+            if (apiKey.startsWith("sk-")) {
+                // Could be DeepSeek or OpenAI
+                if (detected.providerName == "DeepSeek") {
+                    candidates.add(
+                        Candidate(
+                            name = "OpenAI",
+                            testUrl = "https://api.openai.com/v1/models",
+                            endpoint = "https://api.openai.com",
+                            baseUrl = "https://api.openai.com/v1/chat/completions",
+                            defaultModel = "gpt-4o-mini"
+                        )
+                    )
+                } else {
+                    candidates.add(
+                        Candidate(
+                            name = "DeepSeek",
+                            testUrl = "https://api.deepseek.com/v1/models",
+                            endpoint = "https://api.deepseek.com",
+                            baseUrl = "https://api.deepseek.com/v1/chat/completions",
+                            defaultModel = "deepseek-chat"
+                        )
+                    )
+                }
+            } else if (apiKey.startsWith("AIza")) {
+                candidates.add(
+                    Candidate(
+                        name = "Google Gemini",
+                        testUrl = "https://generativelanguage.googleapis.com/v1beta/openai/models",
+                        endpoint = "https://generativelanguage.googleapis.com",
+                        baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+                        defaultModel = "gemini-1.5-flash"
+                    )
                 )
-            )
+            }
+            // Also add Local Ollama with key (if running secured local instance)
             candidates.add(
-                EndpointCandidate(
+                Candidate(
                     name = "Local Ollama",
                     testUrl = "http://127.0.0.1:11434/api/tags",
                     endpoint = "http://127.0.0.1:11434",
-                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions"
-                )
-            )
-            candidates.add(
-                EndpointCandidate(
-                    name = "Groq",
-                    testUrl = "https://api.groq.com/openai/v1/models",
-                    endpoint = "https://api.groq.com/openai",
-                    baseUrl = "https://api.groq.com/openai/v1/chat/completions"
+                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions",
+                    defaultModel = "qwen2.5-coder:latest"
                 )
             )
         } else {
             // Local Ollama endpoints
             candidates.add(
-                EndpointCandidate(
+                Candidate(
                     name = "Local Ollama (127.0.0.1)",
                     testUrl = "http://127.0.0.1:11434/api/tags",
                     endpoint = "http://127.0.0.1:11434",
-                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions"
+                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions",
+                    defaultModel = "qwen2.5-coder:latest"
                 )
             )
             candidates.add(
-                EndpointCandidate(
+                Candidate(
                     name = "Local Ollama (localhost)",
                     testUrl = "http://localhost:11434/api/tags",
                     endpoint = "http://localhost:11434",
-                    baseUrl = "http://localhost:11434/v1/chat/completions"
+                    baseUrl = "http://localhost:11434/v1/chat/completions",
+                    defaultModel = "qwen2.5-coder:latest"
                 )
             )
             candidates.add(
-                EndpointCandidate(
-                    name = "Emulator Ollama (10.0.2.2)",
-                    testUrl = "http://10.0.2.2:11434/api/tags",
-                    endpoint = "http://10.0.2.2:11434",
-                    baseUrl = "http://10.0.2.2:11434/v1/chat/completions"
+                Candidate(
+                    name = "Termux Bridge Server",
+                    testUrl = "http://127.0.0.1:8080/ping",
+                    endpoint = "http://127.0.0.1:8080",
+                    baseUrl = "http://127.0.0.1:8080/run",
+                    defaultModel = "qwen2.5-coder:latest"
                 )
             )
         }
@@ -170,14 +229,19 @@ class OllamaSettingsActivity : AppCompatActivity() {
     }
 
     private fun testNextCandidate(
-        candidates: List<EndpointCandidate>,
+        candidates: List<Candidate>,
         index: Int,
         apiKey: String,
         lastError: String?
     ) {
         if (index >= candidates.size) {
             runOnUiThread {
-                tvStatus.text = lastError ?: "Failed: Could not connect to any endpoint"
+                val err = if (apiKey.isEmpty()) {
+                    "Failed: Local Ollama / Termux is not running on 127.0.0.1:11434.\nEnter an API key for DeepSeek or Gemini to use Cloud AI."
+                } else {
+                    lastError ?: "Failed: Could not connect to API with the provided key."
+                }
+                tvStatus.text = err
                 tvStatus.setTextColor(Color.parseColor("#FF5252"))
             }
             return
@@ -185,18 +249,17 @@ class OllamaSettingsActivity : AppCompatActivity() {
 
         val candidate = candidates[index]
         val client = OkHttpClient.Builder()
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(5, TimeUnit.SECONDS)
+            .connectTimeout(6, TimeUnit.SECONDS)
+            .readTimeout(6, TimeUnit.SECONDS)
             .build()
 
         val reqBuilder = Request.Builder().url(candidate.testUrl).get()
         if (apiKey.isNotEmpty()) {
-            reqBuilder.addHeader("Authorization", "Bearer $apiKey")
+            reqBuilder.header("Authorization", "Bearer $apiKey")
         }
 
         client.newCall(reqBuilder.build()).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                // Try next candidate
                 testNextCandidate(candidates, index + 1, apiKey, "Failed: ${e.localizedMessage ?: "Connection Refused"}")
             }
 
@@ -209,18 +272,10 @@ class OllamaSettingsActivity : AppCompatActivity() {
                         tvStatus.text = "✓ Connected to ${candidate.name}! (HTTP $code)"
                         tvStatus.setTextColor(Color.parseColor("#00C853"))
 
-                        // Auto-save the working endpoint and baseUrl in preferences
-                        val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
-                        sp.edit()
-                            .putString("endpoint", candidate.endpoint)
-                            .putString("base_url", candidate.baseUrl)
-                            .putString("api_key", apiKey)
-                            .apply()
-
-                        // Parse discovered models
+                        // Discovered models list
+                        val discovered = mutableListOf<String>()
                         try {
                             val json = JSONObject(bodyStr)
-                            val discovered = mutableListOf<String>()
                             if (json.has("models")) {
                                 val arr = json.getJSONArray("models")
                                 for (i in 0 until arr.length()) {
@@ -236,28 +291,49 @@ class OllamaSettingsActivity : AppCompatActivity() {
                                     if (id.isNotEmpty()) discovered.add(id)
                                 }
                             }
-                            if (discovered.isNotEmpty()) {
-                                for (m in discovered.reversed()) {
-                                    if (!modelList.contains(m)) modelList.add(0, m)
-                                }
-                                modelAdapter.notifyDataSetChanged()
-                                etModelCustom.setText(discovered[0])
-                                spModels.setSelection(0)
-                                Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}! Loaded ${discovered.size} models 🎯", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}!", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {}
+
+                        val effectiveModel = if (discovered.isNotEmpty()) {
+                            discovered[0]
+                        } else {
+                            candidate.defaultModel
+                        }
+
+                        // Auto-save verified connection in preferences
+                        val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
+                        sp.edit()
+                            .putString("endpoint", candidate.endpoint)
+                            .putString("base_url", candidate.baseUrl)
+                            .putString("api_key", apiKey)
+                            .putString("model", effectiveModel)
+                            .putString("model_name", effectiveModel)
+                            .apply()
+
+                        if (discovered.isNotEmpty()) {
+                            for (m in discovered.reversed()) {
+                                if (!modelList.contains(m)) modelList.add(0, m)
                             }
-                        } catch (e: Exception) {
-                            Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}!", Toast.LENGTH_SHORT).show()
+                            modelAdapter.notifyDataSetChanged()
+                            etModelCustom.setText(effectiveModel)
+                            val p = modelList.indexOf(effectiveModel)
+                            if (p >= 0) spModels.setSelection(p)
+                            Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}! Loaded ${discovered.size} models 🎯", Toast.LENGTH_SHORT).show()
+                        } else {
+                            etModelCustom.setText(effectiveModel)
+                            Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}! 🚀", Toast.LENGTH_SHORT).show()
                         }
                     }
                 } else if (code == 401) {
-                    runOnUiThread {
-                        tvStatus.text = "HTTP 401: Invalid API Key for ${candidate.name}"
-                        tvStatus.setTextColor(Color.parseColor("#FF5252"))
+                    if (index + 1 < candidates.size) {
+                        // Key might belong to another candidate (e.g. OpenAI vs DeepSeek)
+                        testNextCandidate(candidates, index + 1, apiKey, "HTTP 401: Invalid API Key for ${candidate.name}")
+                    } else {
+                        runOnUiThread {
+                            tvStatus.text = "HTTP 401: Invalid API Key. Please check the key."
+                            tvStatus.setTextColor(Color.parseColor("#FF5252"))
+                        }
                     }
                 } else {
-                    // Try next candidate
                     testNextCandidate(candidates, index + 1, apiKey, "${candidate.name} returned HTTP $code")
                 }
             }
@@ -267,28 +343,18 @@ class OllamaSettingsActivity : AppCompatActivity() {
     private fun savePreferences() {
         val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
         val apiKey = etApiKey.text.toString().trim()
-        val model = etModelCustom.text.toString().trim().ifEmpty { "qwen2.5-coder:latest" }
+        val customModel = etModelCustom.text.toString().trim()
         val prompt = etSystemPrompt.text.toString().trim()
 
-        var endpoint = sp.getString("endpoint", "") ?: ""
-        var baseUrl = sp.getString("base_url", "") ?: ""
-
-        if (endpoint.isEmpty() || baseUrl.isEmpty()) {
-            if (apiKey.startsWith("sk-")) {
-                endpoint = "https://api.deepseek.com"
-                baseUrl = "https://api.deepseek.com/v1/chat/completions"
-            } else {
-                endpoint = "http://127.0.0.1:11434"
-                baseUrl = "http://127.0.0.1:11434/v1/chat/completions"
-            }
-        }
+        val config = AiConfigHelper.detectProvider(apiKey, customModel = customModel)
+        val finalModel = customModel.ifEmpty { config.defaultModel }
 
         sp.edit()
-            .putString("endpoint", endpoint)
-            .putString("base_url", baseUrl)
+            .putString("endpoint", config.baseUrl.substringBeforeLast("/chat/completions"))
+            .putString("base_url", config.baseUrl)
             .putString("api_key", apiKey)
-            .putString("model", model)
-            .putString("model_name", model)
+            .putString("model", finalModel)
+            .putString("model_name", finalModel)
             .putString("system_prompt", prompt)
             .apply()
 

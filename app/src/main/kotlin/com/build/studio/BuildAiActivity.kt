@@ -71,24 +71,16 @@ class BuildAiActivity : AppCompatActivity() {
 
     private val systemPrompt = """You are Build AI, an expert Android developer and coding assistant inside the Build Studio app. You can create files, folders, write Java and XML code, fix compilation errors, and answer questions.
 
-RULE 0 - MANDATORY PLAN BEFORE ACTING: Before any <write_file>, <replace_code>, <delete>, <rename>, <move>, or <create_dir> tag, you MUST write a <plan>...</plan> block. Inside it, in plain text, state: (1) the exact root cause, quoting the specific error line/number you are responding to, not a guess; (2) which file(s) you actually need to look at or change to fix it, and why those specific ones; (3) whether any existing file in the project is now unused or redundant because of this change; (4) the smallest action type you will use. Do not put code inside <plan>. Skip <plan> only for pure conversation with no file action.
+RULE 0 - MANDATORY PLAN BEFORE ACTING: Before any <write_file>, <replace_code>, <delete>, <rename>, <move>, or <create_dir> tag, you MUST write a <plan>...</plan> block. Inside it, in plain text, state: (1) what you are going to do and why; (2) which file(s) you need to create or change; (3) the actions you will use. Skip <plan> only for pure conversational greetings (like hello, hi, how are you) with no file action.
 
-RULE 1 - NO GUESSING: If you are not confident about the root cause or the fix, say so and ask for the specific file or information you need instead of guessing.
+RULE 1 - NO GUESSING: Base your diagnosis and code on the complete file(s) provided.
 
-RULE 2 - FULL ANALYSIS BEFORE FIXING: Base your diagnosis on the complete file(s) provided, not a single line in isolation.
+RULE 2 - SMALLEST EDIT FIRST: Use <replace_code> for small edits, or <write_file> for full files.
 
-RULE 3 - SMALLEST EDIT FIRST: Prefer the smallest possible change. Use <replace_code> for a single line, block, or function instead of rewriting the whole file with <write_file>.
-
-RULE 4 - DELETE BEFORE WRITE, ALWAYS: If a fix requires deleting a file and recreating it, you MUST emit the <delete> tag for that exact path BEFORE the <write_file> tag for the same path.
-
-RULE 5 - DESTRUCTIVE ACTIONS NEED A REASON: Whenever you use <delete>, <rename>, or <move>, state in plain text in the <plan> block why it is necessary.
-
-RULE 6 - STATE YOUR CONFIDENCE: State a confidence level (e.g. "Confidence: ~90%") inside the <plan> block.
-
-RULE 7 - PLAIN TEXT FORMATTING: In your normal chat replies, do not use markdown symbols like **, __, backticks, or bullet dashes. Use simple numbered lines (1. 2. 3.).
+RULE 3 - PLAIN TEXT FORMATTING: In conversational replies, keep it simple and friendly.
 
 TAG FORMATS:
-<plan>analysis, affected files, confidence %, action type</plan>
+<plan>analysis and action plan</plan>
 <write_file path="relative/path/to/file">code</write_file>
 <replace_code path="relative/path/to/file">
 <target>exact lines to match</target>
@@ -163,10 +155,13 @@ TAG FORMATS:
 
     private fun updateActiveModelDisplay() {
         val prefs = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
-        val model = prefs.getString("model_name", "")?.ifEmpty {
-            prefs.getString("model", "qwen2.5-coder")
-        } ?: "qwen2.5-coder"
-        tvActiveModel?.text = "Build AI ($model)"
+        val apiKey = prefs.getString("api_key", "") ?: ""
+        val savedModel = prefs.getString("model_name", "")?.ifEmpty {
+            prefs.getString("model", "")
+        } ?: ""
+
+        val config = AiConfigHelper.detectProvider(apiKey, customModel = savedModel)
+        tvActiveModel?.text = "Build AI (${config.providerName} • ${config.defaultModel})"
     }
 
     private fun confirmClearChat() {
@@ -207,19 +202,15 @@ TAG FORMATS:
 
         val prefs = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
         val apiKey = prefs.getString("api_key", "") ?: ""
-        var baseUrl = prefs.getString("base_url", "") ?: ""
+        val savedBaseUrl = prefs.getString("base_url", "") ?: ""
+        val savedModel = prefs.getString("model_name", "")?.ifEmpty {
+            prefs.getString("model", "")
+        } ?: ""
 
-        if (baseUrl.isEmpty() || (baseUrl.contains("localhost") && apiKey.startsWith("sk-"))) {
-            baseUrl = if (apiKey.startsWith("sk-")) {
-                "https://api.deepseek.com/v1/chat/completions"
-            } else {
-                "http://127.0.0.1:11434/v1/chat/completions"
-            }
-        }
-
-        val model = prefs.getString("model_name", "")?.ifEmpty {
-            prefs.getString("model", "qwen2.5-coder:latest")
-        } ?: "qwen2.5-coder:latest"
+        // Resolve exact working baseUrl and compatible model
+        val config = AiConfigHelper.detectProvider(apiKey, customBaseUrl = savedBaseUrl, customModel = savedModel)
+        val baseUrl = config.baseUrl
+        val model = config.defaultModel
 
         val userInstructions = prefs.getString("system_prompt", "")?.trim()
         val finalSystemPrompt = if (!userInstructions.isNullOrEmpty()) {
@@ -235,33 +226,40 @@ TAG FORMATS:
                 put("role", "system")
                 put("content", "$finalSystemPrompt\n\n$contextPayload")
             })
-            // Pass last 4 messages for conversation continuity
-            val startIdx = maxOf(0, messages.size - 6)
-            for (i in startIdx until messages.size - 1) {
+
+            // Conversation history: only prior non-empty messages
+            // messages.size - 2 is current user message, messages.size - 1 is current streaming assistant
+            val priorEnd = maxOf(0, messages.size - 2)
+            val priorStart = maxOf(0, priorEnd - 6)
+            for (i in priorStart until priorEnd) {
                 val m = messages[i]
-                jsonMsgs.put(JSONObject().apply {
-                    put("role", if (m.type == 1) "user" else "assistant")
-                    put("content", m.text)
-                })
+                if (m.text.isNotBlank()) {
+                    jsonMsgs.put(JSONObject().apply {
+                        put("role", if (m.type == 1) "user" else "assistant")
+                        put("content", m.text)
+                    })
+                }
             }
+
+            // Current user message added once
             jsonMsgs.put(JSONObject().apply {
                 put("role", "user")
                 put("content", userText)
             })
+
             put("messages", jsonMsgs)
-            put("temperature", 0.2)
+            put("temperature", 0.3)
         }
 
         val reqBuilder = Request.Builder()
             .url(baseUrl)
-            .addHeader("Content-Type", "application/json")
 
         if (apiKey.isNotEmpty()) {
-            reqBuilder.addHeader("Authorization", "Bearer $apiKey")
+            reqBuilder.header("Authorization", "Bearer $apiKey")
         }
 
         val request = reqBuilder
-            .post(jsonBody.toString().toRequestBody("application/json".toMediaTypeOrNull()))
+            .post(jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
 
         activeCall = client.newCall(request)
@@ -270,21 +268,89 @@ TAG FORMATS:
                 runOnUiThread {
                     layoutThinking.visibility = View.GONE
                     assistantMsg.isStreaming = false
-                    assistantMsg.text = "Error communicating with AI: ${e.message}"
+                    val errDesc = if (apiKey.isEmpty()) {
+                        "Cannot connect to local Ollama (127.0.0.1:11434). Please start Termux/Ollama or enter a DeepSeek / Gemini API key in Settings -> Build AI Settings."
+                    } else {
+                        "Connection failed: ${e.localizedMessage ?: "Network unreachable"}. Please check your connection or API key."
+                    }
+                    assistantMsg.text = errDesc
                     chatAdapter.notifyItemChanged(assistantIdx)
                 }
             }
 
             override fun onResponse(call: Call, response: Response) {
+                val respCode = response.code
                 val respBody = response.body?.string() ?: ""
+                val isSuccess = response.isSuccessful
+
                 runOnUiThread {
                     layoutThinking.visibility = View.GONE
                     assistantMsg.isStreaming = false
+
+                    if (!isSuccess) {
+                        var errDetail = ""
+                        try {
+                            val errJson = JSONObject(respBody)
+                            if (errJson.has("error")) {
+                                val errObj = errJson.optJSONObject("error")
+                                errDetail = errObj?.optString("message") ?: errJson.optString("error")
+                            } else if (errJson.has("message")) {
+                                errDetail = errJson.optString("message")
+                            }
+                        } catch (e: Exception) {
+                            errDetail = respBody.take(250)
+                        }
+
+                        val errorDisplay = when (respCode) {
+                            401 -> "Authentication failed (HTTP 401): Invalid API key for ${config.providerName}. Please check your key in Settings -> Build AI Settings.\n$errDetail"
+                            400 -> "Request error (HTTP 400): $errDetail"
+                            404 -> "Not found (HTTP 404): Endpoint or model '$model' not found.\n$errDetail"
+                            429 -> "Rate limit exceeded (HTTP 429): $errDetail"
+                            else -> "Server error (HTTP $respCode): $errDetail"
+                        }
+
+                        assistantMsg.text = errorDisplay
+                        chatAdapter.notifyItemChanged(assistantIdx)
+                        return@runOnUiThread
+                    }
+
                     try {
                         val json = JSONObject(respBody)
+                        var replyText = ""
+
+                        // 1. OpenAI / DeepSeek format: choices[0].message.content
                         val choices = json.optJSONArray("choices")
-                        val content = choices?.optJSONObject(0)?.optJSONObject("message")?.optString("content") ?: respBody
-                        parseResponseIntoMessage(content, assistantMsg)
+                        if (choices != null && choices.length() > 0) {
+                            val msgObj = choices.optJSONObject(0)?.optJSONObject("message")
+                            replyText = msgObj?.optString("content") ?: choices.optJSONObject(0)?.optString("text") ?: ""
+                        }
+
+                        // 2. Ollama /api/chat format: message.content
+                        if (replyText.isEmpty()) {
+                            replyText = json.optJSONObject("message")?.optString("content") ?: ""
+                        }
+
+                        // 3. Ollama /api/generate format: response
+                        if (replyText.isEmpty()) {
+                            replyText = json.optString("response")
+                        }
+
+                        // 4. Gemini format: candidates[0].content.parts[0].text
+                        if (replyText.isEmpty()) {
+                            val candidates = json.optJSONArray("candidates")
+                            if (candidates != null && candidates.length() > 0) {
+                                val parts = candidates.optJSONObject(0)?.optJSONObject("content")?.optJSONArray("parts")
+                                if (parts != null && parts.length() > 0) {
+                                    replyText = parts.optJSONObject(0)?.optString("text") ?: ""
+                                }
+                            }
+                        }
+
+                        if (replyText.isEmpty()) {
+                            replyText = respBody
+                        }
+
+                        parseResponseIntoMessage(replyText, assistantMsg)
                         chatAdapter.notifyItemChanged(assistantIdx)
                         rvChat.scrollToPosition(assistantIdx)
                     } catch (e: Exception) {
@@ -567,7 +633,7 @@ TAG FORMATS:
     private fun executeAction(act: FileAction) {
         val root = projectPath
         if (root.isNullOrEmpty()) {
-            Toast.makeText(this, "Error: No project path available", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error: No project open to apply action", Toast.LENGTH_SHORT).show()
             return
         }
         val targetFile = File(root, act.filePath)
