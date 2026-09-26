@@ -242,8 +242,9 @@ TAG FORMATS:
         val config = AiConfigHelper.resolveByModel(savedModel, apiKey)
         var baseUrl = config.baseUrl
         val model = config.defaultModel
+        val cleanModel = AiConfigHelper.cleanModelId(model)
 
-        if (config.providerName == "Google Gemini" && apiKey.isNotEmpty() && !baseUrl.contains("key=")) {
+        if (config.providerName.contains("Google", ignoreCase = true) && apiKey.isNotEmpty() && !baseUrl.contains("key=")) {
             baseUrl = if (baseUrl.contains("?")) "$baseUrl&key=$apiKey" else "$baseUrl?key=$apiKey"
         }
 
@@ -255,7 +256,7 @@ TAG FORMATS:
         }
 
         val jsonBody = JSONObject().apply {
-            put("model", model)
+            put("model", cleanModel)
             val jsonMsgs = JSONArray()
             jsonMsgs.put(JSONObject().apply {
                 put("role", "system")
@@ -291,6 +292,9 @@ TAG FORMATS:
 
         if (apiKey.isNotEmpty()) {
             reqBuilder.header("Authorization", "Bearer $apiKey")
+            if (config.providerName.contains("Sarvam", ignoreCase = true)) {
+                reqBuilder.header("api-subscription-key", apiKey)
+            }
         }
 
         val request = reqBuilder

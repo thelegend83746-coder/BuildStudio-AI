@@ -12,11 +12,145 @@ object AiConfigHelper {
         val models: List<String> = emptyList()
     )
 
+    val PROVIDERS = listOf(
+        "Google AI Studio (Gemini)",
+        "Ollama (Local / Offline)",
+        "Qwen / DashScope (Alibaba)",
+        "Sarvam AI (Indian LLM)",
+        "DeepSeek",
+        "Groq (Fast Cloud)",
+        "OpenAI"
+    )
+
+    fun getProviderConfigByName(providerName: String, apiKey: String = ""): ProviderConfig {
+        val p = providerName.trim()
+        val key = apiKey.trim()
+
+        return when {
+            p.contains("Gemini", ignoreCase = true) || p.contains("Google", ignoreCase = true) -> {
+                ProviderConfig(
+                    providerName = "Google AI Studio",
+                    baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+                    defaultModel = "gemini-1.5-flash",
+                    testUrl = "https://generativelanguage.googleapis.com/v1beta/openai/models",
+                    keyPrefixHint = "starts with AIzaSy...",
+                    requiresKey = true,
+                    models = listOf(
+                        "gemini-1.5-flash [FREE TIER]",
+                        "gemini-2.0-flash [FREE TIER]",
+                        "gemini-1.5-flash-8b [FREE TIER]",
+                        "gemini-1.5-pro [PAID / LIMITED]"
+                    )
+                )
+            }
+
+            p.contains("Ollama", ignoreCase = true) -> {
+                ProviderConfig(
+                    providerName = "Local Ollama",
+                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions",
+                    defaultModel = "qwen2.5-coder:latest",
+                    testUrl = "http://127.0.0.1:11434/api/tags",
+                    keyPrefixHint = "No API Key required (127.0.0.1:11434)",
+                    requiresKey = false,
+                    models = listOf(
+                        "qwen2.5-coder:latest [FREE / LOCAL]",
+                        "deepseek-coder:6.7b [FREE / LOCAL]",
+                        "llama3.2:latest [FREE / LOCAL]"
+                    )
+                )
+            }
+
+            p.contains("Qwen", ignoreCase = true) || p.contains("DashScope", ignoreCase = true) -> {
+                ProviderConfig(
+                    providerName = "Qwen / DashScope",
+                    baseUrl = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+                    defaultModel = "qwen2.5-coder:7b",
+                    testUrl = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/models",
+                    keyPrefixHint = "starts with sk-...",
+                    requiresKey = true,
+                    models = listOf(
+                        "qwen2.5-coder:7b [FREE TRIAL]",
+                        "qwen2.5-coder:latest [FREE TRIAL]",
+                        "qwen-2.5-coder-32b-instruct [PAID]",
+                        "qwen-plus [PAID]",
+                        "qwen-turbo [PAID]"
+                    )
+                )
+            }
+
+            p.contains("Sarvam", ignoreCase = true) -> {
+                ProviderConfig(
+                    providerName = "Sarvam AI",
+                    baseUrl = "https://api.sarvam.ai/v1/chat/completions",
+                    defaultModel = "sarvam-2b",
+                    testUrl = "https://api.sarvam.ai/v1/models",
+                    keyPrefixHint = "Enter Sarvam Subscription Key",
+                    requiresKey = true,
+                    models = listOf(
+                        "sarvam-2b [PAID / DEV CREDITS]",
+                        "sarvam-m [PAID / DEV CREDITS]",
+                        "sarvam-translate [PAID]"
+                    )
+                )
+            }
+
+            p.contains("DeepSeek", ignoreCase = true) -> {
+                ProviderConfig(
+                    providerName = "DeepSeek",
+                    baseUrl = "https://api.deepseek.com/v1/chat/completions",
+                    defaultModel = "deepseek-chat",
+                    testUrl = "https://api.deepseek.com/v1/models",
+                    keyPrefixHint = "starts with sk-...",
+                    requiresKey = true,
+                    models = listOf(
+                        "deepseek-chat [PAID - LOW COST]",
+                        "deepseek-coder [PAID - LOW COST]",
+                        "deepseek-reasoner [PAID]"
+                    )
+                )
+            }
+
+            p.contains("Groq", ignoreCase = true) -> {
+                ProviderConfig(
+                    providerName = "Groq",
+                    baseUrl = "https://api.groq.com/openai/v1/chat/completions",
+                    defaultModel = "llama-3.3-70b-versatile",
+                    testUrl = "https://api.groq.com/openai/v1/models",
+                    keyPrefixHint = "starts with gsk_...",
+                    requiresKey = true,
+                    models = listOf(
+                        "llama-3.3-70b-versatile [FREE TIER]",
+                        "llama-3.1-8b-instant [FREE TIER]",
+                        "mixtral-8x7b-32768 [FREE TIER]"
+                    )
+                )
+            }
+
+            p.contains("OpenAI", ignoreCase = true) -> {
+                ProviderConfig(
+                    providerName = "OpenAI",
+                    baseUrl = "https://api.openai.com/v1/chat/completions",
+                    defaultModel = "gpt-4o-mini",
+                    testUrl = "https://api.openai.com/v1/models",
+                    keyPrefixHint = "starts with sk-proj-... / sk-...",
+                    requiresKey = true,
+                    models = listOf(
+                        "gpt-4o-mini [PAID]",
+                        "gpt-4o [PAID]",
+                        "gpt-3.5-turbo [PAID]"
+                    )
+                )
+            }
+
+            else -> {
+                // Fallback by key format or model name
+                resolveByModel(p, key)
+            }
+        }
+    }
+
     /**
      * Resolves the exact provider configuration primarily based on the user's selected model.
-     * When user selects Google Gemini -> tests/calls Gemini (DeepSeek key fails with HTTP 400).
-     * When user selects DeepSeek -> tests/calls DeepSeek (Gemini key fails with HTTP 401).
-     * When user selects Local Ollama -> tests local 127.0.0.1:11434.
      */
     fun resolveByModel(
         selectedModelOrLabel: String,
@@ -28,129 +162,75 @@ object AiConfigHelper {
         val trimmedUrl = customBaseUrl.trim()
 
         return when {
-            // 1. Google Gemini
-            s.contains("gemini", ignoreCase = true) -> {
-                val model = when {
-                    s.contains("2.0") -> "gemini-2.0-flash"
-                    s.contains("pro") -> "gemini-1.5-pro"
-                    else -> "gemini-1.5-flash"
-                }
-                ProviderConfig(
-                    providerName = "Google Gemini",
-                    baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-                    defaultModel = model,
-                    testUrl = "https://generativelanguage.googleapis.com/v1beta/openai/models",
-                    keyPrefixHint = "starts with AIzaSy...",
-                    requiresKey = true,
-                    models = listOf("gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro")
-                )
+            // Sarvam AI
+            s.contains("sarvam", ignoreCase = true) -> {
+                getProviderConfigByName("Sarvam AI", key)
             }
 
-            // 2. DeepSeek
+            // Google AI Studio / Gemini
+            s.contains("gemini", ignoreCase = true) || s.contains("google", ignoreCase = true) -> {
+                val base = getProviderConfigByName("Google AI Studio", key)
+                val cleanId = cleanModelId(s)
+                val model = if (cleanId.isNotEmpty()) cleanId else base.defaultModel
+                base.copy(defaultModel = model)
+            }
+
+            // DeepSeek
             s.contains("deepseek", ignoreCase = true) -> {
-                val model = when {
-                    s.contains("coder", ignoreCase = true) -> "deepseek-coder"
-                    s.contains("reasoner", ignoreCase = true) -> "deepseek-reasoner"
-                    else -> "deepseek-chat"
-                }
-                ProviderConfig(
-                    providerName = "DeepSeek",
-                    baseUrl = "https://api.deepseek.com/v1/chat/completions",
-                    defaultModel = model,
-                    testUrl = "https://api.deepseek.com/v1/models",
-                    keyPrefixHint = "starts with sk-...",
-                    requiresKey = true,
-                    models = listOf("deepseek-chat", "deepseek-coder", "deepseek-reasoner")
-                )
+                val base = getProviderConfigByName("DeepSeek", key)
+                val cleanId = cleanModelId(s)
+                val model = if (cleanId.isNotEmpty()) cleanId else base.defaultModel
+                base.copy(defaultModel = model)
             }
 
-            // 3. GLM-4.6 / GLM-4.7 (Zhipu AI)
-            s.contains("glm", ignoreCase = true) -> {
-                val model = when {
-                    s.contains("4.7") || s.contains("4-plus") -> "glm-4-plus"
-                    s.contains("4.6") || s.contains("4-0520") -> "glm-4-0520"
-                    else -> "glm-4-flash"
-                }
-                ProviderConfig(
-                    providerName = "Zhipu AI (GLM)",
-                    baseUrl = "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-                    defaultModel = model,
-                    testUrl = "https://open.bigmodel.cn/api/paas/v4/models",
-                    keyPrefixHint = "id.secret format",
-                    requiresKey = true,
-                    models = listOf("glm-4-flash", "glm-4-plus", "glm-4-0520")
-                )
+            // Qwen-Coder (Alibaba DashScope / compatible)
+            s.contains("qwen", ignoreCase = true) && !s.contains("ollama", ignoreCase = true) && !s.contains("127.0.0.1", ignoreCase = true) -> {
+                val base = getProviderConfigByName("Qwen / DashScope", key)
+                val cleanId = cleanModelId(s)
+                val model = if (cleanId.isNotEmpty()) cleanId else base.defaultModel
+                base.copy(defaultModel = model)
             }
 
-            // 4. Qwen-Coder (Alibaba DashScope / compatible)
-            s.contains("qwen", ignoreCase = true) && !s.contains("ollama", ignoreCase = true) -> {
-                val model = if (s.contains("32b")) "qwen-2.5-coder-32b-instruct" else "qwen2.5-coder:latest"
-                ProviderConfig(
-                    providerName = "Qwen / DashScope",
-                    baseUrl = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
-                    defaultModel = model,
-                    testUrl = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/models",
-                    keyPrefixHint = "starts with sk-...",
-                    requiresKey = true,
-                    models = listOf("qwen2.5-coder:latest", "qwen-2.5-coder-32b-instruct")
-                )
+            // Groq (Llama / Mixtral)
+            s.contains("groq", ignoreCase = true) || s.contains("llama-3", ignoreCase = true) -> {
+                val base = getProviderConfigByName("Groq", key)
+                val cleanId = cleanModelId(s)
+                val model = if (cleanId.isNotEmpty()) cleanId else base.defaultModel
+                base.copy(defaultModel = model)
             }
 
-            // 5. Groq (Llama / Mixtral)
-            s.contains("groq", ignoreCase = true) || s.contains("llama", ignoreCase = true) -> {
-                ProviderConfig(
-                    providerName = "Groq",
-                    baseUrl = "https://api.groq.com/openai/v1/chat/completions",
-                    defaultModel = "llama-3.3-70b-versatile",
-                    testUrl = "https://api.groq.com/openai/v1/models",
-                    keyPrefixHint = "starts with gsk_...",
-                    requiresKey = true,
-                    models = listOf("llama-3.3-70b-versatile", "mixtral-8x7b-32768", "llama-3.1-8b-instant")
-                )
-            }
-
-            // 6. OpenAI
+            // OpenAI
             s.contains("gpt", ignoreCase = true) || s.contains("openai", ignoreCase = true) -> {
-                ProviderConfig(
-                    providerName = "OpenAI",
-                    baseUrl = "https://api.openai.com/v1/chat/completions",
-                    defaultModel = "gpt-4o-mini",
-                    testUrl = "https://api.openai.com/v1/models",
-                    keyPrefixHint = "starts with sk-proj-... / sk-...",
-                    requiresKey = true,
-                    models = listOf("gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo")
-                )
+                val base = getProviderConfigByName("OpenAI", key)
+                val cleanId = cleanModelId(s)
+                val model = if (cleanId.isNotEmpty()) cleanId else base.defaultModel
+                base.copy(defaultModel = model)
             }
 
-            // 7. Local Ollama (on device or Termux)
+            // Local Ollama (on device or Termux)
             s.contains("ollama", ignoreCase = true) -> {
-                ProviderConfig(
-                    providerName = "Local Ollama",
-                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions",
-                    defaultModel = "qwen2.5-coder:latest",
-                    testUrl = "http://127.0.0.1:11434/api/tags",
-                    keyPrefixHint = "No key needed for local daemon",
-                    requiresKey = false,
-                    models = listOf("qwen2.5-coder:latest", "deepseek-coder:6.7b", "llama3.2:latest")
-                )
+                val base = getProviderConfigByName("Ollama", key)
+                val cleanId = cleanModelId(s)
+                val model = if (cleanId.isNotEmpty()) cleanId else base.defaultModel
+                base.copy(defaultModel = model)
             }
 
-            // 8. Explicit custom URL configured
+            // Explicit custom URL configured
             trimmedUrl.startsWith("http") && !trimmedUrl.contains("127.0.0.1") && !trimmedUrl.contains("localhost") -> {
                 val base = if (trimmedUrl.endsWith("/chat/completions")) trimmedUrl else "${trimmedUrl.trimEnd('/')}/v1/chat/completions"
                 val test = if (trimmedUrl.endsWith("/")) "${trimmedUrl}v1/models" else "$trimmedUrl/v1/models"
                 ProviderConfig(
                     providerName = "Custom Endpoint",
                     baseUrl = base,
-                    defaultModel = if (s.isNotEmpty()) s else "gpt-4o-mini",
+                    defaultModel = if (s.isNotEmpty()) cleanModelId(s) else "gpt-4o-mini",
                     testUrl = test,
                     keyPrefixHint = "Custom API Key",
                     requiresKey = true,
-                    models = if (s.isNotEmpty()) listOf(s) else listOf("gpt-4o-mini")
+                    models = if (s.isNotEmpty()) listOf(s) else listOf("gpt-4o-mini [CUSTOM]")
                 )
             }
 
-            // Fallback: If model is empty or unrecognized, detect from key format
+            // Fallback: detect from key format
             else -> {
                 detectProviderByKey(key, s)
             }
@@ -159,73 +239,78 @@ object AiConfigHelper {
 
     private fun detectProviderByKey(key: String, fallbackModel: String): ProviderConfig {
         return when {
-            key.startsWith("AIza") -> {
-                ProviderConfig(
-                    providerName = "Google Gemini",
-                    baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-                    defaultModel = if (fallbackModel.isNotEmpty()) fallbackModel else "gemini-1.5-flash",
-                    testUrl = "https://generativelanguage.googleapis.com/v1beta/openai/models",
-                    keyPrefixHint = "starts with AIzaSy...",
-                    requiresKey = true,
-                    models = listOf("gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro")
-                )
-            }
-            key.startsWith("gsk_") -> {
-                ProviderConfig(
-                    providerName = "Groq",
-                    baseUrl = "https://api.groq.com/openai/v1/chat/completions",
-                    defaultModel = "llama-3.3-70b-versatile",
-                    testUrl = "https://api.groq.com/openai/v1/models",
-                    keyPrefixHint = "starts with gsk_...",
-                    requiresKey = true,
-                    models = listOf("llama-3.3-70b-versatile", "mixtral-8x7b-32768", "llama-3.1-8b-instant")
-                )
-            }
-            key.contains(".") && !key.startsWith("http") -> {
-                ProviderConfig(
-                    providerName = "Zhipu AI (GLM)",
-                    baseUrl = "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-                    defaultModel = "glm-4-flash",
-                    testUrl = "https://open.bigmodel.cn/api/paas/v4/models",
-                    keyPrefixHint = "id.secret format",
-                    requiresKey = true,
-                    models = listOf("glm-4-flash", "glm-4-plus", "glm-4-0520")
-                )
-            }
-            key.startsWith("sk-") -> {
-                ProviderConfig(
-                    providerName = "DeepSeek",
-                    baseUrl = "https://api.deepseek.com/v1/chat/completions",
-                    defaultModel = if (fallbackModel.isNotEmpty()) fallbackModel else "deepseek-chat",
-                    testUrl = "https://api.deepseek.com/v1/models",
-                    keyPrefixHint = "starts with sk-...",
-                    requiresKey = true,
-                    models = listOf("deepseek-chat", "deepseek-coder", "deepseek-reasoner")
-                )
-            }
-            key.isNotEmpty() -> {
-                ProviderConfig(
-                    providerName = "OpenAI Compatible",
-                    baseUrl = "https://api.openai.com/v1/chat/completions",
-                    defaultModel = if (fallbackModel.isNotEmpty()) fallbackModel else "gpt-4o-mini",
-                    testUrl = "https://api.openai.com/v1/models",
-                    keyPrefixHint = "API Key",
-                    requiresKey = true,
-                    models = listOf("gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo")
-                )
-            }
-            else -> {
-                ProviderConfig(
-                    providerName = "Local Ollama",
-                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions",
-                    defaultModel = "qwen2.5-coder:latest",
-                    testUrl = "http://127.0.0.1:11434/api/tags",
-                    keyPrefixHint = "No key needed for local daemon",
-                    requiresKey = false,
-                    models = listOf("qwen2.5-coder:latest", "deepseek-coder:6.7b", "llama3.2:latest")
-                )
-            }
+            key.startsWith("AIza") -> getProviderConfigByName("Google AI Studio", key)
+            key.startsWith("gsk_") -> getProviderConfigByName("Groq", key)
+            key.startsWith("sk-") -> getProviderConfigByName("DeepSeek", key)
+            key.isNotEmpty() -> getProviderConfigByName("OpenAI", key)
+            else -> getProviderConfigByName("Ollama", key)
         }
+    }
+
+    /**
+     * Parses the response from `/models` or `/api/tags` and decorates every model with a [FREE] or [PAID] badge.
+     */
+    fun parseModelsResponse(providerName: String, responseJson: String): List<String> {
+        val result = mutableListOf<String>()
+        try {
+            val json = org.json.JSONObject(responseJson)
+
+            // 1. Ollama format: { "models": [ { "name": "qwen2.5-coder:latest" } ] }
+            if (json.has("models")) {
+                val arr = json.getJSONArray("models")
+                for (i in 0 until arr.length()) {
+                    val m = arr.getJSONObject(i)
+                    val name = m.optString("name", "")
+                    if (name.isNotEmpty()) {
+                        result.add("$name [FREE / LOCAL]")
+                    }
+                }
+            }
+
+            // 2. OpenAI / Gemini / DashScope / Groq / Sarvam format: { "data": [ { "id": "..." } ] }
+            if (json.has("data")) {
+                val arr = json.getJSONArray("data")
+                for (i in 0 until arr.length()) {
+                    val d = arr.getJSONObject(i)
+                    val id = d.optString("id", "").ifEmpty { d.optString("name", "") }
+                    if (id.isNotEmpty() && !id.contains("embedding", ignoreCase = true) && !id.contains("whisper", ignoreCase = true)) {
+                        val isFree = when {
+                            providerName.contains("Ollama", ignoreCase = true) -> true
+                            providerName.contains("Groq", ignoreCase = true) -> true
+                            id.contains("flash", ignoreCase = true) || id.contains("8b", ignoreCase = true) || id.contains("free", ignoreCase = true) -> true
+                            else -> false
+                        }
+                        val tag = when {
+                            providerName.contains("Ollama", ignoreCase = true) -> "[FREE / LOCAL]"
+                            providerName.contains("Groq", ignoreCase = true) -> "[FREE TIER]"
+                            isFree -> "[FREE TIER]"
+                            providerName.contains("DeepSeek", ignoreCase = true) -> "[PAID - LOW COST]"
+                            providerName.contains("Sarvam", ignoreCase = true) -> "[PAID / DEV CREDITS]"
+                            else -> "[PAID]"
+                        }
+                        result.add("$id $tag")
+                    }
+                }
+            }
+        } catch (_: Exception) {
+        }
+
+        // If parsed list is empty, return default verified models for that provider
+        if (result.isEmpty()) {
+            val cfg = getProviderConfigByName(providerName)
+            result.addAll(cfg.models)
+        }
+        return result
+    }
+
+    /**
+     * Strips "[FREE...]" and "[PAID...]" tags to return the pure model ID for API payloads.
+     */
+    fun cleanModelId(modelOrDisplay: String): String {
+        return modelOrDisplay
+            .replace(Regex("\\[.*?\\]"), "")
+            .replace(Regex("\\(.*?\\)"), "")
+            .trim()
     }
 
     // Retain legacy method for backward compatibility

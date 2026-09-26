@@ -97,61 +97,67 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
     private fun setupAiSettings(root: View) {
         val sp = requireContext().getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
         val etApiKey = root.findViewById<EditText>(R.id.et_sheet_api_key)
+        val spProvider = root.findViewById<Spinner>(R.id.sp_sheet_provider)
         val spModels = root.findViewById<Spinner>(R.id.sp_sheet_models)
         val tvStatus = root.findViewById<TextView>(R.id.tv_sheet_conn_status)
         val btnTest = root.findViewById<Button>(R.id.btn_sheet_test_conn)
         val btnSave = root.findViewById<Button>(R.id.btn_sheet_save_ai)
 
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, supportedAiModels)
-        spModels.adapter = adapter
+        val providerList = AiConfigHelper.PROVIDERS
+        val providerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, providerList)
+        spProvider.adapter = providerAdapter
+
+        val activeModelsList = mutableListOf<String>()
+        val modelsAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, activeModelsList)
+        spModels.adapter = modelsAdapter
 
         // Load existing AI prefs
         val savedKey = sp.getString("api_key", "") ?: ""
+        val savedProvider = sp.getString("provider_name", "") ?: ""
         val savedModel = sp.getString("model_name", "")?.ifEmpty { sp.getString("model", "") } ?: ""
         val savedLabel = sp.getString("model_label", "") ?: ""
 
         etApiKey.setText(savedKey)
 
-        var modelIdx = if (savedLabel.isNotEmpty()) supportedAiModels.indexOf(savedLabel) else -1
-        if (modelIdx < 0 && savedModel.isNotEmpty()) {
-            modelIdx = supportedAiModels.indexOfFirst { it.contains(savedModel, ignoreCase = true) }
-        }
-        if (modelIdx >= 0) {
-            spModels.setSelection(modelIdx)
-        } else {
-            spModels.setSelection(0)
-        }
+        fun updateModelsForProvider(providerName: String, preserveModel: String = "") {
+            val config = AiConfigHelper.getProviderConfigByName(providerName, etApiKey.text.toString().trim())
+            etApiKey.hint = "Enter ${config.providerName} Key (${config.keyPrefixHint})"
 
-        fun updateModelGuidance(pos: Int) {
-            val selectedModelFull = supportedAiModels[pos]
-            val config = AiConfigHelper.resolveByModel(selectedModelFull)
-            val hint = when {
-                config.providerName == "Google Gemini" -> "Enter Google Gemini API Key (starts with AIzaSy...)"
-                config.providerName == "DeepSeek" -> "Enter DeepSeek API Key (starts with sk-...)"
-                config.providerName == "Zhipu AI (GLM)" -> "Enter Zhipu GLM API Key (format: id.secret)"
-                config.providerName.contains("Qwen") -> "Enter DashScope / Qwen API Key (starts with sk-...)"
-                config.providerName == "Groq" -> "Enter Groq API Key (starts with gsk_...)"
-                config.providerName == "OpenAI" -> "Enter OpenAI API Key (starts with sk-proj-...)"
-                config.providerName == "Local Ollama" -> "No API Key required for Local Ollama"
-                else -> "Enter ${config.providerName} API Key"
+            activeModelsList.clear()
+            activeModelsList.addAll(config.models)
+            modelsAdapter.notifyDataSetChanged()
+
+            if (preserveModel.isNotEmpty()) {
+                val idx = activeModelsList.indexOfFirst { it.contains(preserveModel, ignoreCase = true) }
+                if (idx >= 0) spModels.setSelection(idx)
+            } else if (activeModelsList.isNotEmpty()) {
+                spModels.setSelection(0)
             }
-            etApiKey.hint = hint
-            tvStatus.text = "Selected: ${config.providerName} (${config.defaultModel})"
+
+            tvStatus.text = "Active: ${config.providerName} (${config.defaultModel})"
             tvStatus.setTextColor(Color.parseColor("#64748B"))
         }
 
-        spModels.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        var providerIdx = providerList.indexOfFirst { it.contains(savedProvider, ignoreCase = true) }
+        if (providerIdx < 0 && savedModel.isNotEmpty()) {
+            val detected = AiConfigHelper.resolveByModel(savedModel, savedKey)
+            providerIdx = providerList.indexOfFirst { it.contains(detected.providerName, ignoreCase = true) }
+        }
+        if (providerIdx < 0) providerIdx = 0
+        spProvider.setSelection(providerIdx)
+        updateModelsForProvider(providerList[providerIdx], savedLabel.ifEmpty { savedModel })
+
+        spProvider.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                updateModelGuidance(position)
+                updateModelsForProvider(providerList[position])
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-        updateModelGuidance(spModels.selectedItemPosition)
 
         btnTest.setOnClickListener {
             val key = etApiKey.text.toString().trim()
-            val selectedModelFull = supportedAiModels[spModels.selectedItemPosition]
-            val config = AiConfigHelper.resolveByModel(selectedModelFull, apiKey = key)
+            val selectedProvider = providerList[spProvider.selectedItemPosition]
+            val config = AiConfigHelper.getProviderConfigByName(selectedProvider, apiKey = key)
 
             if (config.requiresKey && key.isEmpty()) {
                 tvStatus.text = "✗ ${config.providerName} requires an API key (${config.keyPrefixHint})"
@@ -160,36 +166,51 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
                 return@setOnClickListener
             }
 
-            val testUrl = if (config.providerName == "Google Gemini" && key.isNotEmpty()) {
+            val testUrl = if (config.providerName.contains("Google", ignoreCase = true) && key.isNotEmpty()) {
                 "${config.testUrl}?key=$key"
             } else {
                 config.testUrl
             }
 
-            tvStatus.text = "Testing live connection to ${config.providerName}..."
+            tvStatus.text = "Connecting to ${config.providerName} & fetching models..."
             tvStatus.setTextColor(Color.parseColor("#64748B"))
 
             val startTime = System.currentTimeMillis()
             Thread {
                 val client = OkHttpClient.Builder()
-                    .connectTimeout(10, TimeUnit.SECONDS)
-                    .readTimeout(10, TimeUnit.SECONDS)
+                    .connectTimeout(12, TimeUnit.SECONDS)
+                    .readTimeout(12, TimeUnit.SECONDS)
                     .build()
 
                 try {
                     val reqBuilder = Request.Builder().url(testUrl).get()
                     if (key.isNotEmpty()) {
                         reqBuilder.header("Authorization", "Bearer $key")
+                        if (config.providerName.contains("Sarvam", ignoreCase = true)) {
+                            reqBuilder.header("api-subscription-key", key)
+                        }
                     }
+
                     val resp = client.newCall(reqBuilder.build()).execute()
                     val ok = resp.isSuccessful
                     val code = resp.code
                     val latency = System.currentTimeMillis() - startTime
-                    val respBodySnippet = resp.body?.string()?.take(180) ?: ""
+                    val respBody = resp.body?.string() ?: ""
 
                     activity?.runOnUiThread {
                         if (ok) {
-                            tvStatus.text = "✓ ${config.providerName} Connected (${latency}ms, HTTP $code)!"
+                            val discovered = AiConfigHelper.parseModelsResponse(config.providerName, respBody)
+                            if (discovered.isNotEmpty()) {
+                                activeModelsList.clear()
+                                activeModelsList.addAll(discovered)
+                                modelsAdapter.notifyDataSetChanged()
+                                spModels.setSelection(0)
+                            }
+
+                            val freeCount = activeModelsList.count { it.contains("FREE", ignoreCase = true) }
+                            val paidCount = activeModelsList.size - freeCount
+
+                            tvStatus.text = "✓ ${config.providerName} Connected (${latency}ms, HTTP $code)! Found ${activeModelsList.size} models ($freeCount Free, $paidCount Paid)"
                             tvStatus.setTextColor(Color.parseColor("#10B981"))
                             Toast.makeText(context, "${config.providerName} Verified! 🚀", Toast.LENGTH_SHORT).show()
                         } else {
@@ -197,9 +218,9 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
                                 400 -> "HTTP 400 (Invalid API Key for ${config.providerName})"
                                 401 -> "HTTP 401 (Authentication Failed / Invalid Key for ${config.providerName})"
                                 403 -> "HTTP 403 (Forbidden / Access Denied)"
-                                404 -> "HTTP 404 (Model or Endpoint Not Found)"
+                                404 -> "HTTP 404 (Endpoint Not Found)"
                                 429 -> "HTTP 429 (Rate Limit / Quota Exceeded)"
-                                else -> "HTTP $code: $respBodySnippet"
+                                else -> "HTTP $code: ${respBody.take(120)}"
                             }
                             tvStatus.text = "✗ ${config.providerName} Error: $detail"
                             tvStatus.setTextColor(Color.parseColor("#EF4444"))
@@ -218,20 +239,28 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
 
         btnSave.setOnClickListener {
             val key = etApiKey.text.toString().trim()
-            val selectedModelFull = supportedAiModels[spModels.selectedItemPosition]
-            val config = AiConfigHelper.resolveByModel(selectedModelFull, apiKey = key)
+            val selectedProvider = providerList[spProvider.selectedItemPosition]
+            val config = AiConfigHelper.getProviderConfigByName(selectedProvider, apiKey = key)
+
+            val selectedModelFull = if (activeModelsList.isNotEmpty() && spModels.selectedItemPosition in activeModelsList.indices) {
+                activeModelsList[spModels.selectedItemPosition]
+            } else {
+                config.defaultModel
+            }
+
+            val cleanModel = AiConfigHelper.cleanModelId(selectedModelFull)
 
             sp.edit()
                 .putString("api_key", key)
                 .putString("endpoint", config.baseUrl.substringBeforeLast("/chat/completions"))
                 .putString("base_url", config.baseUrl)
-                .putString("model", config.defaultModel)
-                .putString("model_name", config.defaultModel)
+                .putString("model", cleanModel)
+                .putString("model_name", cleanModel)
                 .putString("model_label", selectedModelFull)
                 .putString("provider_name", config.providerName)
                 .apply()
 
-            Toast.makeText(context, "Saved: ${config.providerName} (${config.defaultModel})! 🚀", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Saved: ${config.providerName} ($cleanModel)! 🚀", Toast.LENGTH_SHORT).show()
             dismiss()
         }
     }

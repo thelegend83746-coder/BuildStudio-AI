@@ -135,26 +135,67 @@
                     style="@style/TextInputLayoutStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
+                    android:layout_marginBottom="10dp"
                     app:boxStrokeColor="@color/colorPrimary">
 
                     <EditText
                         android:id="@+id/et_sheet_api_key"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Enter API Key (Gemini, Groq, OpenRouter, DeepSeek, etc.)"
+                        android:hint="Enter API Key"
                         android:inputType="textPassword"
                         android:padding="12dp"
                         android:textSize="14sp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Model Selector Dropdown -->
+                <!-- Provider Selector ("Kiska API Key Hai") directly below API Key -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
                     android:layout_marginBottom="4dp"
-                    android:text="Model Selector"
+                    android:text="Select AI Provider (Kiska API Key Hai)"
+                    android:textColor="@color/text_slate_700"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/sp_sheet_provider"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edittext_border"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp" />
+
+                <!-- Action Button: Test Connection & Fetch Models -->
+                <Button
+                    android:id="@+id/btn_sheet_test_conn"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/btn_outline"
+                    android:text="⚡ Test Connection &amp; Fetch Models"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <!-- Connection Status & Latency -->
+                <TextView
+                    android:id="@+id/tv_sheet_conn_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="Status: Select provider and test connection"
+                    android:textColor="@color/text_slate_500"
+                    android:textSize="12sp" />
+
+                <!-- Models List (Free / Paid) -->
+                <TextView
+                    android:id="@+id/tv_sheet_models_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="Available Models (Free / Paid)"
                     android:textColor="@color/text_slate_700"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -163,51 +204,21 @@
                     android:id="@+id/sp_sheet_models"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:layout_marginBottom="14dp"
+                    android:layout_marginBottom="16dp"
                     android:background="@drawable/edittext_border"
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp" />
 
-                <!-- Connection Status -->
-                <TextView
-                    android:id="@+id/tv_sheet_conn_status"
+                <!-- Save AI Settings -->
+                <Button
+                    android:id="@+id/btn_sheet_save_ai"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="14dp"
-                    android:text="Status: Ready"
-                    android:textColor="@color/text_slate_500"
-                    android:textSize="12sp" />
-
-                <!-- Action Buttons: Test Connection & Save Settings -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btn_sheet_test_conn"
-                        android:layout_width="0dp"
-                        android:layout_height="46dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/btn_outline"
-                        android:text="Test Connection"
-                        android:textColor="@color/text_slate_900"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <Button
-                        android:id="@+id/btn_sheet_save_ai"
-                        android:layout_width="0dp"
-                        android:layout_height="46dp"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/btn_primary"
-                        android:text="Save Settings"
-                        android:textColor="#FFFFFF"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                    android:layout_height="48dp"
+                    android:background="@drawable/btn_primary"
+                    android:text="Save AI Configuration"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <!-- TAB 2: APPLICATION SETTINGS -->

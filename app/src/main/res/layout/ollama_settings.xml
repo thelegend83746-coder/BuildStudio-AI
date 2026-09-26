@@ -81,15 +81,32 @@
                         android:id="@+id/et_api_key"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:layout_marginBottom="16dp"
+                        android:layout_marginBottom="12dp"
                         android:background="@drawable/edittext_bg"
-                        android:hint="Enter API Key (or empty for local Ollama)"
+                        android:hint="Enter API Key"
                         android:inputType="textPassword"
                         android:paddingLeft="12dp"
                         android:paddingRight="12dp"
                         android:singleLine="true"
                         android:textColor="@color/text_slate_900"
                         android:textSize="14sp" />
+
+                    <!-- Provider Selection (Kiska API Key Hai) -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="6dp"
+                        android:text="Select AI Provider (Kiska API Key Hai)"
+                        android:textColor="@color/text_slate_600"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <Spinner
+                        android:id="@+id/sp_provider"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/edittext_bg" />
 
                     <!-- Test Connection Button & Status -->
                     <LinearLayout
@@ -127,7 +144,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="6dp"
-                        android:text="Active Model"
+                        android:text="Available Models (Free / Paid)"
                         android:textColor="@color/text_slate_600"
                         android:textSize="12sp"
                         android:textStyle="bold" />

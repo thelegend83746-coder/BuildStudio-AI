@@ -17,12 +17,15 @@ import java.util.concurrent.TimeUnit
 class OllamaSettingsActivity : AppCompatActivity() {
 
     private lateinit var etApiKey: EditText
+    private lateinit var spProvider: Spinner
     private lateinit var etModelCustom: EditText
     private lateinit var etSystemPrompt: EditText
     private lateinit var spModels: Spinner
     private lateinit var tvStatus: TextView
     private val modelList = mutableListOf<String>()
     private lateinit var modelAdapter: ArrayAdapter<String>
+    private lateinit var providerAdapter: ArrayAdapter<String>
+    private val providerList = AiConfigHelper.PROVIDERS
     private var isUserTypingModel = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,10 +36,14 @@ class OllamaSettingsActivity : AppCompatActivity() {
         backBtn?.setOnClickListener { finish(); Animatoo.animateSlideRight(this) }
 
         etApiKey = findViewById(R.id.et_api_key)
+        spProvider = findViewById(R.id.sp_provider)
         etModelCustom = findViewById(R.id.et_model_custom) ?: findViewById(R.id.et_model_name)
         etSystemPrompt = findViewById(R.id.et_system_prompt)
         spModels = findViewById(R.id.sp_models) ?: findViewById(R.id.spinner_models)
         tvStatus = findViewById(R.id.tv_connection_status) ?: findViewById(R.id.tv_conn_status)
+
+        providerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, providerList)
+        spProvider.adapter = providerAdapter
 
         modelAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, modelList)
         spModels.adapter = modelAdapter
@@ -49,64 +56,66 @@ class OllamaSettingsActivity : AppCompatActivity() {
         btnTest?.setOnClickListener { testConnection() }
         btnSave?.setOnClickListener { savePreferences() }
 
-        // Live provider detection when typing API Key
-        etApiKey.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                val key = s?.toString()?.trim() ?: ""
-                val currentModel = etModelCustom.text.toString().trim()
-                val config = AiConfigHelper.detectProvider(key, customModel = currentModel)
+        spProvider.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedProvider = providerList[position]
+                val config = AiConfigHelper.getProviderConfigByName(selectedProvider, etApiKey.text.toString().trim())
+                etApiKey.hint = "Enter ${config.providerName} Key (${config.keyPrefixHint})"
 
-                updateModelList(config.models, config.defaultModel)
+                modelList.clear()
+                modelList.addAll(config.models)
+                modelAdapter.notifyDataSetChanged()
+
+                if (modelList.isNotEmpty()) {
+                    spModels.setSelection(0)
+                    etModelCustom.setText(AiConfigHelper.cleanModelId(modelList[0]))
+                }
             }
-        })
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
 
         spModels.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position in modelList.indices && !isUserTypingModel) {
-                    etModelCustom.setText(modelList[position])
+                    etModelCustom.setText(AiConfigHelper.cleanModelId(modelList[position]))
                 }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 
-    private fun updateModelList(newModels: List<String>, defaultSelect: String) {
-        modelList.clear()
-        modelList.addAll(newModels)
-        modelAdapter.notifyDataSetChanged()
-
-        val pos = modelList.indexOf(defaultSelect)
-        if (pos >= 0) {
-            spModels.setSelection(pos)
-        } else if (modelList.isNotEmpty()) {
-            spModels.setSelection(0)
-        }
-        etModelCustom.setText(defaultSelect)
-    }
-
     private fun loadPreferences() {
         val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
         val savedKey = sp.getString("api_key", "") ?: ""
+        val savedProvider = sp.getString("provider_name", "") ?: ""
         val savedModel = sp.getString("model_name", "")?.ifEmpty {
             sp.getString("model", "")
         } ?: ""
-
-        val config = AiConfigHelper.detectProvider(savedKey, customModel = savedModel)
+        val savedLabel = sp.getString("model_label", "") ?: ""
 
         etApiKey.setText(savedKey)
+
+        var pIdx = providerList.indexOfFirst { it.contains(savedProvider, ignoreCase = true) }
+        if (pIdx < 0 && savedModel.isNotEmpty()) {
+            val detected = AiConfigHelper.resolveByModel(savedModel, savedKey)
+            pIdx = providerList.indexOfFirst { it.contains(detected.providerName, ignoreCase = true) }
+        }
+        if (pIdx < 0) pIdx = 0
+        spProvider.setSelection(pIdx)
+
+        val config = AiConfigHelper.getProviderConfigByName(providerList[pIdx], savedKey)
         modelList.clear()
         modelList.addAll(config.models)
-        if (savedModel.isNotEmpty() && !modelList.contains(savedModel)) {
-            modelList.add(0, savedModel)
+
+        if (savedLabel.isNotEmpty() && !modelList.contains(savedLabel)) {
+            modelList.add(0, savedLabel)
         }
         modelAdapter.notifyDataSetChanged()
 
         val activeModel = savedModel.ifEmpty { config.defaultModel }
-        etModelCustom.setText(activeModel)
+        etModelCustom.setText(AiConfigHelper.cleanModelId(activeModel))
 
-        val pos = modelList.indexOf(activeModel)
+        val pos = modelList.indexOfFirst { it.contains(activeModel, ignoreCase = true) }
         if (pos >= 0) {
             spModels.setSelection(pos)
         }
@@ -119,171 +128,88 @@ class OllamaSettingsActivity : AppCompatActivity() {
         )
     }
 
-    data class Candidate(
-        val name: String,
-        val testUrl: String,
-        val endpoint: String,
-        val baseUrl: String,
-        val defaultModel: String
-    )
-
     private fun testConnection() {
         tvStatus.text = "Testing connection..."
         tvStatus.setTextColor(Color.parseColor("#64748B"))
 
         val apiKey = etApiKey.text.toString().trim()
-        val currentModel = etModelCustom.text.toString().trim()
-        val detected = AiConfigHelper.resolveByModel(currentModel, apiKey = apiKey)
+        val selectedProvider = providerList[spProvider.selectedItemPosition]
+        val config = AiConfigHelper.getProviderConfigByName(selectedProvider, apiKey = apiKey)
 
-        val candidates = mutableListOf<Candidate>()
-
-        if (apiKey.isNotEmpty()) {
-            val testUrl = if (detected.providerName == "Google Gemini") {
-                "${detected.testUrl}?key=$apiKey"
-            } else {
-                detected.testUrl
-            }
-            candidates.add(
-                Candidate(
-                    name = detected.providerName,
-                    testUrl = testUrl,
-                    endpoint = detected.baseUrl.substringBeforeLast("/chat/completions"),
-                    baseUrl = detected.baseUrl,
-                    defaultModel = detected.defaultModel
-                )
-            )
-        } else {
-            // Local Ollama endpoints
-            candidates.add(
-                Candidate(
-                    name = "Local Ollama (127.0.0.1)",
-                    testUrl = "http://127.0.0.1:11434/api/tags",
-                    endpoint = "http://127.0.0.1:11434",
-                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions",
-                    defaultModel = "qwen2.5-coder:latest"
-                )
-            )
-            candidates.add(
-                Candidate(
-                    name = "Local Ollama (localhost)",
-                    testUrl = "http://localhost:11434/api/tags",
-                    endpoint = "http://localhost:11434",
-                    baseUrl = "http://localhost:11434/v1/chat/completions",
-                    defaultModel = "qwen2.5-coder:latest"
-                )
-            )
-        }
-
-        testNextCandidate(candidates, 0, apiKey, null)
-    }
-
-    private fun testNextCandidate(
-        candidates: List<Candidate>,
-        index: Int,
-        apiKey: String,
-        lastError: String?
-    ) {
-        if (index >= candidates.size) {
-            runOnUiThread {
-                val err = if (apiKey.isEmpty()) {
-                    "Failed: Local Ollama / Termux is not running on 127.0.0.1:11434.\nEnter an API key for DeepSeek or Gemini to use Cloud AI."
-                } else {
-                    lastError ?: "Failed: Could not connect to API with the provided key."
-                }
-                tvStatus.text = err
-                tvStatus.setTextColor(Color.parseColor("#FF5252"))
-            }
+        if (config.requiresKey && apiKey.isEmpty()) {
+            tvStatus.text = "✗ ${config.providerName} requires an API key (${config.keyPrefixHint})"
+            tvStatus.setTextColor(Color.parseColor("#FF5252"))
+            Toast.makeText(this, "Please enter an API Key for ${config.providerName}", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val candidate = candidates[index]
+        val testUrl = if (config.providerName.contains("Google", ignoreCase = true) && apiKey.isNotEmpty()) {
+            "${config.testUrl}?key=$apiKey"
+        } else {
+            config.testUrl
+        }
+
+        tvStatus.text = "Connecting to ${config.providerName} & fetching models..."
+        tvStatus.setTextColor(Color.parseColor("#64748B"))
+
+        val startTime = System.currentTimeMillis()
         val client = OkHttpClient.Builder()
-            .connectTimeout(6, TimeUnit.SECONDS)
-            .readTimeout(6, TimeUnit.SECONDS)
+            .connectTimeout(12, TimeUnit.SECONDS)
+            .readTimeout(12, TimeUnit.SECONDS)
             .build()
 
-        val reqBuilder = Request.Builder().url(candidate.testUrl).get()
+        val reqBuilder = Request.Builder().url(testUrl).get()
         if (apiKey.isNotEmpty()) {
             reqBuilder.header("Authorization", "Bearer $apiKey")
+            if (config.providerName.contains("Sarvam", ignoreCase = true)) {
+                reqBuilder.header("api-subscription-key", apiKey)
+            }
         }
 
         client.newCall(reqBuilder.build()).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                testNextCandidate(candidates, index + 1, apiKey, "Failed: ${e.localizedMessage ?: "Connection Refused"}")
+                runOnUiThread {
+                    tvStatus.text = "✗ Connection failed: ${e.localizedMessage ?: "Unreachable"}"
+                    tvStatus.setTextColor(Color.parseColor("#FF5252"))
+                    Toast.makeText(this@OllamaSettingsActivity, "Connection error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
 
             override fun onResponse(call: Call, response: Response) {
                 val code = response.code
+                val latency = System.currentTimeMillis() - startTime
                 val bodyStr = response.body?.string() ?: ""
 
-                if (response.isSuccessful) {
-                    runOnUiThread {
-                        tvStatus.text = "✓ Connected to ${candidate.name}! (HTTP $code)"
-                        tvStatus.setTextColor(Color.parseColor("#00C853"))
-
-                        // Discovered models list
-                        val discovered = mutableListOf<String>()
-                        try {
-                            val json = JSONObject(bodyStr)
-                            if (json.has("models")) {
-                                val arr = json.getJSONArray("models")
-                                for (i in 0 until arr.length()) {
-                                    val item = arr.getJSONObject(i)
-                                    val name = if (item.has("name")) item.getString("name") else item.optString("model")
-                                    if (name.isNotEmpty()) discovered.add(name)
-                                }
-                            } else if (json.has("data")) {
-                                val arr = json.getJSONArray("data")
-                                for (i in 0 until arr.length()) {
-                                    val item = arr.getJSONObject(i)
-                                    val id = item.optString("id")
-                                    if (id.isNotEmpty()) discovered.add(id)
-                                }
-                            }
-                        } catch (e: Exception) {}
-
-                        val effectiveModel = if (discovered.isNotEmpty()) {
-                            discovered[0]
-                        } else {
-                            candidate.defaultModel
-                        }
-
-                        // Auto-save verified connection in preferences
-                        val sp = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
-                        sp.edit()
-                            .putString("endpoint", candidate.endpoint)
-                            .putString("base_url", candidate.baseUrl)
-                            .putString("api_key", apiKey)
-                            .putString("model", effectiveModel)
-                            .putString("model_name", effectiveModel)
-                            .apply()
-
+                runOnUiThread {
+                    if (response.isSuccessful) {
+                        val discovered = AiConfigHelper.parseModelsResponse(config.providerName, bodyStr)
                         if (discovered.isNotEmpty()) {
-                            for (m in discovered.reversed()) {
-                                if (!modelList.contains(m)) modelList.add(0, m)
-                            }
+                            modelList.clear()
+                            modelList.addAll(discovered)
                             modelAdapter.notifyDataSetChanged()
-                            etModelCustom.setText(effectiveModel)
-                            val p = modelList.indexOf(effectiveModel)
-                            if (p >= 0) spModels.setSelection(p)
-                            Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}! Loaded ${discovered.size} models 🎯", Toast.LENGTH_SHORT).show()
-                        } else {
-                            etModelCustom.setText(effectiveModel)
-                            Toast.makeText(this@OllamaSettingsActivity, "Connected to ${candidate.name}! 🚀", Toast.LENGTH_SHORT).show()
+                            spModels.setSelection(0)
+                            etModelCustom.setText(AiConfigHelper.cleanModelId(discovered[0]))
                         }
-                    }
-                } else if (code == 401) {
-                    if (index + 1 < candidates.size) {
-                        // Key might belong to another candidate (e.g. OpenAI vs DeepSeek)
-                        testNextCandidate(candidates, index + 1, apiKey, "HTTP 401: Invalid API Key for ${candidate.name}")
+
+                        val freeCount = modelList.count { it.contains("FREE", ignoreCase = true) }
+                        val paidCount = modelList.size - freeCount
+
+                        tvStatus.text = "✓ ${config.providerName} Connected (${latency}ms, HTTP $code)! Found ${modelList.size} models ($freeCount Free, $paidCount Paid)"
+                        tvStatus.setTextColor(Color.parseColor("#00C853"))
+                        Toast.makeText(this@OllamaSettingsActivity, "${config.providerName} Connected! 🎯", Toast.LENGTH_SHORT).show()
                     } else {
-                        runOnUiThread {
-                            tvStatus.text = "HTTP 401: Invalid API Key. Please check the key."
-                            tvStatus.setTextColor(Color.parseColor("#FF5252"))
+                        val errDetail = when (code) {
+                            400 -> "HTTP 400 (Invalid API Key for ${config.providerName})"
+                            401 -> "HTTP 401 (Authentication Failed / Invalid Key for ${config.providerName})"
+                            403 -> "HTTP 403 (Forbidden / Access Denied)"
+                            404 -> "HTTP 404 (Endpoint Not Found)"
+                            429 -> "HTTP 429 (Rate Limit / Quota Exceeded)"
+                            else -> "HTTP $code: ${bodyStr.take(120)}"
                         }
+                        tvStatus.text = "✗ ${config.providerName} Error: $errDetail"
+                        tvStatus.setTextColor(Color.parseColor("#FF5252"))
+                        Toast.makeText(this@OllamaSettingsActivity, "Verification failed: $errDetail", Toast.LENGTH_LONG).show()
                     }
-                } else {
-                    testNextCandidate(candidates, index + 1, apiKey, "${candidate.name} returned HTTP $code")
                 }
             }
         })
@@ -294,20 +220,29 @@ class OllamaSettingsActivity : AppCompatActivity() {
         val apiKey = etApiKey.text.toString().trim()
         val customModel = etModelCustom.text.toString().trim()
         val prompt = etSystemPrompt.text.toString().trim()
+        val selectedProvider = providerList[spProvider.selectedItemPosition]
+        val config = AiConfigHelper.getProviderConfigByName(selectedProvider, apiKey = apiKey)
 
-        val config = AiConfigHelper.detectProvider(apiKey, customModel = customModel)
-        val finalModel = customModel.ifEmpty { config.defaultModel }
+        val selectedModelFull = if (modelList.isNotEmpty() && spModels.selectedItemPosition in modelList.indices) {
+            modelList[spModels.selectedItemPosition]
+        } else {
+            customModel.ifEmpty { config.defaultModel }
+        }
+
+        val cleanModel = AiConfigHelper.cleanModelId(customModel.ifEmpty { selectedModelFull })
 
         sp.edit()
             .putString("endpoint", config.baseUrl.substringBeforeLast("/chat/completions"))
             .putString("base_url", config.baseUrl)
             .putString("api_key", apiKey)
-            .putString("model", finalModel)
-            .putString("model_name", finalModel)
+            .putString("provider_name", config.providerName)
+            .putString("model", cleanModel)
+            .putString("model_name", cleanModel)
+            .putString("model_label", selectedModelFull)
             .putString("system_prompt", prompt)
             .apply()
 
-        Toast.makeText(this, "AI Settings saved! 🚀", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "AI Settings saved: ${config.providerName} ($cleanModel)! 🚀", Toast.LENGTH_SHORT).show()
         finish()
         Animatoo.animateSlideRight(this)
     }
