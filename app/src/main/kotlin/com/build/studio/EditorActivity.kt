@@ -151,12 +151,11 @@ class EditorActivity : AppCompatActivity() {
 
         tvPrjName.text = currentProject.name
 
+        // Top Bar Back button: automatically saves current file and exits
         findViewById<View>(R.id.drawer_toggle_btn)?.setOnClickListener {
-            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                drawerLayout.closeDrawer(GravityCompat.START)
-            } else {
-                drawerLayout.openDrawer(GravityCompat.START)
-            }
+            saveCurrentFile()
+            finish()
+            Animatoo.animateSlideDown(this)
         }
 
         findViewById<View>(R.id.undo_btn)?.setOnClickListener {
@@ -860,7 +859,7 @@ class EditorActivity : AppCompatActivity() {
         val task = CompilerAsyncTask(this, currentProject) { result ->
             runOnUiThread {
                 if (result.isSuccess && result.apkFile != null) {
-                    DialogUtil.showApkUtilityDialog(this, result.apkFile, currentProject.name)
+                    DialogUtil.showApkUtilityDialog(this, result.apkFile, currentProject.name, currentProject.packageName)
                 } else {
                     DialogUtil.showCompilerErrorDialog(
                         this,
@@ -886,7 +885,21 @@ class EditorActivity : AppCompatActivity() {
             isOutsideTouchable = true
         }
 
-        // Build AI item
+        // 1. Add Library: Opens dependency manager dialog
+        popupView.findViewById<View>(R.id.menu_add_library)?.setOnClickListener {
+            popupWindow.dismiss()
+            showAddLibraryDialog()
+        }
+
+        // 2. File Explorer: Opens side drawer showing full project tree
+        popupView.findViewById<View>(R.id.menu_file_explorer)?.setOnClickListener {
+            popupWindow.dismiss()
+            if (!drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.openDrawer(GravityCompat.START)
+            }
+        }
+
+        // 3. Build AI: Launches integrated AI assistant
         popupView.findViewById<View>(R.id.build_ai)?.setOnClickListener {
             popupWindow.dismiss()
             val intent = Intent(this, BuildAiActivity::class.java).apply {
@@ -897,13 +910,75 @@ class EditorActivity : AppCompatActivity() {
             Animatoo.animateSlideLeft(this)
         }
 
+        // Shortcuts to quickly create Java or Resource file
+        popupView.findViewById<View>(R.id.java_file)?.setOnClickListener {
+            popupWindow.dismiss()
+            promptCreateFile(currentProject.srcDir)
+        }
+
+        popupView.findViewById<View>(R.id.res_file)?.setOnClickListener {
+            popupWindow.dismiss()
+            val layoutDir = File(currentProject.resDir, "layout").apply { mkdirs() }
+            promptCreateFile(layoutDir)
+        }
+
         popupWindow.showAsDropDown(anchor, 0, 0, Gravity.END)
+    }
+
+    private fun showAddLibraryDialog() {
+        val dialog = Dialog(this).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(R.layout.dialog_input)
+            window?.apply {
+                setBackgroundDrawableResource(android.R.color.transparent)
+                setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            }
+        }
+
+        val tvTitle = dialog.findViewById<TextView>(R.id.dialog_title)
+        val etInput = dialog.findViewById<EditText>(R.id.dialog_input)
+        val btnCancel = dialog.findViewById<View>(R.id.btn_cancel)
+        val btnSubmit = dialog.findViewById<View>(R.id.btn_submit)
+
+        tvTitle?.text = "Add Library (AAR / Maven)"
+        etInput?.hint = "e.g. androidx.recyclerview:recyclerview:1.3.2"
+
+        btnCancel?.setOnClickListener { dialog.dismiss() }
+        btnSubmit?.setOnClickListener {
+            val dep = etInput?.text?.toString()?.trim() ?: ""
+            if (dep.isEmpty()) {
+                etInput?.error = "Please enter dependency coordinate"
+                return@setOnClickListener
+            }
+
+            try {
+                val gradleFile = File(currentProject.rootPath, "app/build.gradle")
+                if (gradleFile.exists()) {
+                    var content = gradleFile.readText()
+                    if (content.contains("dependencies {")) {
+                        content = content.replaceFirst("dependencies {", "dependencies {\n    implementation '$dep'")
+                    } else {
+                        content += "\n\ndependencies {\n    implementation '$dep'\n}\n"
+                    }
+                    gradleFile.writeText(content)
+                }
+
+                val libsDir = File(currentProject.rootPath, "app/Build/libs/${dep.replace(':', '_')}").apply { mkdirs() }
+                Toast.makeText(this, "Added library: $dep 🚀", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Error adding library: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        dialog.show()
     }
 
     override fun onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START)
         } else {
+            saveCurrentFile()
             super.onBackPressed()
             Animatoo.animateSlideDown(this)
         }

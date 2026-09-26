@@ -33,28 +33,35 @@ class CompilerAsyncTask(
                 Logger.log("   Language: ${project.language}")
                 Logger.log("==================================================")
 
-                // Step 1: AAPT2 Resource Compilation & Linking
+                // Step 1: Pre-Flight Validation (XML syntax & View ID matching)
+                postProgress("Validating XML syntax & layout View IDs...", 1, 6)
+                PreFlightValidator.validate(project)
+
+                // Step 2: Resource Compilation (AAPT2) & Linking
                 val aapt2 = AAPT2Compiler(project).apply {
-                    progressListener = { msg, s, t -> postProgress(msg, 1, 7) }
+                    progressListener = { msg, s, t -> postProgress(msg, 2, 6) }
                 }
                 aapt2.run()
 
-                // Step 2: Source Code Compilation (Kotlin / Java)
+                // Step 3: Source Code Compilation (ECJ / Kotlin)
                 val sourceCompiler = KotlinJavaCompiler(project).apply {
-                    progressListener = { msg, s, t -> postProgress(msg, 2, 7) }
+                    progressListener = { msg, s, t -> postProgress(msg, 3, 6) }
                 }
                 sourceCompiler.run()
 
-                // Step 3: D8 Dex Conversion
+                // Step 4: D8 Dex Conversion
                 val d8 = D8Compiler(project).apply {
-                    progressListener = { msg, s, t -> postProgress(msg, 3, 7) }
+                    progressListener = { msg, s, t -> postProgress(msg, 4, 6) }
                 }
                 d8.run()
 
-                // Steps 4, 5, 6: Packaging + ZipAlign + Signing
+                // Step 5: Packaging + ZipAlign + Signing (ZipSigner)
                 val finalApk = ZipSignerWrapper.packageAndSign(project) { msg, step, total ->
-                    postProgress(msg, step, total)
+                    postProgress(msg, 5, 6)
                 }
+
+                // Step 6: Native Installation Readiness
+                postProgress("APK ready for native installation", 6, 6)
 
                 // Step 7: Completed
                 val durationMs = System.currentTimeMillis() - startTime

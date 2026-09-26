@@ -41,8 +41,23 @@ class D8Compiler(project: Project) : Compiler(project) {
 
         try {
             val d8Class = Class.forName("com.android.tools.r8.D8", true, cl)
-            val mainMethod = d8Class.getMethod("main", Array<String>::class.java)
-            mainMethod.invoke(null, args.toTypedArray())
+            var invoked = false
+            try {
+                val d8CommandClass = Class.forName("com.android.tools.r8.D8Command", true, cl)
+                val originClass = Class.forName("com.android.tools.r8.origin.Origin", true, cl)
+                val rootOrigin = originClass.getField("root").get(null)
+                val parseMethod = d8CommandClass.getMethod("parse", Array<String>::class.java, originClass)
+                val builder = parseMethod.invoke(null, args.toTypedArray(), rootOrigin)
+                val command = builder.javaClass.getMethod("build").invoke(builder)
+                val runMethod = d8Class.getMethod("run", d8CommandClass)
+                runMethod.invoke(null, command)
+                invoked = true
+            } catch (_: Throwable) {}
+
+            if (!invoked) {
+                val mainMethod = d8Class.getMethod("main", Array<String>::class.java)
+                mainMethod.invoke(null, args.toTypedArray())
+            }
         } catch (e: ClassNotFoundException) {
             throw IllegalStateException(
                 "❌ [Build Engine Missing File] D8 / Dex compiler engine not found on classpath!\n" +

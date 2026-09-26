@@ -67,11 +67,13 @@ class ApplicationLoader : Application() {
                 if (!aapt2.exists()) {
                     val extAapt2 = File(extEngineDir, "aapt2")
                     if (extAapt2.exists()) {
-                        FileUtil.copyFile(extAapt2, aapt2)
+                        val internalBin = File(filesDir, "bin/aapt2").apply { parentFile?.mkdirs() }
+                        FileUtil.copyFile(extAapt2, internalBin)
+                        internalBin.setExecutable(true, false)
                     }
                 }
                 if (aapt2.exists()) {
-                    aapt2.setExecutable(true, false)
+                    try { aapt2.setExecutable(true, false) } catch (_: Throwable) {}
                 }
 
                 // 4. Dex ClassLoader for offline jars if present
@@ -102,6 +104,15 @@ class ApplicationLoader : Application() {
     }
 
     fun getAAPT2Binary(): File {
+        // 1. Native library dir from APK installation (extractNativeLibs="true")
+        try {
+            val nativeAapt2 = File(applicationInfo.nativeLibraryDir, "libaapt2.so")
+            if (nativeAapt2.exists() && nativeAapt2.length() > 0L) {
+                nativeAapt2.setExecutable(true, false)
+                return nativeAapt2
+            }
+        } catch (_: Throwable) {}
+
         val abi = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
         val archName = when {
             abi.contains("arm64") -> "arm64-v8a"
@@ -110,17 +121,20 @@ class ApplicationLoader : Application() {
             else -> "x86"
         }
 
-        // Primary location in internal storage
+        // 2. Internal storage locations
         val bin1 = File(filesDir, "bin/aapt2")
-        if (bin1.exists()) return bin1
+        if (bin1.exists() && bin1.length() > 0L) return bin1
         val bin2 = File(filesDir, "bin/$archName/aapt2")
-        if (bin2.exists()) return bin2
+        if (bin2.exists() && bin2.length() > 0L) return bin2
 
-        // Check external engine directory
+        // 3. Check external engine directory fallback
         val extBin = File("/storage/emulated/0/test-folder/compiler_engine/aapt2")
-        if (extBin.exists()) return extBin
+        if (extBin.exists() && extBin.length() > 0L) return extBin
+        val extArchBin = File("/storage/emulated/0/test-folder/compiler_engine/$archName/aapt2")
+        if (extArchBin.exists() && extArchBin.length() > 0L) return extArchBin
 
-        return bin1
+        val nativeFallback = File(applicationInfo.nativeLibraryDir, "libaapt2.so")
+        return if (nativeFallback.exists()) nativeFallback else bin1
     }
 
     fun getAndroidJar(targetSdk: Int): File {

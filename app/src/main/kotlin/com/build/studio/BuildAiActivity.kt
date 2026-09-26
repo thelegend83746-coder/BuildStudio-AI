@@ -48,6 +48,7 @@ class BuildAiActivity : AppCompatActivity() {
         val type: Int, // 1 = User, 2 = Assistant
         var text: String,
         var plan: String? = null,
+        var confidence: String? = null,
         val actions: MutableList<FileAction> = mutableListOf(),
         var isStreaming: Boolean = false
     )
@@ -69,23 +70,21 @@ class BuildAiActivity : AppCompatActivity() {
         .readTimeout(120, TimeUnit.SECONDS)
         .build()
 
-    private val systemPrompt = """You are Build AI, an expert Android developer and coding assistant inside the Build Studio app. You can create files, folders, write Java and XML code, fix compilation errors, and answer questions.
+    private val systemPrompt = """You are Build AI, an expert Android systems engineer and on-device IDE coding assistant inside the Build Studio app. You can create files, folders, write Java and XML code, fix compilation errors, and generate targeted smart patches.
 
-RULE 0 - MANDATORY PLAN BEFORE ACTING: Before any <write_file>, <replace_code>, <delete>, <rename>, <move>, or <create_dir> tag, you MUST write a <plan>...</plan> block. Inside it, in plain text, state: (1) what you are going to do and why; (2) which file(s) you need to create or change; (3) the actions you will use. Skip <plan> only for pure conversational greetings (like hello, hi, how are you) with no file action.
-
-RULE 1 - NO GUESSING: Base your diagnosis and code on the complete file(s) provided.
-
-RULE 2 - SMALLEST EDIT FIRST: Use <replace_code> for small edits, or <write_file> for full files.
-
-RULE 3 - PLAIN TEXT FORMATTING: In conversational replies, keep it simple and friendly.
+CRITICAL RULES:
+1. NEVER REWRITE ENTIRE FILES UNNECESSARILY: Output targeted patches using <replace_code> for specific XML attributes or Java method blocks to prevent breaking existing code.
+2. MANDATORY EXECUTION PLAN & CONFIDENCE SCORE: For every coding task, you MUST output a <plan>...</plan> block explaining your diagnosis and planned edits, followed by <confidence>98%</confidence> (stating your estimated confidence score between 90% and 99%).
+3. COMPILER ERROR AUTO-FIXER: When provided with a compiler error or stack trace, diagnose the root cause (e.g. AndroidX compatibility, missing view bindings, duplicate IDs, missing imports), patch ONLY the broken lines using <replace_code>, and preserve the rest of the file.
 
 TAG FORMATS:
-<plan>analysis and action plan</plan>
-<write_file path="relative/path/to/file">code</write_file>
+<plan>detailed analysis and targeted action steps</plan>
+<confidence>98%</confidence>
 <replace_code path="relative/path/to/file">
-<target>exact lines to match</target>
-<replacement>replacement code</replacement>
+<target>exact existing lines to replace</target>
+<replacement>exact replacement code</replacement>
 </replace_code>
+<write_file path="relative/path/to/file">full code (only for new files or when full rewrite is necessary)</write_file>
 <create_dir path="relative/path/to/dir"/>
 <rename path="relative/old/path" new_path="relative/new/path"/>
 <move path="relative/old/path" dest_path="relative/new/path"/>
@@ -139,13 +138,35 @@ TAG FORMATS:
             }
         }
 
-        messages.add(
-            ChatMessage(
-                type = 2,
-                text = "Hello! I am Build AI. I can generate code, fix compiler errors, and create Android features for your project. How can I help you today?"
+        // Load persistent chat history from SQLite
+        val p = projectPath ?: ""
+        if (p.isNotEmpty()) {
+            val savedMsgs = AiChatDbHelper.getInstance(this).loadMessages(p)
+            if (savedMsgs.isNotEmpty()) {
+                messages.addAll(savedMsgs)
+                chatAdapter.notifyDataSetChanged()
+                rvChat.scrollToPosition(messages.size - 1)
+            }
+        }
+
+        if (messages.isEmpty()) {
+            messages.add(
+                ChatMessage(
+                    type = 2,
+                    text = "Hello! I am Build AI. I can generate code, fix compiler errors, and create Android features for your project. How can I help you today?"
+                )
             )
-        )
-        chatAdapter.notifyItemInserted(0)
+            chatAdapter.notifyItemInserted(0)
+        }
+
+        // Auto-fixer intent payload support
+        val prefillPrompt = intent.getStringExtra("prompt") ?: intent.getStringExtra("error")
+        if (!prefillPrompt.isNullOrBlank()) {
+            etMessage.setText(prefillPrompt)
+            etMessage.postDelayed({
+                sendMessage(prefillPrompt)
+            }, 300)
+        }
     }
 
     override fun onResume() {
@@ -170,6 +191,10 @@ TAG FORMATS:
             .setMessage("Do you want to clear the conversation history?")
             .setPositiveButton("Clear") { _, _ ->
                 messages.clear()
+                val p = projectPath ?: ""
+                if (p.isNotEmpty()) {
+                    AiChatDbHelper.getInstance(this).clearMessages(p)
+                }
                 chatAdapter.notifyDataSetChanged()
             }
             .setNegativeButton("Cancel", null)
@@ -185,6 +210,10 @@ TAG FORMATS:
 
     private fun sendMessage(userText: String) {
         messages.add(ChatMessage(type = 1, text = userText))
+        val p = projectPath ?: ""
+        if (p.isNotEmpty()) {
+            AiChatDbHelper.getInstance(this).saveMessage(p, 1, userText)
+        }
         chatAdapter.notifyItemInserted(messages.size - 1)
         rvChat.scrollToPosition(messages.size - 1)
         etMessage.setText("")
@@ -351,10 +380,32 @@ TAG FORMATS:
                         }
 
                         parseResponseIntoMessage(replyText, assistantMsg)
+                        val p = projectPath ?: ""
+                        if (p.isNotEmpty()) {
+                            AiChatDbHelper.getInstance(this@BuildAiActivity).saveMessage(
+                                p,
+                                2,
+                                assistantMsg.text,
+                                assistantMsg.plan,
+                                assistantMsg.confidence,
+                                assistantMsg.actions
+                            )
+                        }
                         chatAdapter.notifyItemChanged(assistantIdx)
                         rvChat.scrollToPosition(assistantIdx)
                     } catch (e: Exception) {
                         parseResponseIntoMessage(respBody, assistantMsg)
+                        val p = projectPath ?: ""
+                        if (p.isNotEmpty()) {
+                            AiChatDbHelper.getInstance(this@BuildAiActivity).saveMessage(
+                                p,
+                                2,
+                                assistantMsg.text,
+                                assistantMsg.plan,
+                                assistantMsg.confidence,
+                                assistantMsg.actions
+                            )
+                        }
                         chatAdapter.notifyItemChanged(assistantIdx)
                     }
                 }
@@ -417,12 +468,29 @@ TAG FORMATS:
     private fun parseResponseIntoMessage(raw: String, msg: ChatMessage) {
         var cleanText = raw
 
-        // 1. Parse <plan>...</plan>
-        val planPattern = Pattern.compile("<plan>(.*?)</plan>", Pattern.DOTALL)
+        // 1. Parse <plan>...</plan> and optional confidence attribute
+        val planPattern = Pattern.compile("<plan(?:\\s+confidence=[\"']([^\"']+)[\"'])?>(.*?)</plan>", Pattern.DOTALL)
         val planMatcher = planPattern.matcher(cleanText)
         if (planMatcher.find()) {
-            msg.plan = planMatcher.group(1)?.trim()
+            val confAttr = planMatcher.group(1)
+            msg.plan = planMatcher.group(2)?.trim()
+            if (!confAttr.isNullOrBlank()) {
+                msg.confidence = if (confAttr.contains("%")) "Confidence: $confAttr" else "Confidence: $confAttr%"
+            }
             cleanText = planMatcher.replaceAll("").trim()
+        }
+
+        // Parse explicit <confidence>...</confidence> if present
+        val confPattern = Pattern.compile("<confidence>(.*?)</confidence>", Pattern.DOTALL)
+        val confMatcher = confPattern.matcher(cleanText)
+        if (confMatcher.find()) {
+            val c = confMatcher.group(1)?.trim() ?: ""
+            msg.confidence = if (c.startsWith("Confidence", ignoreCase = true)) c else "Confidence: $c"
+            cleanText = confMatcher.replaceAll("").trim()
+        }
+
+        if (msg.confidence.isNullOrBlank() && !msg.plan.isNullOrBlank()) {
+            msg.confidence = "Confidence: 98%"
         }
 
         // 2. Parse <write_file path="...">...</write_file>
@@ -521,13 +589,15 @@ TAG FORMATS:
             } else if (holder is AssistantViewHolder) {
                 holder.tvText.text = msg.text
 
-                // Plan Card
+                // Plan Card with Confidence Score
                 if (!msg.plan.isNullOrBlank()) {
                     holder.containerPlan.visibility = View.VISIBLE
                     holder.containerPlan.removeAllViews()
                     val planCard = LayoutInflater.from(this@BuildAiActivity).inflate(R.layout.chat_plan_card, holder.containerPlan, false)
                     val tvPlanText = planCard.findViewById<TextView>(R.id.tv_plan_text) ?: planCard.findViewById<TextView>(R.id.tv_plan_body)
+                    val tvConfidence = planCard.findViewById<TextView>(R.id.tv_confidence_score)
                     tvPlanText?.text = msg.plan
+                    tvConfidence?.text = msg.confidence ?: "Confidence: 98%"
                     holder.containerPlan.addView(planCard)
                 } else {
                     holder.containerPlan.visibility = View.GONE

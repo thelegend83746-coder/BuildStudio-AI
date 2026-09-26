@@ -26,7 +26,7 @@ import java.util.Locale
 object DialogUtil {
 
     @JvmStatic
-    fun showApkUtilityDialog(context: Context, apkFile: File?, appName: String?) {
+    fun showApkUtilityDialog(context: Context, apkFile: File?, appName: String?, packageName: String? = null) {
         if (apkFile == null || !apkFile.exists()) {
             Toast.makeText(context, "APK file not found!", Toast.LENGTH_SHORT).show()
             return
@@ -45,6 +45,7 @@ object DialogUtil {
         val tvPath = dialog.findViewById<TextView>(R.id.tv_apk_path)
         val tvSize = dialog.findViewById<TextView>(R.id.tv_apk_size)
         val btnInstall = dialog.findViewById<Button>(R.id.btn_install_apk)
+        val btnOpen = dialog.findViewById<Button>(R.id.btn_open_app)
         val btnClose = dialog.findViewById<View>(R.id.btn_close_dialog)
 
         tvTitle?.text = appName ?: apkFile.name
@@ -55,7 +56,22 @@ object DialogUtil {
 
         btnInstall?.setOnClickListener {
             installApk(context, apkFile)
-            dialog.dismiss()
+        }
+
+        btnOpen?.setOnClickListener {
+            val pkg = packageName ?: appName
+            if (!pkg.isNullOrEmpty()) {
+                val launchIntent = context.packageManager.getLaunchIntentForPackage(pkg)
+                if (launchIntent != null) {
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(launchIntent)
+                    dialog.dismiss()
+                } else {
+                    Toast.makeText(context, "App not installed yet or package '$pkg' not found. Tap Install first.", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                Toast.makeText(context, "Package name not available to launch.", Toast.LENGTH_SHORT).show()
+            }
         }
 
         dialog.findViewById<View>(R.id.tool_sign_apk)?.setOnClickListener {
@@ -89,11 +105,31 @@ object DialogUtil {
                 Uri.fromFile(apkFile)
             }
 
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(apkUri, "application/vnd.android.package-archive")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            // Launch package installer directly without file manager chooser
+            val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
+                    data = apkUri
+                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+                    putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+                    putExtra(Intent.EXTRA_RETURN_RESULT, true)
+                }
+            } else {
+                Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(apkUri, "application/vnd.android.package-archive")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
             }
-            context.startActivity(intent)
+
+            try {
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                // Fallback to VIEW intent
+                val fallback = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(apkUri, "application/vnd.android.package-archive")
+                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(fallback)
+            }
         } catch (e: Exception) {
             Toast.makeText(context, "Installation error: ${e.message}", Toast.LENGTH_LONG).show()
         }

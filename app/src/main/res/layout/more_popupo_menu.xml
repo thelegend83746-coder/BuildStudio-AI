@@ -1,59 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content">
-  <LinearLayout android:orientation="vertical" android:id="@+id/linear1_m" android:background="@drawable/popup_bg" android:paddingTop="8.0dp" android:paddingBottom="8.0dp" android:layout_width="220.0dp" android:layout_height="wrap_content" android:layout_margin="8.0dp" android:elevation="6.0dp">
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/java_file" android:background="?android:attr/selectableItemBackground" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="48.0dp">
-      <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginRight="12.0dp" android:src="@drawable/java_96">
-      </ImageView>
-      <TextView android:textSize="15.0sp" android:textColor="#ff2d3748" android:id="@+id/textview1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Java File" android:fontFamily="sans-serif-medium">
-      </TextView>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/linear1_m"
+        android:layout_width="230dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="@drawable/popup_bg"
+        android:elevation="8dp"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <!-- 1. Add Library -->
+        <LinearLayout
+            android:id="@+id/menu_add_library"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginRight="12dp"
+                android:src="@drawable/ic_local_library_black"
+                app:tint="@color/colorPrimary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Add Library"
+                android:textColor="@color/text_slate_900"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:background="#EDF2F7" />
+
+        <!-- 2. File Explorer -->
+        <LinearLayout
+            android:id="@+id/menu_file_explorer"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginRight="12dp"
+                android:src="@drawable/ic_folder_black"
+                app:tint="@color/colorPrimary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="File Explorer"
+                android:textColor="@color/text_slate_900"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:background="#EDF2F7" />
+
+        <!-- 3. Build AI -->
+        <LinearLayout
+            android:id="@+id/build_ai"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginRight="12dp"
+                android:src="@drawable/ic_ai"
+                app:tint="#8B5CF6" />
+
+            <TextView
+                android:id="@+id/textview_build_ai"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-bold"
+                android:text="Build AI Assistant"
+                android:textColor="#8B5CF6"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:background="#EDF2F7" />
+
+        <!-- Java File Shortcut -->
+        <LinearLayout
+            android:id="@+id/java_file"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginRight="12dp"
+                android:src="@drawable/java_96" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="New Java File"
+                android:textColor="@color/text_slate_700"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Resource XML Shortcut -->
+        <LinearLayout
+            android:id="@+id/res_file"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginRight="12dp"
+                android:src="@drawable/ic_folder_black"
+                app:tint="@color/text_slate_500" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="New Resource File"
+                android:textColor="@color/text_slate_700"
+                android:textSize="13sp" />
+        </LinearLayout>
     </LinearLayout>
-    <View android:background="#ffedf2f7" android:layout_width="match_parent" android:layout_height="1.0dp" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp">
-    </View>
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/res_file" android:background="?android:attr/selectableItemBackground" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="48.0dp">
-      <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginRight="12.0dp" android:src="@drawable/ic_folder_black" app:tint="#ff4f46e5">
-      </ImageView>
-      <TextView android:textSize="15.0sp" android:textColor="#ff2d3748" android:id="@+id/textview2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Resources File" android:fontFamily="sans-serif-medium">
-      </TextView>
-    </LinearLayout>
-    <View android:background="#ffedf2f7" android:layout_width="match_parent" android:layout_height="1.0dp" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp">
-    </View>
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/assets_file" android:background="?android:attr/selectableItemBackground" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="48.0dp">
-      <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginRight="12.0dp" android:src="@drawable/ic_folder_black" app:tint="#ff4f46e5">
-      </ImageView>
-      <TextView android:textSize="15.0sp" android:textColor="#ff2d3748" android:id="@+id/textview3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Assets File" android:fontFamily="sans-serif-medium">
-      </TextView>
-    </LinearLayout>
-    <View android:background="#ffedf2f7" android:layout_width="match_parent" android:layout_height="1.0dp" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp">
-    </View>
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/lib_file" android:background="?android:attr/selectableItemBackground" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="48.0dp">
-      <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginRight="12.0dp" android:src="@drawable/ic_folder_black" app:tint="#ff4f46e5">
-      </ImageView>
-      <TextView android:textSize="15.0sp" android:textColor="#ff2d3748" android:id="@+id/textview5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Lib File" android:fontFamily="sans-serif-medium">
-      </TextView>
-    </LinearLayout>
-    <View android:background="#ffedf2f7" android:layout_width="match_parent" android:layout_height="1.0dp" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp">
-    </View>
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/jni_file" android:background="?android:attr/selectableItemBackground" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="48.0dp">
-      <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginRight="12.0dp" android:src="@drawable/ic_folder_black" app:tint="#ff4f46e5">
-      </ImageView>
-      <TextView android:textSize="15.0sp" android:textColor="#ff2d3748" android:id="@+id/textview4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Jni File" android:fontFamily="sans-serif-medium">
-      </TextView>
-    </LinearLayout>
-    <View android:background="#ffedf2f7" android:layout_width="match_parent" android:layout_height="1.0dp" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp">
-    </View>
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/local_lib" android:background="?android:attr/selectableItemBackground" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="48.0dp">
-      <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginRight="12.0dp" android:src="@drawable/ic_local_library_black" app:tint="#ff4f46e5">
-      </ImageView>
-      <TextView android:textSize="15.0sp" android:textColor="#ff2d3748" android:id="@+id/textview6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Local Library" android:fontFamily="sans-serif-medium">
-      </TextView>
-    </LinearLayout>
-    <View android:background="#ffedf2f7" android:layout_width="match_parent" android:layout_height="1.0dp" android:layout_marginTop="4.0dp" android:layout_marginBottom="4.0dp">
-    </View>
-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@+id/build_ai" android:background="?android:attr/selectableItemBackground" android:paddingLeft="16.0dp" android:paddingRight="16.0dp" android:focusable="true" android:clickable="true" android:layout_width="match_parent" android:layout_height="48.0dp">
-      <ImageView android:layout_width="24.0dp" android:layout_height="24.0dp" android:layout_marginRight="12.0dp" android:src="@drawable/ic_ai" app:tint="#ff8b5cf6">
-      </ImageView>
-      <TextView android:textSize="15.0sp" android:textColor="#ff8b5cf6" android:id="@+id/textview_build_ai" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Build AI" android:fontFamily="sans-serif-medium">
-      </TextView>
-    </LinearLayout>
-  </LinearLayout>
 </LinearLayout>

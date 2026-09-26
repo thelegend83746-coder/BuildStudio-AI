@@ -29,11 +29,26 @@
                 app:tint="@color/colorPrimary" />
 
             <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginLeft="6dp"
+                android:text="ANALYSIS &amp; EXECUTION PLAN"
+                android:textColor="@color/colorPrimary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_confidence_score"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="6dp"
-                android:text="ANALYSIS &amp; PLAN"
-                android:textColor="@color/colorPrimary"
+                android:background="@drawable/btn_symbol_chip"
+                android:paddingLeft="8dp"
+                android:paddingTop="2dp"
+                android:paddingRight="8dp"
+                android:paddingBottom="2dp"
+                android:text="Confidence: 98%"
+                android:textColor="#10B981"
                 android:textSize="11sp"
                 android:textStyle="bold" />
         </LinearLayout>

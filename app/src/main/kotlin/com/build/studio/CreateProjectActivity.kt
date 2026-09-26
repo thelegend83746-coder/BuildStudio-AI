@@ -219,7 +219,7 @@ class CreateProjectActivity : AppCompatActivity() {
                 tilAppName.error = null
                 val clean = name.lowercase().replace("[^a-z0-9]".toRegex(), "")
                 if (clean.isNotEmpty()) {
-                    etPackageName.setText("com.example.$clean")
+                    etPackageName.setText("com.buildstudio.$clean")
                 }
             }
             override fun afterTextChanged(s: Editable?) {}
@@ -269,12 +269,12 @@ class CreateProjectActivity : AppCompatActivity() {
 
         if (pkgName.isEmpty()) {
             val clean = appName.lowercase().replace("[^a-z0-9]".toRegex(), "")
-            pkgName = "com.example." + (if (clean.isNotEmpty()) clean else "app")
+            pkgName = "com.buildstudio." + (if (clean.isNotEmpty()) clean else "app")
             etPackageName.setText(pkgName)
         }
 
         if (!pkgName.contains(".") || pkgName.endsWith(".") || pkgName.startsWith(".")) {
-            tilPackageName.error = "Enter a valid package name (e.g. com.example.app)"
+            tilPackageName.error = "Enter a valid package name (e.g. com.buildstudio.app)"
             etPackageName.requestFocus()
             return
         }
@@ -293,16 +293,18 @@ class CreateProjectActivity : AppCompatActivity() {
         template: String
     ) {
         try {
-            // Determine best writable storage directory
-            var saveBase = File("/storage/emulated/0/.BUILD STUDIO")
+            // Priority 1: App-internal storage (/data/user/0/com.buildstudio/files/projects/)
+            var saveBase = File(filesDir, "projects")
             if (!saveBase.exists()) {
-                val ok = saveBase.mkdirs()
-                if (!ok && !saveBase.canWrite()) {
+                saveBase.mkdirs()
+            }
+            // Fallback to external if internal cannot be created
+            if (!saveBase.exists() || !saveBase.canWrite()) {
+                saveBase = File("/storage/emulated/0/.BUILD STUDIO")
+                if (!saveBase.exists()) saveBase.mkdirs()
+                if (!saveBase.canWrite()) {
                     saveBase = File("/storage/emulated/0/test-folder/projects").apply { mkdirs() }
                 }
-            }
-            if (!saveBase.canWrite()) {
-                saveBase = File(getExternalFilesDir(null), "projects").apply { mkdirs() }
             }
 
             val projectDir = File(saveBase, appName)
@@ -591,13 +593,49 @@ rootProject.name = "$appName"
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 101 && resultCode == RESULT_OK && data?.data != null) {
+            val uri: Uri = data.data!!
             try {
-                val uri: Uri = data.data!!
-                val inputStream = contentResolver.openInputStream(uri)
-                pickedLogoBitmap = BitmapFactory.decodeStream(inputStream)
-                ivLogoPreview.setImageBitmap(pickedLogoBitmap)
+                // Validate strict PNG format by inspecting the 8-byte PNG signature: 89 50 4E 47 0D 0A 1A 0A
+                var isPng = false
+                contentResolver.openInputStream(uri)?.use { stream ->
+                    val header = ByteArray(8)
+                    val read = stream.read(header)
+                    if (read == 8 &&
+                        header[0] == 0x89.toByte() &&
+                        header[1] == 0x50.toByte() && // P
+                        header[2] == 0x4E.toByte() && // N
+                        header[3] == 0x47.toByte() && // G
+                        header[4] == 0x0D.toByte() && // \r
+                        header[5] == 0x0A.toByte() && // \n
+                        header[6] == 0x1A.toByte() && // EOF
+                        header[7] == 0x0A.toByte()    // \n
+                    ) {
+                        isPng = true
+                    }
+                }
+
+                if (!isPng) {
+                    pickedLogoBitmap = null
+                    ivLogoPreview.setImageResource(R.drawable.default_image)
+                    Toast.makeText(this, "Invalid PNG format required", Toast.LENGTH_LONG).show()
+                    return
+                }
+
+                // Strictly decoded only after PNG magic verification
+                contentResolver.openInputStream(uri)?.use { stream ->
+                    pickedLogoBitmap = BitmapFactory.decodeStream(stream)
+                    if (pickedLogoBitmap != null) {
+                        ivLogoPreview.setImageBitmap(pickedLogoBitmap)
+                        Toast.makeText(this, "PNG icon selected ✓", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "Invalid PNG format required", Toast.LENGTH_LONG).show()
+                    }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
+                pickedLogoBitmap = null
+                ivLogoPreview.setImageResource(R.drawable.default_image)
+                Toast.makeText(this, "Invalid PNG format required", Toast.LENGTH_LONG).show()
             }
         }
     }

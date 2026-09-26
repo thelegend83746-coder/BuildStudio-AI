@@ -20,7 +20,7 @@ class AAPT2Compiler(project: Project) : Compiler(project) {
                 "Please add the offline aapt2 binary as instructed in readme.txt."
             )
         }
-        aapt2Binary.setExecutable(true, false)
+        try { aapt2Binary.setExecutable(true, false) } catch (_: Throwable) {}
 
         val androidJar = ApplicationLoader.instance.getAndroidJar(project.targetSdk)
         if (!androidJar.exists() || androidJar.length() == 0L) {

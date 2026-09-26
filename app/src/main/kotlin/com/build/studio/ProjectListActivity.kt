@@ -90,11 +90,13 @@ class ProjectListActivity : AppCompatActivity() {
     private fun loadProjects() {
         projectList.clear()
 
+        val internalDir1 = File(filesDir, "projects")
+        val internalDir2 = File("/data/user/0/com.buildstudio/files/projects")
         val primaryDir = File("/storage/emulated/0/.BUILD STUDIO")
         val fallbackDir = File("/storage/emulated/0/test-folder/projects")
-        val internalDir = File(getExternalFilesDir(null), "projects")
+        val externalFiles = File(getExternalFilesDir(null), "projects")
 
-        for (dir in listOf(primaryDir, fallbackDir, internalDir)) {
+        for (dir in listOf(internalDir1, internalDir2, primaryDir, fallbackDir, externalFiles)) {
             if (dir.exists() && dir.isDirectory) {
                 val subDirs = dir.listFiles { f -> f.isDirectory } ?: continue
                 for (sub in subDirs) {
@@ -136,10 +138,10 @@ class ProjectListActivity : AppCompatActivity() {
             Animatoo.animateSlideLeft(this)
         }
 
+        // Settings opens the tabbed Settings Bottom Sheet
         popupView.findViewById<View>(R.id.b1)?.setOnClickListener {
             popupWindow.dismiss()
-            startActivity(Intent(this, SettingsActivity::class.java))
-            Animatoo.animateSlideLeft(this)
+            SettingsBottomSheet.show(this)
         }
 
         popupView.findViewById<View>(R.id.b2)?.setOnClickListener {
@@ -274,28 +276,34 @@ class ProjectListActivity : AppCompatActivity() {
         private val items: List<Project>
     ) : BaseAdapter() {
 
+        private val dateFormat = java.text.SimpleDateFormat("MMM dd, yyyy HH:mm", java.util.Locale.getDefault())
+
         override fun getCount(): Int = items.size
         override fun getItem(position: Int): Any = items[position]
         override fun getItemId(position: Int): Long = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.projects_list, parent, false)
+            val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_project_card, parent, false)
             val project = items[position]
 
-            val tvTitle = view.findViewById<TextView>(R.id.text1)
-            val tvPath = view.findViewById<TextView>(R.id.text2)
-            val ivIcon = view.findViewById<ImageView>(R.id.image1)
+            val tvTitle = view.findViewById<TextView>(R.id.tv_project_name) ?: view.findViewById<TextView>(R.id.text1)
+            val tvPackage = view.findViewById<TextView>(R.id.tv_project_package) ?: view.findViewById<TextView>(R.id.text2)
+            val tvTimestamp = view.findViewById<TextView>(R.id.tv_project_timestamp)
+            val tvSdkRange = view.findViewById<TextView>(R.id.tv_project_sdk_range)
+            val ivIcon = view.findViewById<ImageView>(R.id.iv_project_icon) ?: view.findViewById<ImageView>(R.id.image1)
 
-            tvTitle.text = project.name
-            tvPath.text = project.rootPath
+            tvTitle?.text = project.name
+            tvPackage?.text = project.packageName
+            tvTimestamp?.text = dateFormat.format(java.util.Date(project.lastModified))
+            tvSdkRange?.text = "SDK ${project.minSdk} - ${project.targetSdk}"
 
             val iconFile = File(project.rootPath, "icon.png")
             if (iconFile.exists()) {
                 val bmp = BitmapFactory.decodeFile(iconFile.absolutePath)
-                if (bmp != null) ivIcon.setImageBitmap(bmp)
-                else ivIcon.setImageResource(R.drawable.default_image)
+                if (bmp != null) ivIcon?.setImageBitmap(bmp)
+                else ivIcon?.setImageResource(R.drawable.ic_launcher)
             } else {
-                ivIcon.setImageResource(R.drawable.default_image)
+                ivIcon?.setImageResource(R.drawable.ic_launcher)
             }
 
             return view
