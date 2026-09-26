@@ -164,11 +164,11 @@
           android:layout_height="36dp"
           android:background="@color/bg_white"
           android:elevation="2dp"
-          app:tabIndicatorColor="@color/colorPrimary"
+          app:tabIndicatorColor="#E53935"
           app:tabIndicatorFullWidth="false"
           app:tabIndicatorHeight="3dp"
           app:tabMode="scrollable"
-          app:tabSelectedTextColor="@color/colorPrimary"
+          app:tabSelectedTextColor="#E53935"
           app:tabTextColor="@color/text_slate_700" />
 
       <!-- FrameLayout Container with CodeEditor -->

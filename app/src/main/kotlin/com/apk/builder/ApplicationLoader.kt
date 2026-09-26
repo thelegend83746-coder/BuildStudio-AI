@@ -138,20 +138,67 @@ class ApplicationLoader : Application() {
     }
 
     fun getAndroidJar(targetSdk: Int): File {
-        // Priority 1: Specific platform jar
+        // Priority 1: Specific platform jar in internal filesDir
         val pJar = File(filesDir, "platforms/android-$targetSdk/android.jar")
         if (pJar.exists() && pJar.length() > 0L) return pJar
+
+        // Extract specific platform jar from assets if present
+        try {
+            pJar.parentFile?.mkdirs()
+            assets.open("platforms/android-$targetSdk/android.jar").use { input ->
+                pJar.outputStream().use { output -> input.copyTo(output) }
+            }
+            if (pJar.exists() && pJar.length() > 0L) return pJar
+        } catch (_: Exception) {}
 
         // Priority 2: Generic android.jar in filesDir
         val mainJar = File(filesDir, "android.jar")
         if (mainJar.exists() && mainJar.length() > 0L) return mainJar
 
-        // Priority 3: External compiler engine directory
+        // Extract generic android.jar from assets
+        try {
+            assets.open("android.jar").use { input ->
+                mainJar.outputStream().use { output -> input.copyTo(output) }
+            }
+            if (mainJar.exists() && mainJar.length() > 0L) return mainJar
+        } catch (_: Exception) {}
+
+        // Priority 3: Extract from android.jar.zip in assets
+        try {
+            assets.open("android.jar.zip").use { input ->
+                java.util.zip.ZipInputStream(input).use { zis ->
+                    var entry = zis.nextEntry
+                    while (entry != null) {
+                        if (entry.name.endsWith("android.jar")) {
+                            mainJar.outputStream().use { output -> zis.copyTo(output) }
+                            break
+                        }
+                        entry = zis.nextEntry
+                    }
+                }
+            }
+            if (mainJar.exists() && mainJar.length() > 0L) return mainJar
+        } catch (_: Exception) {}
+
+        // Priority 4: External compiler engine directory
+        val extPlatformJar = File("/storage/emulated/0/test-folder/compiler_engine/platforms/android-$targetSdk/android.jar")
+        if (extPlatformJar.exists() && extPlatformJar.length() > 0L) return extPlatformJar
+
         val extJar = File("/storage/emulated/0/test-folder/compiler_engine/android.jar")
         if (extJar.exists() && extJar.length() > 0L) return extJar
 
-        val extPlatformJar = File("/storage/emulated/0/test-folder/compiler_engine/platforms/android-$targetSdk/android.jar")
-        if (extPlatformJar.exists() && extPlatformJar.length() > 0L) return extPlatformJar
+        // Priority 5: Fallback to any available platform jar in assets
+        for (sdk in listOf(34, 33, 32, 31, 30, 35, 36)) {
+            val fallbackPJar = File(filesDir, "platforms/android-$sdk/android.jar")
+            if (fallbackPJar.exists() && fallbackPJar.length() > 0L) return fallbackPJar
+            try {
+                fallbackPJar.parentFile?.mkdirs()
+                assets.open("platforms/android-$sdk/android.jar").use { input ->
+                    fallbackPJar.outputStream().use { output -> input.copyTo(output) }
+                }
+                if (fallbackPJar.exists() && fallbackPJar.length() > 0L) return fallbackPJar
+            } catch (_: Exception) {}
+        }
 
         return mainJar
     }

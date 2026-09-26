@@ -386,7 +386,20 @@ android {
                     isOverScrollEnabled = true
                 } catch (_: Throwable) {}
                 try {
-                    setEdgeEffectColor(Color.parseColor("#2563EB"))
+                    setEdgeEffectColor(Color.parseColor("#9E9E9E"))
+                } catch (_: Throwable) {}
+
+                try {
+                    val scheme = colorScheme
+                    scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, Color.WHITE)
+                    scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, Color.WHITE)
+                    scheme.setColor(EditorColorScheme.LINE_NUMBER, Color.parseColor("#0084FF"))
+                    scheme.setColor(EditorColorScheme.LINE_DIVIDER, Color.parseColor("#EEEEEE"))
+                    scheme.setColor(EditorColorScheme.TEXT_NORMAL, Color.parseColor("#212121"))
+                    scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.parseColor("#0084FF"))
+                    scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.parseColor("#0084FF"))
+                    scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#BBDEFB"))
+                    scheme.setColor(EditorColorScheme.CURRENT_LINE, Color.parseColor("#FAFAFA"))
                 } catch (_: Throwable) {}
             }
 
@@ -417,8 +430,8 @@ android {
             })
 
             codeEditor.setOnTouchListener { _, event ->
-                if (event.pointerCount > 1) {
-                    scaleGestureDetector.onTouchEvent(event)
+                val handled = scaleGestureDetector.onTouchEvent(event)
+                if (event.pointerCount > 1 || scaleGestureDetector.isInProgress) {
                     true
                 } else {
                     false
@@ -963,7 +976,7 @@ public class MainActivity extends Activity {
                 tabLayout.getTabAt(existingIndex)?.select()
             } else {
                 val tab = tabLayout.newTab().apply {
-                    text = file.name
+                    text = file.name.uppercase()
                     tag = file
                 }
                 tabLayout.addTab(tab)
