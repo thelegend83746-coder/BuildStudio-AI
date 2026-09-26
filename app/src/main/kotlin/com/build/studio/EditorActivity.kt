@@ -7,26 +7,21 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.view.Window
-import android.view.GestureDetector
 import android.view.Gravity
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
+import android.view.Window
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.apk.builder.DialogUtil
 import com.apk.builder.FileUtil
-import com.apk.builder.logger.Logger
 import com.apk.builder.model.Project
 import com.blogspot.atifsoftwares.animatoolib.Animatoo
 import com.google.android.material.tabs.TabLayout
@@ -50,24 +45,18 @@ class EditorActivity : AppCompatActivity() {
     private val openTabs = mutableListOf<File>()
     private val fileContentCache = mutableMapOf<String, String>()
 
-    private lateinit var gestureDetector: GestureDetectorCompat
     private lateinit var scaleGestureDetector: ScaleGestureDetector
     private var currentFontSize = 14f
-    private var isToolbarVisible = true
     private val fileNodes = mutableListOf<FileNode>()
     private val expandedPaths = HashSet<String>()
     private lateinit var treeAdapter: TreeAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        try {
-            setContentView(R.layout.editor)
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        }
+        setContentView(R.layout.editor)
 
         try {
-            var path = intent.getStringExtra("project_path")
+            val path = intent.getStringExtra("project_path")
                 ?: intent.getStringExtra("path")
                 ?: intent.getStringExtra("fullPath")
                 ?: intent.getStringExtra("projectPath")
@@ -92,61 +81,25 @@ class EditorActivity : AppCompatActivity() {
             currentProject = Project("Project", "com.example.app", "/storage/emulated/0/.BUILD STUDIO/MyApplication")
         }
 
-        try {
-            initViews()
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        }
-
-        try {
-            setupGestures()
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        }
-
-        try {
-            setupEditor()
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        }
-
-        try {
-            setupTree()
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        }
-
-        try {
-            openDefaultFile()
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        }
+        initViews()
+        setupEditor()
+        setupTree()
+        openDefaultFile()
     }
 
     private fun initViews() {
         drawerLayout = findViewById(R.id._drawer) ?: DrawerLayout(this)
-        val editorContainer = findViewById<FrameLayout>(R.id.editor_container)
-        codeEditor = CodeEditor(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            setTextSize(14f)
-            typefaceText = Typeface.MONOSPACE
-            typefaceLineNumber = Typeface.MONOSPACE
-            isLineNumberEnabled = true
-            isWordwrap = false
-        }
-        editorContainer?.addView(codeEditor)
+        codeEditor = findViewById(R.id.code_editor)
         tabLayout = findViewById(R.id.tablayout1)
         tvPrjName = findViewById(R.id.prj_name)
         toolbarLayout = findViewById(R.id.toolbar) ?: LinearLayout(this)
 
+        tvPrjName.text = currentProject.name
+
+        // Drawer views
         val drawerView = findViewById<View>(R.id.drawer) ?: findViewById<View>(R.id._nav_view)
-        rvFileTree = findViewById<RecyclerView>(R.id.recyclerview1)
-            ?: drawerView?.findViewById<RecyclerView>(R.id.recyclerview1)
-            ?: findViewById<RecyclerView>(R.id._drawer_recyclerview1)
-            ?: drawerView?.findViewById<RecyclerView>(R.id._drawer_recyclerview1)
+        rvFileTree = drawerView?.findViewById(R.id.recyclerview1)
+            ?: findViewById(R.id.recyclerview1)
             ?: RecyclerView(this)
 
         drawerView?.findViewById<View>(R.id.btn_drawer_new_file)?.setOnClickListener {
@@ -155,8 +108,10 @@ class EditorActivity : AppCompatActivity() {
         drawerView?.findViewById<View>(R.id.btn_drawer_new_folder)?.setOnClickListener {
             promptCreateFolder(currentProject.srcDir)
         }
-
-        tvPrjName.text = currentProject.name
+        drawerView?.findViewById<View>(R.id.btn_drawer_refresh)?.setOnClickListener {
+            setupTree()
+            Toast.makeText(this, "File tree refreshed", Toast.LENGTH_SHORT).show()
+        }
 
         // Top Bar Back button: automatically saves current file and exits
         findViewById<View>(R.id.drawer_toggle_btn)?.setOnClickListener {
@@ -165,12 +120,22 @@ class EditorActivity : AppCompatActivity() {
             Animatoo.animateSlideDown(this)
         }
 
+        // Undo button
         findViewById<View>(R.id.undo_btn)?.setOnClickListener {
-            if (codeEditor.canUndo()) codeEditor.undo()
+            if (codeEditor.canUndo()) {
+                codeEditor.undo()
+            } else {
+                Toast.makeText(this, "Nothing to undo", Toast.LENGTH_SHORT).show()
+            }
         }
 
+        // Redo button
         findViewById<View>(R.id.redo_btn)?.setOnClickListener {
-            if (codeEditor.canRedo()) codeEditor.redo()
+            if (codeEditor.canRedo()) {
+                codeEditor.redo()
+            } else {
+                Toast.makeText(this, "Nothing to redo", Toast.LENGTH_SHORT).show()
+            }
         }
 
         // Save Button: explicitly saves active file with confirmation Toast
@@ -184,16 +149,6 @@ class EditorActivity : AppCompatActivity() {
             }
         }
 
-        // Bottom Symbol / Code Assist Toolbar
-        val symbolLayout = findViewById<com.apk.builder.SymbolLayout>(R.id.symbol_layout)
-        symbolLayout?.setTargetEditor(codeEditor)
-
-        // Run button (Build TextView)
-        findViewById<View>(R.id.Build)?.setOnClickListener {
-            saveCurrentFile()
-            runBuildPipeline()
-        }
-
         // Folder button to toggle drawer
         findViewById<View>(R.id.imageview3)?.setOnClickListener {
             if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
@@ -203,106 +158,20 @@ class EditorActivity : AppCompatActivity() {
             }
         }
 
+        // Run button (Build TextView)
+        findViewById<View>(R.id.Build)?.setOnClickListener {
+            saveCurrentFile()
+            runBuildPipeline()
+        }
+
         // Overflow menu (more_popupo_menu.xml)
         findViewById<View>(R.id.menu)?.setOnClickListener { v ->
             showMorePopupMenu(v)
         }
-    }
 
-    private fun setupGestures() {
-        gestureDetector = GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
-            private val SWIPE_THRESHOLD = 80
-            private val SWIPE_VELOCITY_THRESHOLD = 80
-
-            override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent,
-                velocityX: Float,
-                velocityY: Float
-            ): Boolean {
-                if (e1 == null) return false
-                val diffY = e2.y - e1.y
-                val diffX = e2.x - e1.x
-
-                if (abs(diffX) > abs(diffY)) {
-                    if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffX > 0) {
-                            onSwipeRight()
-                        } else {
-                            onSwipeLeft()
-                        }
-                        return true
-                    }
-                } else {
-                    if (abs(diffY) > SWIPE_THRESHOLD && abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffY > 0) {
-                            onSwipeDown()
-                        } else {
-                            onSwipeUp()
-                        }
-                        return true
-                    }
-                }
-                return false
-            }
-        })
-    }
-
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        try {
-            if (ev.pointerCount > 1 && ::scaleGestureDetector.isInitialized) {
-                scaleGestureDetector.onTouchEvent(ev)
-            } else {
-                gestureDetector.onTouchEvent(ev)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return super.dispatchTouchEvent(ev)
-    }
-
-    private fun onSwipeDown() {
-        if (!isToolbarVisible) {
-            isToolbarVisible = true
-            toolbarLayout.visibility = View.VISIBLE
-            toolbarLayout.animate().translationY(0f).alpha(1.0f).setDuration(280).start()
-            tabLayout.animate().translationY(0f).setDuration(280).start()
-        }
-    }
-
-    private fun onSwipeUp() {
-        if (isToolbarVisible) {
-            isToolbarVisible = false
-            val moveUp = -toolbarLayout.height.toFloat()
-            toolbarLayout.animate().translationY(moveUp).alpha(0f).setDuration(280).withEndAction {
-                toolbarLayout.visibility = View.GONE
-            }.start()
-            tabLayout.animate().translationY(moveUp).setDuration(280).start()
-        }
-    }
-
-    private fun onSwipeRight() {
-        if (!drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.openDrawer(GravityCompat.START)
-        } else {
-            val curr = tabLayout.selectedTabPosition
-            if (curr > 0) {
-                tabLayout.getTabAt(curr - 1)?.select()
-                codeEditor.startAnimation(AnimationUtils.loadAnimation(this, R.anim.animate_slide_in_left))
-            }
-        }
-    }
-
-    private fun onSwipeLeft() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START)
-        } else {
-            val curr = tabLayout.selectedTabPosition
-            if (curr < tabLayout.tabCount - 1) {
-                tabLayout.getTabAt(curr + 1)?.select()
-                codeEditor.startAnimation(AnimationUtils.loadAnimation(this, R.anim.animate_slide_left_enter))
-            }
-        }
+        // Bottom Symbol / Code Assist Toolbar
+        val symbolLayout = findViewById<com.apk.builder.SymbolLayout>(R.id.symbol_layout)
+        symbolLayout?.setTargetEditor(codeEditor)
     }
 
     private fun setupEditor() {
@@ -318,8 +187,6 @@ class EditorActivity : AppCompatActivity() {
                 isLineNumberEnabled = true
                 isWordwrap = wordWrap
             }
-
-            applyEditorTheme()
 
             // Smooth code pinch-to-zoom (Code Zooming)
             scaleGestureDetector = ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -372,43 +239,21 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
-    private fun applyEditorTheme() {
-        try {
-            val scheme = codeEditor.colorScheme
-            val clazz = scheme.javaClass
-            for (field in clazz.fields) {
-                if (field.type == Int::class.javaPrimitiveType && java.lang.reflect.Modifier.isStatic(field.modifiers)) {
-                    val name = field.name.uppercase()
-                    val id = field.getInt(null)
-                    when {
-                        name.contains("LINE_NUMBER_BACKGROUND") || name.contains("LINE_NUMBER_PANEL") -> scheme.setColor(id, Color.parseColor("#F8FAFC"))
-                        name.contains("LINE_NUMBER") || name.contains("LINENUMBER") -> scheme.setColor(id, Color.parseColor("#8A9BA8"))
-                        name.contains("LINE_DIVIDER") || name.contains("DIVIDER") -> scheme.setColor(id, Color.parseColor("#E2E8F0"))
-                        name.contains("WHOLE_BACKGROUND") || (name.contains("BACKGROUND") && !name.contains("SELECTION") && !name.contains("LINE")) -> scheme.setColor(id, Color.parseColor("#FFFFFF"))
-                        name.contains("TEXT_NORMAL") || name == "TEXT" -> scheme.setColor(id, Color.parseColor("#1E293B"))
-                        name.contains("KEYWORD") -> scheme.setColor(id, Color.parseColor("#5B53FE"))
-                        name.contains("LITERAL") || name.contains("STRING") -> scheme.setColor(id, Color.parseColor("#059669"))
-                        name.contains("COMMENT") -> scheme.setColor(id, Color.parseColor("#94A3B8"))
-                        name.contains("IDENTIFIER") -> scheme.setColor(id, Color.parseColor("#1E293B"))
-                        name.contains("OPERATOR") -> scheme.setColor(id, Color.parseColor("#334155"))
-                    }
-                }
-            }
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        }
-    }
-
     private fun setupTree() {
         try {
             val rootDir = File(currentProject.rootPath)
             if (expandedPaths.isEmpty() && rootDir.exists()) {
                 expandedPaths.add(rootDir.absolutePath)
-                rootDir.walkTopDown().forEach { f ->
-                    if (f.isDirectory && f.name != "build" && f.name != ".git" && f.name != ".build_ai_backups") {
-                        expandedPaths.add(f.absolutePath)
+                fun expandSubDirs(dir: File) {
+                    val children = dir.listFiles() ?: return
+                    for (c in children) {
+                        if (c.isDirectory && c.name != "build" && c.name != ".git" && c.name != ".build_ai_backups") {
+                            expandedPaths.add(c.absolutePath)
+                            expandSubDirs(c)
+                        }
                     }
                 }
+                expandSubDirs(rootDir)
             }
             rvFileTree.layoutManager = LinearLayoutManager(this)
             treeAdapter = TreeAdapter(fileNodes)
@@ -800,35 +645,74 @@ class EditorActivity : AppCompatActivity() {
             if (!rootDir.exists()) {
                 rootDir.mkdirs()
             }
-            val mainFile = rootDir.walkTopDown().firstOrNull {
-                it.isFile && (it.name == "MainActivity.kt" || it.name == "MainActivity.java")
-            }
-            val manifest = currentProject.manifestFile
 
-            when {
-                mainFile != null && mainFile.exists() -> openFileInEditor(mainFile)
-                manifest.exists() -> openFileInEditor(manifest)
-                else -> {
-                    val firstFile = rootDir.walkTopDown().firstOrNull { it.isFile && it.name != "project.json" }
-                    if (firstFile != null) {
-                        openFileInEditor(firstFile)
-                    } else {
-                        val defaultJava = File(currentProject.srcDir, "MainActivity.java")
-                        defaultJava.parentFile?.mkdirs()
-                        val defaultContent = "package ${currentProject.packageName};\n\npublic class MainActivity {\n}\n"
-                        FileUtil.writeFile(defaultJava.absolutePath, defaultContent)
-                        openFileInEditor(defaultJava)
-                    }
-                }
+            var targetFile: File? = null
+
+            // 1. Search for MainActivity in srcDir
+            val srcDir = currentProject.srcDir
+            if (srcDir.exists()) {
+                targetFile = findFileRecursively(srcDir) { it.name.startsWith("MainActivity") }
             }
-        } catch (e: Exception) {
+
+            // 2. Search for any .java or .kt file in project
+            if (targetFile == null && rootDir.exists()) {
+                targetFile = findFileRecursively(rootDir) { it.name.endsWith(".java") || it.name.endsWith(".kt") }
+            }
+
+            // 3. Fallback to AndroidManifest.xml
+            if (targetFile == null) {
+                val manifest = currentProject.manifestFile
+                if (manifest.exists()) targetFile = manifest
+            }
+
+            // 4. Fallback to any file in project
+            if (targetFile == null && rootDir.exists()) {
+                targetFile = findFileRecursively(rootDir) { it.isFile && it.name != "project.json" }
+            }
+
+            // 5. Ultimate fallback: create MainActivity.java
+            if (targetFile == null) {
+                val defaultJava = File(currentProject.srcDir, "MainActivity.java")
+                defaultJava.parentFile?.mkdirs()
+                val pkg = if (currentProject.packageName.isNotEmpty()) currentProject.packageName else "com.example.app"
+                val defaultContent = "package $pkg;\n\nimport android.app.Activity;\nimport android.os.Bundle;\n\npublic class MainActivity extends Activity {\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n    }\n}\n"
+                FileUtil.writeFile(defaultJava.absolutePath, defaultContent)
+                targetFile = defaultJava
+            }
+
+            openFileInEditor(targetFile)
+        } catch (e: Throwable) {
             e.printStackTrace()
         }
     }
 
+    private fun findFileRecursively(dir: File, predicate: (File) -> Boolean): File? {
+        val children = dir.listFiles() ?: return null
+        for (f in children) {
+            if (f.isDirectory) {
+                if (f.name == "build" || f.name == ".git" || f.name == ".build_ai_backups") continue
+                val found = findFileRecursively(f, predicate)
+                if (found != null) return found
+            } else if (predicate(f)) {
+                return f
+            }
+        }
+        return null
+    }
+
     private fun openFileInEditor(file: File) {
         try {
-            val existingIndex = openTabs.indexOfFirst { it.absolutePath == file.absolutePath }
+            if (!file.exists()) return
+
+            var existingIndex = -1
+            for (i in 0 until tabLayout.tabCount) {
+                val tab = tabLayout.getTabAt(i)
+                if ((tab?.tag as? File)?.absolutePath == file.absolutePath) {
+                    existingIndex = i
+                    break
+                }
+            }
+
             if (existingIndex != -1) {
                 tabLayout.getTabAt(existingIndex)?.select()
             } else {
@@ -841,7 +725,7 @@ class EditorActivity : AppCompatActivity() {
                 tab.select()
             }
             switchToFile(file)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             e.printStackTrace()
         }
     }
@@ -868,8 +752,7 @@ class EditorActivity : AppCompatActivity() {
 
             codeEditor.setText(content)
             tvPrjName.text = "${currentProject.name} — ${file.name}"
-            codeEditor.startAnimation(AnimationUtils.loadAnimation(this, R.anim.animate_fade_enter))
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             e.printStackTrace()
         }
     }
@@ -879,6 +762,8 @@ class EditorActivity : AppCompatActivity() {
         val text = codeEditor.text.toString()
         fileContentCache[f.absolutePath] = text
         FileUtil.writeFile(f.absolutePath, text)
+        currentProject.lastModified = System.currentTimeMillis()
+        currentProject.saveConfig()
     }
 
     override fun onPause() {
