@@ -162,6 +162,35 @@
             android:layout_marginBottom="4dp"
             android:background="#EDF2F7" />
 
+        <!-- 5. Edit Project Configuration -->
+        <LinearLayout
+            android:id="@+id/menu_edit_project"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginRight="12dp"
+                android:src="@drawable/ic_info_black"
+                app:tint="@color/colorPrimary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Configure Project"
+                android:textColor="@color/text_slate_900"
+                android:textSize="14sp" />
+        </LinearLayout>
+
         <!-- Java File Shortcut -->
         <LinearLayout
             android:id="@+id/java_file"

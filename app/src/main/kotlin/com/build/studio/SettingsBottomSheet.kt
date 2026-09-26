@@ -121,22 +121,23 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
 
         btnTest.setOnClickListener {
             val key = etApiKey.text.toString().trim()
-            var endpoint = etEndpoint.text.toString().trim()
-            if (endpoint.isEmpty()) {
-                endpoint = if (key.isNotEmpty()) "https://generativelanguage.googleapis.com" else "http://127.0.0.1:11434"
+            val endpoint = etEndpoint.text.toString().trim()
+            val selectedModelFull = supportedAiModels[spModels.selectedItemPosition]
+            val actualModel = when {
+                selectedModelFull.startsWith("Qwen-Coder") -> "qwen2.5-coder:latest"
+                selectedModelFull == "GLM-4.6" -> "glm-4-0520"
+                selectedModelFull == "GLM-4.7" -> "glm-4-plus"
+                else -> selectedModelFull
             }
-            tvStatus.text = "Status: Testing connection to $endpoint..."
+
+            val config = AiConfigHelper.detectProvider(key, customBaseUrl = endpoint, customModel = actualModel)
+            val testUrl = config.testUrl
+
+            tvStatus.text = "Testing ${config.providerName} (${config.defaultModel})..."
             tvStatus.setTextColor(Color.parseColor("#64748B"))
 
             Thread {
-                val client = OkHttpClient.Builder().connectTimeout(5, TimeUnit.SECONDS).build()
-                val testUrl = if (endpoint.contains("googleapis.com")) {
-                    "https://generativelanguage.googleapis.com/v1beta/openai/models"
-                } else if (endpoint.contains("127.0.0.1") || endpoint.contains("localhost")) {
-                    "http://127.0.0.1:11434/api/tags"
-                } else {
-                    if (endpoint.endsWith("/")) "${endpoint}v1/models" else "$endpoint/v1/models"
-                }
+                val client = OkHttpClient.Builder().connectTimeout(8, TimeUnit.SECONDS).build()
 
                 try {
                     val reqBuilder = Request.Builder().url(testUrl).get()
@@ -146,11 +147,11 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
                     val code = resp.code
                     activity?.runOnUiThread {
                         if (ok) {
-                            tvStatus.text = "✓ Connection Successful (HTTP $code)"
+                            tvStatus.text = "✓ ${config.providerName} Connected! (HTTP $code)"
                             tvStatus.setTextColor(Color.parseColor("#10B981"))
-                            Toast.makeText(context, "Connection verified! 🚀", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "${config.providerName} verified! 🚀", Toast.LENGTH_SHORT).show()
                         } else {
-                            tvStatus.text = "✗ Server returned HTTP $code"
+                            tvStatus.text = "✗ ${config.providerName} returned HTTP $code"
                             tvStatus.setTextColor(Color.parseColor("#EF4444"))
                         }
                     }

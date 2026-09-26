@@ -3,6 +3,8 @@ package com.build.studio
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
@@ -25,10 +27,12 @@ import com.apk.builder.FileUtil
 import com.apk.builder.model.Project
 import com.blogspot.atifsoftwares.animatoolib.Animatoo
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.textfield.TextInputEditText
 import com.tyron.compiler.CompilerAsyncTask
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
-import io.github.rosemoe.sora.widget.EditorColorScheme
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import io.github.rosemoe.sora.widget.schemes.SchemeGitHub
 import java.io.File
 import kotlin.math.abs
 
@@ -43,6 +47,8 @@ class EditorActivity : AppCompatActivity() {
 
     private lateinit var currentProject: Project
     private var activeFile: File? = null
+    private var pendingEditLogoBitmap: Bitmap? = null
+    private var ivCurrentEditingLogo: ImageView? = null
     private val openTabs = mutableListOf<File>()
     private val fileContentCache = mutableMapOf<String, String>()
 
@@ -280,16 +286,21 @@ android {
                 isFocusable = true
                 isFocusableInTouchMode = true
 
-                val scheme = colorScheme
-                scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, Color.parseColor("#FFFFFF"))
-                scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, Color.parseColor("#F8FAFC"))
-                scheme.setColor(EditorColorScheme.LINE_NUMBER, Color.parseColor("#64748B"))
-                scheme.setColor(EditorColorScheme.LINE_DIVIDER, Color.parseColor("#E2E8F0"))
-                scheme.setColor(EditorColorScheme.TEXT_NORMAL, Color.parseColor("#0F172A"))
-                scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.parseColor("#2563EB"))
-                scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.parseColor("#2563EB"))
-                scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#BFDBFE"))
-                scheme.setColor(EditorColorScheme.CURRENT_LINE, Color.parseColor("#F8FAFC"))
+                try {
+                    colorScheme = SchemeGitHub()
+                } catch (_: Throwable) {}
+                try {
+                    val scheme = colorScheme
+                    scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, Color.parseColor("#FFFFFF"))
+                    scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, Color.parseColor("#F8FAFC"))
+                    scheme.setColor(EditorColorScheme.LINE_NUMBER, Color.parseColor("#64748B"))
+                    scheme.setColor(EditorColorScheme.LINE_DIVIDER, Color.parseColor("#E2E8F0"))
+                    scheme.setColor(EditorColorScheme.TEXT_NORMAL, Color.parseColor("#0F172A"))
+                    scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.parseColor("#2563EB"))
+                    scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.parseColor("#2563EB"))
+                    scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#BFDBFE"))
+                    scheme.setColor(EditorColorScheme.CURRENT_LINE, Color.parseColor("#F8FAFC"))
+                } catch (_: Throwable) {}
             }
             editorContainer?.removeAllViews()
             editorContainer?.addView(codeEditor)
@@ -1142,6 +1153,13 @@ public class $className extends Activity {
             backupCurrentProject()
         }
 
+        // 5. Configure Project
+        popupView.findViewById<View>(R.id.menu_edit_project)?.setOnClickListener {
+            popupWindow.dismiss()
+            saveCurrentFile()
+            showConfigureProjectDialog()
+        }
+
         // Shortcuts to quickly create Java or Resource file
         popupView.findViewById<View>(R.id.java_file)?.setOnClickListener {
             popupWindow.dismiss()
@@ -1317,6 +1335,232 @@ public class $className extends Activity {
         }
 
         dialog.show()
+    }
+
+    private fun showConfigureProjectDialog() {
+        pendingEditLogoBitmap = null
+        val dialog = Dialog(this).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+            setContentView(R.layout.dialog_edit_project)
+            window?.apply {
+                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            }
+        }
+
+        val ivLogo = dialog.findViewById<ImageView>(R.id.iv_edit_logo)
+        val layoutIconPicker = dialog.findViewById<View>(R.id.layout_edit_icon_picker)
+        val etName = dialog.findViewById<TextInputEditText>(R.id.et_edit_app_name)
+        val etPackage = dialog.findViewById<TextInputEditText>(R.id.et_edit_package_name)
+        val etMinSdk = dialog.findViewById<TextInputEditText>(R.id.et_edit_min_sdk)
+        val etTargetSdk = dialog.findViewById<TextInputEditText>(R.id.et_edit_target_sdk)
+        val etVersionCode = dialog.findViewById<TextInputEditText>(R.id.et_edit_version_code)
+        val etVersionName = dialog.findViewById<TextInputEditText>(R.id.et_edit_version_name)
+        val btnSave = dialog.findViewById<Button>(R.id.btn_save_config)
+        val btnCancel = dialog.findViewById<Button>(R.id.btn_cancel_config)
+
+        ivCurrentEditingLogo = ivLogo
+
+        val iconCandidates = listOf(
+            currentProject.iconPath?.let { File(it) },
+            File(currentProject.rootPath, "app/src/main/res/drawable-xhdpi/app_icon.png"),
+            File(currentProject.rootPath, "app/src/main/res/drawable/app_icon.png"),
+            File(currentProject.rootPath, "app/src/main/res/mipmap-xhdpi/ic_launcher.png"),
+            File(currentProject.rootPath, "app/src/main/res/mipmap/ic_launcher.png"),
+            File(currentProject.rootPath, "icon.png")
+        )
+        val iconFile = iconCandidates.firstOrNull { it != null && it.exists() }
+        if (iconFile != null) {
+            val bmp = BitmapFactory.decodeFile(iconFile.absolutePath)
+            if (bmp != null) ivLogo?.setImageBitmap(bmp)
+            else ivLogo?.setImageResource(R.drawable.ic_launcher)
+        } else {
+            ivLogo?.setImageResource(R.drawable.ic_launcher)
+        }
+
+        etName?.setText(currentProject.name)
+        etPackage?.setText(currentProject.packageName)
+        etMinSdk?.setText(currentProject.minSdk.toString())
+        etTargetSdk?.setText(currentProject.targetSdk.toString())
+        etVersionCode?.setText(currentProject.versionCode.toString())
+        etVersionName?.setText(currentProject.versionName)
+
+        layoutIconPicker?.setOnClickListener {
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "image/*"
+            }
+            startActivityForResult(Intent.createChooser(intent, "Select App Icon (PNG required)"), 301)
+        }
+
+        btnCancel?.setOnClickListener { dialog.dismiss() }
+
+        btnSave?.setOnClickListener {
+            val newName = etName?.text.toString().trim()
+            val newPkg = etPackage?.text.toString().trim()
+            val newMinSdk = etMinSdk?.text.toString().trim().toIntOrNull() ?: currentProject.minSdk
+            val newTargetSdk = etTargetSdk?.text.toString().trim().toIntOrNull() ?: currentProject.targetSdk
+            val newVCode = etVersionCode?.text.toString().trim().toIntOrNull() ?: currentProject.versionCode
+            val newVName = etVersionName?.text.toString().trim().ifEmpty { currentProject.versionName }
+
+            if (newName.isEmpty()) {
+                Toast.makeText(this, "App Name cannot be empty", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (newPkg.isEmpty()) {
+                Toast.makeText(this, "Package Name cannot be empty", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Save Icon if changed
+            val bmp = pendingEditLogoBitmap
+            if (bmp != null) {
+                try {
+                    val targets = listOf(
+                        File(currentProject.rootPath, "app/src/main/res/drawable-xhdpi/app_icon.png"),
+                        File(currentProject.rootPath, "app/src/main/res/drawable/app_icon.png"),
+                        File(currentProject.rootPath, "app/src/main/res/mipmap-xhdpi/ic_launcher.png"),
+                        File(currentProject.rootPath, "app/src/main/res/mipmap/ic_launcher.png"),
+                        File(currentProject.rootPath, "icon.png")
+                    )
+                    for (t in targets) {
+                        t.parentFile?.mkdirs()
+                        java.io.FileOutputStream(t).use { fos ->
+                            bmp.compress(Bitmap.CompressFormat.PNG, 100, fos)
+                        }
+                    }
+                    currentProject.iconPath = File(currentProject.rootPath, "app/src/main/res/drawable-xhdpi/app_icon.png").absolutePath
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // Update Manifest
+            val manifest = currentProject.manifestFile
+            if (manifest.exists()) {
+                try {
+                    var mText = manifest.readText()
+                    mText = mText.replace(Regex("""package\s*=\s*"[^"]+""""), """package="$newPkg"""")
+                    if (mText.contains("android:minSdkVersion")) {
+                        mText = mText.replace(Regex("""android:minSdkVersion\s*=\s*"[^"]+""""), """android:minSdkVersion="$newMinSdk"""")
+                    }
+                    if (mText.contains("android:targetSdkVersion")) {
+                        mText = mText.replace(Regex("""android:targetSdkVersion\s*=\s*"[^"]+""""), """android:targetSdkVersion="$newTargetSdk"""")
+                    }
+                    if (mText.contains("android:versionCode")) {
+                        mText = mText.replace(Regex("""android:versionCode\s*=\s*"[^"]+""""), """android:versionCode="$newVCode"""")
+                    }
+                    if (mText.contains("android:versionName")) {
+                        mText = mText.replace(Regex("""android:versionName\s*=\s*"[^"]+""""), """android:versionName="$newVName"""")
+                    }
+                    manifest.writeText(mText)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // Update strings.xml
+            val stringsFiles = listOf(
+                File(currentProject.rootPath, "app/src/main/res/values/strings.xml"),
+                File(currentProject.rootPath, "src/main/res/values/strings.xml"),
+                File(currentProject.rootPath, "res/values/strings.xml")
+            )
+            for (sf in stringsFiles) {
+                if (sf.exists()) {
+                    try {
+                        var sText = sf.readText()
+                        sText = sText.replace(
+                            Regex("""<string\s+name\s*=\s*"app_name"[^>]*>.*?</string>"""),
+                            """<string name="app_name">$newName</string>"""
+                        )
+                        sf.writeText(sText)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            // Update build.gradle
+            val buildFiles = listOf(
+                File(currentProject.rootPath, "app/build.gradle"),
+                File(currentProject.rootPath, "app/build.gradle.kts"),
+                File(currentProject.rootPath, "build.gradle")
+            )
+            for (bf in buildFiles) {
+                if (bf.exists()) {
+                    try {
+                        var bText = bf.readText()
+                        bText = bText.replace(Regex("""applicationId\s+['"][^'"]+['"]"""), """applicationId "$newPkg"""")
+                        bText = bText.replace(Regex("""namespace\s+['"][^'"]+['"]"""), """namespace "$newPkg"""")
+                        bText = bText.replace(Regex("""minSdkVersion\s+\d+"""), """minSdkVersion $newMinSdk""")
+                        bText = bText.replace(Regex("""targetSdkVersion\s+\d+"""), """targetSdkVersion $newTargetSdk""")
+                        bText = bText.replace(Regex("""versionCode\s+\d+"""), """versionCode $newVCode""")
+                        bText = bText.replace(Regex("""versionName\s+['"][^'"]+['"]"""), """versionName "$newVName"""")
+                        bf.writeText(bText)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            currentProject.name = newName
+            currentProject.packageName = newPkg
+            currentProject.minSdk = newMinSdk
+            currentProject.targetSdk = newTargetSdk
+            currentProject.versionCode = newVCode
+            currentProject.versionName = newVName
+            currentProject.saveConfig()
+
+            tvPrjName.text = "${currentProject.name} — ${activeFile?.name ?: "Editor"}"
+            Toast.makeText(this, "Configuration updated! ✓", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 301 && resultCode == RESULT_OK && data?.data != null) {
+            val uri = data.data!!
+            try {
+                // Strict 8-byte PNG validation (89 50 4E 47 0D 0A 1A 0A)
+                var isPng = false
+                contentResolver.openInputStream(uri)?.use { stream ->
+                    val header = ByteArray(8)
+                    val read = stream.read(header)
+                    if (read == 8 &&
+                        header[0] == 0x89.toByte() &&
+                        header[1] == 0x50.toByte() && // P
+                        header[2] == 0x4E.toByte() && // N
+                        header[3] == 0x47.toByte() && // G
+                        header[4] == 0x0D.toByte() && // \r
+                        header[5] == 0x0A.toByte() && // \n
+                        header[6] == 0x1A.toByte() && // EOF
+                        header[7] == 0x0A.toByte()    // \n
+                    ) {
+                        isPng = true
+                    }
+                }
+                if (!isPng) {
+                    pendingEditLogoBitmap = null
+                    Toast.makeText(this, "Invalid PNG format required", Toast.LENGTH_LONG).show()
+                    return
+                }
+                contentResolver.openInputStream(uri)?.use { stream ->
+                    pendingEditLogoBitmap = BitmapFactory.decodeStream(stream)
+                    if (pendingEditLogoBitmap != null) {
+                        ivCurrentEditingLogo?.setImageBitmap(pendingEditLogoBitmap)
+                        Toast.makeText(this, "PNG icon selected ✓", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "Invalid PNG format required", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                pendingEditLogoBitmap = null
+                Toast.makeText(this, "Invalid PNG format required", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     override fun onBackPressed() {

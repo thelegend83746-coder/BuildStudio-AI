@@ -106,27 +106,61 @@ data class Project(
     fun loadConfig() {
         try {
             val configFile = File(rootPath, "project.json")
-            if (!configFile.exists()) return
-            val bytes = ByteArray(configFile.length().toInt())
-            FileInputStream(configFile).use { fis ->
-                fis.read(bytes)
+            if (configFile.exists()) {
+                val bytes = ByteArray(configFile.length().toInt())
+                FileInputStream(configFile).use { fis ->
+                    fis.read(bytes)
+                }
+                val json = JSONObject(String(bytes, StandardCharsets.UTF_8))
+                if (json.has("name")) name = json.getString("name")
+                if (json.has("packageName")) packageName = json.getString("packageName")
+                if (json.has("minSdk")) minSdk = json.getInt("minSdk")
+                if (json.has("targetSdk")) targetSdk = json.getInt("targetSdk")
+                if (json.has("versionCode")) versionCode = json.getInt("versionCode")
+                if (json.has("versionName")) versionName = json.getString("versionName")
+                if (json.has("javaVersion")) javaVersion = json.getString("javaVersion")
+                if (json.has("language")) language = json.getString("language")
+                if (json.has("dexer")) dexer = json.getString("dexer")
+                if (json.has("stringFog")) stringFog = json.getBoolean("stringFog")
+                if (json.has("r8Shrink")) r8Shrink = json.getBoolean("r8Shrink")
+                if (json.has("useAppCompat")) useAppCompat = json.getBoolean("useAppCompat")
+                if (json.has("useMaterial")) useMaterial = json.getBoolean("useMaterial")
+                if (json.has("iconPath")) iconPath = json.getString("iconPath")
+                if (json.has("lastModified")) lastModified = json.getLong("lastModified")
+            } else {
+                // Auto-detect from project files if imported without project.json
+                val manifest = manifestFile
+                if (manifest.exists()) {
+                    val mText = manifest.readText()
+                    val pkgMatch = Regex("""package\s*=\s*"([^"]+)"""").find(mText)
+                    if (pkgMatch != null) packageName = pkgMatch.groupValues[1]
+                    val minMatch = Regex("""android:minSdkVersion\s*=\s*"(\d+)"""").find(mText)
+                    if (minMatch != null) minSdk = minMatch.groupValues[1].toIntOrNull() ?: 26
+                    val targetMatch = Regex("""android:targetSdkVersion\s*=\s*"(\d+)"""").find(mText)
+                    if (targetMatch != null) targetSdk = targetMatch.groupValues[1].toIntOrNull() ?: 34
+                    val vCodeMatch = Regex("""android:versionCode\s*=\s*"(\d+)"""").find(mText)
+                    if (vCodeMatch != null) versionCode = vCodeMatch.groupValues[1].toIntOrNull() ?: 1
+                    val vNameMatch = Regex("""android:versionName\s*=\s*"([^"]+)"""").find(mText)
+                    if (vNameMatch != null) versionName = vNameMatch.groupValues[1]
+                }
+                val stringsXml = File(resDir, "values/strings.xml")
+                if (stringsXml.exists()) {
+                    val sText = stringsXml.readText()
+                    val appMatch = Regex("""<string\s+name\s*=\s*"app_name"[^>]*>(.*?)</string>""").find(sText)
+                    if (appMatch != null && appMatch.groupValues[1].isNotBlank()) {
+                        name = appMatch.groupValues[1].trim()
+                    }
+                }
+                val iconCandidates = listOf(
+                    File(resDir, "drawable-xhdpi/app_icon.png"),
+                    File(resDir, "drawable/app_icon.png"),
+                    File(resDir, "mipmap-xhdpi/ic_launcher.png"),
+                    File(resDir, "mipmap/ic_launcher.png"),
+                    File(rootPath, "icon.png")
+                )
+                iconCandidates.firstOrNull { it.exists() }?.let { iconPath = it.absolutePath }
+                saveConfig()
             }
-            val json = JSONObject(String(bytes, StandardCharsets.UTF_8))
-            if (json.has("name")) name = json.getString("name")
-            if (json.has("packageName")) packageName = json.getString("packageName")
-            if (json.has("minSdk")) minSdk = json.getInt("minSdk")
-            if (json.has("targetSdk")) targetSdk = json.getInt("targetSdk")
-            if (json.has("versionCode")) versionCode = json.getInt("versionCode")
-            if (json.has("versionName")) versionName = json.getString("versionName")
-            if (json.has("javaVersion")) javaVersion = json.getString("javaVersion")
-            if (json.has("language")) language = json.getString("language")
-            if (json.has("dexer")) dexer = json.getString("dexer")
-            if (json.has("stringFog")) stringFog = json.getBoolean("stringFog")
-            if (json.has("r8Shrink")) r8Shrink = json.getBoolean("r8Shrink")
-            if (json.has("useAppCompat")) useAppCompat = json.getBoolean("useAppCompat")
-            if (json.has("useMaterial")) useMaterial = json.getBoolean("useMaterial")
-            if (json.has("iconPath")) iconPath = json.getString("iconPath")
-            if (json.has("lastModified")) lastModified = json.getLong("lastModified")
         } catch (e: Exception) {
             e.printStackTrace()
         }

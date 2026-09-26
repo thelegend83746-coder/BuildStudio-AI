@@ -6,6 +6,8 @@
       </TextView>
       <ImageView android:id="@+id/btn_top_ai" android:background="?android:attr/selectableItemBackgroundBorderless" android:focusable="true" android:clickable="true" android:layout_width="44.0dp" android:layout_height="44.0dp" android:layout_marginEnd="6.0dp" android:src="@drawable/ic_ai" android:scaleType="centerInside" android:contentDescription="Build AI">
       </ImageView>
+      <ImageView android:id="@+id/btn_top_import" android:background="?android:attr/selectableItemBackgroundBorderless" android:focusable="true" android:clickable="true" android:layout_width="44.0dp" android:layout_height="44.0dp" android:layout_marginEnd="6.0dp" android:src="@drawable/ic_import_project" android:scaleType="centerInside" android:contentDescription="Import Project">
+      </ImageView>
       <ImageView android:id="@+id/three_dot_menu_image" android:background="?android:attr/selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="48.0dp" android:layout_height="48.0dp" android:src="@drawable/ic_more_vert_black" android:scaleType="center">
       </ImageView>
     </LinearLayout>
