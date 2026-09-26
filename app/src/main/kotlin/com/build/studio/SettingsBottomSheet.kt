@@ -21,14 +21,16 @@ import java.util.concurrent.TimeUnit
 class SettingsBottomSheet : BottomSheetDialogFragment() {
 
     private val supportedAiModels = listOf(
-        "Qwen-Coder (qwen2.5-coder:latest)",
-        "GLM-4.6",
-        "GLM-4.7",
-        "gemini-1.5-flash",
-        "gemini-2.0-flash",
-        "deepseek-chat",
-        "deepseek-coder",
-        "gpt-4o-mini"
+        "Google Gemini (gemini-1.5-flash)",
+        "Google Gemini (gemini-2.0-flash)",
+        "DeepSeek (deepseek-chat)",
+        "DeepSeek Coder (deepseek-coder)",
+        "Qwen-Coder (qwen-2.5-coder-32b)",
+        "GLM-4.6 (Zhipu AI)",
+        "GLM-4.7 (Zhipu AI)",
+        "OpenAI (gpt-4o-mini)",
+        "Groq (llama-3.3-70b)",
+        "Local Ollama (qwen2.5-coder:latest)"
     )
 
     private val targetSdks = listOf("34", "33", "31", "30", "28")
@@ -106,61 +108,109 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
         // Load existing AI prefs
         val savedKey = sp.getString("api_key", "") ?: ""
         val savedModel = sp.getString("model_name", "")?.ifEmpty { sp.getString("model", "") } ?: ""
+        val savedLabel = sp.getString("model_label", "") ?: ""
 
         etApiKey.setText(savedKey)
 
-        val modelIdx = supportedAiModels.indexOfFirst { it.contains(savedModel, ignoreCase = true) }
+        var modelIdx = if (savedLabel.isNotEmpty()) supportedAiModels.indexOf(savedLabel) else -1
+        if (modelIdx < 0 && savedModel.isNotEmpty()) {
+            modelIdx = supportedAiModels.indexOfFirst { it.contains(savedModel, ignoreCase = true) }
+        }
         if (modelIdx >= 0) {
             spModels.setSelection(modelIdx)
         } else {
             spModels.setSelection(0)
         }
 
+        fun updateModelGuidance(pos: Int) {
+            val selectedModelFull = supportedAiModels[pos]
+            val config = AiConfigHelper.resolveByModel(selectedModelFull)
+            val hint = when {
+                config.providerName == "Google Gemini" -> "Enter Google Gemini API Key (starts with AIzaSy...)"
+                config.providerName == "DeepSeek" -> "Enter DeepSeek API Key (starts with sk-...)"
+                config.providerName == "Zhipu AI (GLM)" -> "Enter Zhipu GLM API Key (format: id.secret)"
+                config.providerName.contains("Qwen") -> "Enter DashScope / Qwen API Key (starts with sk-...)"
+                config.providerName == "Groq" -> "Enter Groq API Key (starts with gsk_...)"
+                config.providerName == "OpenAI" -> "Enter OpenAI API Key (starts with sk-proj-...)"
+                config.providerName == "Local Ollama" -> "No API Key required for Local Ollama"
+                else -> "Enter ${config.providerName} API Key"
+            }
+            etApiKey.hint = hint
+            tvStatus.text = "Selected: ${config.providerName} (${config.defaultModel})"
+            tvStatus.setTextColor(Color.parseColor("#64748B"))
+        }
+
+        spModels.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                updateModelGuidance(position)
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+        updateModelGuidance(spModels.selectedItemPosition)
+
         btnTest.setOnClickListener {
             val key = etApiKey.text.toString().trim()
             val selectedModelFull = supportedAiModels[spModels.selectedItemPosition]
-            val actualModel = when {
-                selectedModelFull.startsWith("Qwen-Coder") -> "qwen2.5-coder:latest"
-                selectedModelFull == "GLM-4.6" -> "glm-4-0520"
-                selectedModelFull == "GLM-4.7" -> "glm-4-plus"
-                else -> selectedModelFull
+            val config = AiConfigHelper.resolveByModel(selectedModelFull, apiKey = key)
+
+            if (config.requiresKey && key.isEmpty()) {
+                tvStatus.text = "✗ ${config.providerName} requires an API key (${config.keyPrefixHint})"
+                tvStatus.setTextColor(Color.parseColor("#EF4444"))
+                Toast.makeText(context, "Please enter an API Key for ${config.providerName}", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
 
-            val config = AiConfigHelper.detectProvider(key, customModel = actualModel)
-            val testUrl = config.testUrl
+            val testUrl = if (config.providerName == "Google Gemini" && key.isNotEmpty()) {
+                "${config.testUrl}?key=$key"
+            } else {
+                config.testUrl
+            }
 
-            tvStatus.text = "Testing ${config.providerName} (${config.defaultModel})..."
+            tvStatus.text = "Testing live connection to ${config.providerName}..."
             tvStatus.setTextColor(Color.parseColor("#64748B"))
 
+            val startTime = System.currentTimeMillis()
             Thread {
-                val client = OkHttpClient.Builder().connectTimeout(8, TimeUnit.SECONDS).build()
+                val client = OkHttpClient.Builder()
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(10, TimeUnit.SECONDS)
+                    .build()
 
                 try {
                     val reqBuilder = Request.Builder().url(testUrl).get()
-                    if (key.isNotEmpty()) reqBuilder.header("Authorization", "Bearer $key")
+                    if (key.isNotEmpty()) {
+                        reqBuilder.header("Authorization", "Bearer $key")
+                    }
                     val resp = client.newCall(reqBuilder.build()).execute()
                     val ok = resp.isSuccessful
                     val code = resp.code
+                    val latency = System.currentTimeMillis() - startTime
+                    val respBodySnippet = resp.body?.string()?.take(180) ?: ""
+
                     activity?.runOnUiThread {
                         if (ok) {
-                            tvStatus.text = "✓ ${config.providerName} Connected! (HTTP $code)"
+                            tvStatus.text = "✓ ${config.providerName} Connected (${latency}ms, HTTP $code)!"
                             tvStatus.setTextColor(Color.parseColor("#10B981"))
-                            Toast.makeText(context, "${config.providerName} verified! 🚀", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "${config.providerName} Verified! 🚀", Toast.LENGTH_SHORT).show()
                         } else {
-                            val msg = when (code) {
-                                401 -> "HTTP 401 (Invalid API Key)"
-                                404 -> "HTTP 404 (Model/Endpoint Not Found)"
+                            val detail = when (code) {
+                                400 -> "HTTP 400 (Invalid API Key for ${config.providerName})"
+                                401 -> "HTTP 401 (Authentication Failed / Invalid Key for ${config.providerName})"
+                                403 -> "HTTP 403 (Forbidden / Access Denied)"
+                                404 -> "HTTP 404 (Model or Endpoint Not Found)"
                                 429 -> "HTTP 429 (Rate Limit / Quota Exceeded)"
-                                else -> "HTTP $code"
+                                else -> "HTTP $code: $respBodySnippet"
                             }
-                            tvStatus.text = "✗ ${config.providerName} error: $msg"
+                            tvStatus.text = "✗ ${config.providerName} Error: $detail"
                             tvStatus.setTextColor(Color.parseColor("#EF4444"))
+                            Toast.makeText(context, "Verification failed: $detail", Toast.LENGTH_LONG).show()
                         }
                     }
                 } catch (e: Exception) {
                     activity?.runOnUiThread {
-                        tvStatus.text = "✗ Connection failed: ${e.localizedMessage ?: "Unreachable"}"
+                        tvStatus.text = "✗ Connection failed to ${config.providerName}: ${e.localizedMessage ?: "Unreachable"}"
                         tvStatus.setTextColor(Color.parseColor("#EF4444"))
+                        Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }.start()
@@ -169,23 +219,19 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
         btnSave.setOnClickListener {
             val key = etApiKey.text.toString().trim()
             val selectedModelFull = supportedAiModels[spModels.selectedItemPosition]
-            val actualModel = when {
-                selectedModelFull.startsWith("Qwen-Coder") -> "qwen2.5-coder:latest"
-                selectedModelFull == "GLM-4.6" -> "glm-4-0520"
-                selectedModelFull == "GLM-4.7" -> "glm-4-plus"
-                else -> selectedModelFull
-            }
+            val config = AiConfigHelper.resolveByModel(selectedModelFull, apiKey = key)
 
-            val config = AiConfigHelper.detectProvider(key, customModel = actualModel)
             sp.edit()
                 .putString("api_key", key)
                 .putString("endpoint", config.baseUrl.substringBeforeLast("/chat/completions"))
                 .putString("base_url", config.baseUrl)
-                .putString("model", actualModel)
-                .putString("model_name", actualModel)
+                .putString("model", config.defaultModel)
+                .putString("model_name", config.defaultModel)
+                .putString("model_label", selectedModelFull)
+                .putString("provider_name", config.providerName)
                 .apply()
 
-            Toast.makeText(context, "AI Settings saved (${config.providerName})! 🚀", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Saved: ${config.providerName} (${config.defaultModel})! 🚀", Toast.LENGTH_SHORT).show()
             dismiss()
         }
     }

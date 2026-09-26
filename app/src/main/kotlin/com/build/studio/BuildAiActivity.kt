@@ -120,8 +120,7 @@ TAG FORMATS:
         }
 
         findViewById<View>(R.id.btn_ai_settings)?.setOnClickListener {
-            startActivity(Intent(this, OllamaSettingsActivity::class.java))
-            Animatoo.animateSlideLeft(this)
+            SettingsBottomSheet.show(this)
         }
 
         chatAdapter = ChatAdapter()
@@ -177,11 +176,13 @@ TAG FORMATS:
     private fun updateActiveModelDisplay() {
         val prefs = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
         val apiKey = prefs.getString("api_key", "") ?: ""
-        val savedModel = prefs.getString("model_name", "")?.ifEmpty {
-            prefs.getString("model", "")
+        val savedModel = prefs.getString("model_label", "")?.ifEmpty {
+            prefs.getString("model_name", "")?.ifEmpty {
+                prefs.getString("model", "")
+            }
         } ?: ""
 
-        val config = AiConfigHelper.detectProvider(apiKey, customModel = savedModel)
+        val config = AiConfigHelper.resolveByModel(savedModel, apiKey)
         tvActiveModel?.text = "Build AI (${config.providerName} • ${config.defaultModel})"
     }
 
@@ -231,15 +232,20 @@ TAG FORMATS:
 
         val prefs = getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
         val apiKey = prefs.getString("api_key", "") ?: ""
-        val savedBaseUrl = prefs.getString("base_url", "") ?: ""
-        val savedModel = prefs.getString("model_name", "")?.ifEmpty {
-            prefs.getString("model", "")
+        val savedModel = prefs.getString("model_label", "")?.ifEmpty {
+            prefs.getString("model_name", "")?.ifEmpty {
+                prefs.getString("model", "")
+            }
         } ?: ""
 
-        // Resolve exact working baseUrl and compatible model
-        val config = AiConfigHelper.detectProvider(apiKey, customBaseUrl = savedBaseUrl, customModel = savedModel)
-        val baseUrl = config.baseUrl
+        // Resolve exact working baseUrl and compatible model based on user selection
+        val config = AiConfigHelper.resolveByModel(savedModel, apiKey)
+        var baseUrl = config.baseUrl
         val model = config.defaultModel
+
+        if (config.providerName == "Google Gemini" && apiKey.isNotEmpty() && !baseUrl.contains("key=")) {
+            baseUrl = if (baseUrl.contains("?")) "$baseUrl&key=$apiKey" else "$baseUrl?key=$apiKey"
+        }
 
         val userInstructions = prefs.getString("system_prompt", "")?.trim()
         val finalSystemPrompt = if (!userInstructions.isNullOrEmpty()) {

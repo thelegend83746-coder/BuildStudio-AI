@@ -133,65 +133,23 @@ class OllamaSettingsActivity : AppCompatActivity() {
 
         val apiKey = etApiKey.text.toString().trim()
         val currentModel = etModelCustom.text.toString().trim()
-        val detected = AiConfigHelper.detectProvider(apiKey, customModel = currentModel)
+        val detected = AiConfigHelper.resolveByModel(currentModel, apiKey = apiKey)
 
         val candidates = mutableListOf<Candidate>()
 
         if (apiKey.isNotEmpty()) {
-            // Put detected candidate first
+            val testUrl = if (detected.providerName == "Google Gemini") {
+                "${detected.testUrl}?key=$apiKey"
+            } else {
+                detected.testUrl
+            }
             candidates.add(
                 Candidate(
                     name = detected.providerName,
-                    testUrl = detected.testUrl,
+                    testUrl = testUrl,
                     endpoint = detected.baseUrl.substringBeforeLast("/chat/completions"),
                     baseUrl = detected.baseUrl,
                     defaultModel = detected.defaultModel
-                )
-            )
-
-            // Fallback candidates
-            if (apiKey.startsWith("sk-")) {
-                // Could be DeepSeek or OpenAI
-                if (detected.providerName == "DeepSeek") {
-                    candidates.add(
-                        Candidate(
-                            name = "OpenAI",
-                            testUrl = "https://api.openai.com/v1/models",
-                            endpoint = "https://api.openai.com",
-                            baseUrl = "https://api.openai.com/v1/chat/completions",
-                            defaultModel = "gpt-4o-mini"
-                        )
-                    )
-                } else {
-                    candidates.add(
-                        Candidate(
-                            name = "DeepSeek",
-                            testUrl = "https://api.deepseek.com/v1/models",
-                            endpoint = "https://api.deepseek.com",
-                            baseUrl = "https://api.deepseek.com/v1/chat/completions",
-                            defaultModel = "deepseek-chat"
-                        )
-                    )
-                }
-            } else if (apiKey.startsWith("AIza")) {
-                candidates.add(
-                    Candidate(
-                        name = "Google Gemini",
-                        testUrl = "https://generativelanguage.googleapis.com/v1beta/openai/models",
-                        endpoint = "https://generativelanguage.googleapis.com",
-                        baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-                        defaultModel = "gemini-1.5-flash"
-                    )
-                )
-            }
-            // Also add Local Ollama with key (if running secured local instance)
-            candidates.add(
-                Candidate(
-                    name = "Local Ollama",
-                    testUrl = "http://127.0.0.1:11434/api/tags",
-                    endpoint = "http://127.0.0.1:11434",
-                    baseUrl = "http://127.0.0.1:11434/v1/chat/completions",
-                    defaultModel = "qwen2.5-coder:latest"
                 )
             )
         } else {
@@ -211,15 +169,6 @@ class OllamaSettingsActivity : AppCompatActivity() {
                     testUrl = "http://localhost:11434/api/tags",
                     endpoint = "http://localhost:11434",
                     baseUrl = "http://localhost:11434/v1/chat/completions",
-                    defaultModel = "qwen2.5-coder:latest"
-                )
-            )
-            candidates.add(
-                Candidate(
-                    name = "Termux Bridge Server",
-                    testUrl = "http://127.0.0.1:8080/ping",
-                    endpoint = "http://127.0.0.1:8080",
-                    baseUrl = "http://127.0.0.1:8080/run",
                     defaultModel = "qwen2.5-coder:latest"
                 )
             )
