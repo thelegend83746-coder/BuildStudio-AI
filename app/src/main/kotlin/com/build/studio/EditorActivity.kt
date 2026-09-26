@@ -64,6 +64,14 @@ class EditorActivity : AppCompatActivity() {
             setContentView(R.layout.editor)
         } catch (e: Throwable) {
             e.printStackTrace()
+            val tv = TextView(this).apply {
+                text = "Layout Inflation Error: ${e.message}\n${e.stackTraceToString()}"
+                setTextColor(Color.RED)
+                textSize = 14f
+                setPadding(32, 64, 32, 32)
+            }
+            setContentView(tv)
+            return
         }
 
         currentProject = resolveProject()
@@ -270,21 +278,16 @@ android {
 
         tvPrjName.text = currentProject.name
 
-        // Initialize CodeEditor from XML layout with clean fallback
+        // Programmatic CodeEditor addition into FrameLayout (guarantees zero InflateException)
         val editorContainer = findViewById<FrameLayout>(R.id.editor_container)
-        val xmlEditor = findViewById<CodeEditor>(R.id.code_editor)
-        if (xmlEditor != null) {
-            codeEditor = xmlEditor
-        } else {
-            codeEditor = CodeEditor(this).apply {
-                layoutParams = FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-            }
-            editorContainer?.removeAllViews()
-            editorContainer?.addView(codeEditor)
+        codeEditor = CodeEditor(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
         }
+        editorContainer?.removeAllViews()
+        editorContainer?.addView(codeEditor)
 
         // Bottom Symbol / Code Assist Toolbar
         val symbolLayout = findViewById<com.apk.builder.SymbolLayout>(R.id.symbol_layout)
@@ -374,17 +377,8 @@ android {
             val wordWrap = prefs.getBoolean("editor_word_wrap", false)
 
             codeEditor.apply {
-                setTextSize(currentFontSize)
-                typefaceText = Typeface.MONOSPACE
-                typefaceLineNumber = Typeface.MONOSPACE
-                isLineNumberEnabled = true
-                isWordwrap = wordWrap
-                isFocusable = true
-                isFocusableInTouchMode = true
-                overScrollMode = View.OVER_SCROLL_ALWAYS
                 try {
-                    val method = javaClass.getMethod("setEdgeEffectColor", Int::class.javaPrimitiveType)
-                    method.invoke(this, Color.parseColor("#9E9E9E"))
+                    colorScheme = SchemeGitHub()
                 } catch (_: Throwable) {}
 
                 try {
@@ -398,6 +392,19 @@ android {
                     scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.parseColor("#0084FF"))
                     scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#BBDEFB"))
                     scheme.setColor(EditorColorScheme.CURRENT_LINE, Color.parseColor("#FAFAFA"))
+                } catch (_: Throwable) {}
+
+                setTextSize(currentFontSize)
+                typefaceText = Typeface.MONOSPACE
+                typefaceLineNumber = Typeface.MONOSPACE
+                isLineNumberEnabled = true
+                isWordwrap = wordWrap
+                isFocusable = true
+                isFocusableInTouchMode = true
+                overScrollMode = View.OVER_SCROLL_ALWAYS
+                try {
+                    val method = javaClass.getMethod("setEdgeEffectColor", Int::class.javaPrimitiveType)
+                    method.invoke(this, Color.parseColor("#9E9E9E"))
                 } catch (_: Throwable) {}
             }
 
@@ -1026,7 +1033,7 @@ public class MainActivity extends Activity {
             var content = fileContentCache[file.absolutePath]
             if (content == null) {
                 content = if (file.exists()) FileUtil.readFile(file.absolutePath) else ""
-                if (content.isEmpty() && file.name.endsWith(".java")) {
+                if (content.isEmpty() && (file.name.endsWith(".java", ignoreCase = true) || file.name.endsWith(".kt", ignoreCase = true))) {
                     val pkg = if (currentProject.packageName.isNotEmpty()) currentProject.packageName else "com.example.app"
                     val className = file.nameWithoutExtension
                     content = """package $pkg;
@@ -1066,6 +1073,7 @@ public class $className extends Activity {
                 codeEditor.setText(content)
                 codeEditor.post {
                     codeEditor.setText(content)
+                    codeEditor.invalidate()
                 }
             }
 

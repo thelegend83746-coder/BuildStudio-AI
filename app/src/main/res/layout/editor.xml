@@ -171,20 +171,13 @@
           app:tabSelectedTextColor="#E53935"
           app:tabTextColor="@color/text_slate_700" />
 
-      <!-- FrameLayout Container with CodeEditor -->
+      <!-- FrameLayout Container for CodeEditor (Prevents InflateException Crash) -->
       <FrameLayout
           android:id="@+id/editor_container"
           android:layout_width="match_parent"
           android:layout_height="0dp"
           android:layout_weight="1"
-          android:background="#ffffff">
-
-          <io.github.rosemoe.sora.widget.CodeEditor
-              android:id="@+id/code_editor"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:background="#ffffff" />
-      </FrameLayout>
+          android:background="#ffffff" />
 
       <!-- Quick Symbol / Code Assist Toolbar -->
       <com.apk.builder.SymbolLayout
