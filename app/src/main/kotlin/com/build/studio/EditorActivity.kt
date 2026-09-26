@@ -149,6 +149,13 @@ class EditorActivity : AppCompatActivity() {
             ?: drawerView?.findViewById<RecyclerView>(R.id._drawer_recyclerview1)
             ?: RecyclerView(this)
 
+        drawerView?.findViewById<View>(R.id.btn_drawer_new_file)?.setOnClickListener {
+            promptCreateFile(currentProject.srcDir)
+        }
+        drawerView?.findViewById<View>(R.id.btn_drawer_new_folder)?.setOnClickListener {
+            promptCreateFolder(currentProject.srcDir)
+        }
+
         tvPrjName.text = currentProject.name
 
         // Top Bar Back button: automatically saves current file and exits
@@ -165,6 +172,21 @@ class EditorActivity : AppCompatActivity() {
         findViewById<View>(R.id.redo_btn)?.setOnClickListener {
             if (codeEditor.canRedo()) codeEditor.redo()
         }
+
+        // Save Button: explicitly saves active file with confirmation Toast
+        findViewById<View>(R.id.btn_save)?.setOnClickListener {
+            val f = activeFile
+            if (f != null) {
+                saveCurrentFile()
+                Toast.makeText(this, "Saved ${f.name} ✓", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "No file open to save", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Bottom Symbol / Code Assist Toolbar
+        val symbolLayout = findViewById<com.apk.builder.SymbolLayout>(R.id.symbol_layout)
+        symbolLayout?.setTargetEditor(codeEditor)
 
         // Run button (Build TextView)
         findViewById<View>(R.id.Build)?.setOnClickListener {
@@ -382,8 +404,8 @@ class EditorActivity : AppCompatActivity() {
             val rootDir = File(currentProject.rootPath)
             if (expandedPaths.isEmpty() && rootDir.exists()) {
                 expandedPaths.add(rootDir.absolutePath)
-                rootDir.walkTopDown().maxDepth(5).forEach { f ->
-                    if (f.isDirectory) {
+                rootDir.walkTopDown().forEach { f ->
+                    if (f.isDirectory && f.name != "build" && f.name != ".git" && f.name != ".build_ai_backups") {
                         expandedPaths.add(f.absolutePath)
                     }
                 }
@@ -836,6 +858,12 @@ class EditorActivity : AppCompatActivity() {
                 } catch (e: Throwable) {
                     e.printStackTrace()
                 }
+            } else {
+                try {
+                    codeEditor.setEditorLanguage(null)
+                } catch (e: Throwable) {
+                    e.printStackTrace()
+                }
             }
 
             codeEditor.setText(content)
@@ -853,11 +881,26 @@ class EditorActivity : AppCompatActivity() {
         FileUtil.writeFile(f.absolutePath, text)
     }
 
+    override fun onPause() {
+        super.onPause()
+        saveCurrentFile()
+    }
+
     private fun runBuildPipeline() {
-        Toast.makeText(this, "Building APK...", Toast.LENGTH_SHORT).show()
+        saveCurrentFile()
+
+        val progressDialog = android.app.ProgressDialog(this).apply {
+            setTitle("Building APK")
+            setMessage("Initiating build pipeline...")
+            setCancelable(false)
+            show()
+        }
 
         val task = CompilerAsyncTask(this, currentProject) { result ->
             runOnUiThread {
+                if (progressDialog.isShowing) {
+                    progressDialog.dismiss()
+                }
                 if (result.isSuccess && result.apkFile != null) {
                     DialogUtil.showApkUtilityDialog(this, result.apkFile, currentProject.name, currentProject.packageName)
                 } else {
@@ -870,6 +913,15 @@ class EditorActivity : AppCompatActivity() {
                 }
             }
         }
+
+        task.onProgressListener = { msg, step, total ->
+            runOnUiThread {
+                if (progressDialog.isShowing) {
+                    progressDialog.setMessage("[$step/$total] $msg")
+                }
+            }
+        }
+
         task.execute()
     }
 

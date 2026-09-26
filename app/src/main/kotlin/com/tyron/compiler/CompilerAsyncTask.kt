@@ -18,6 +18,8 @@ class CompilerAsyncTask(
         fun onCompleted(result: CompilerResult)
     }
 
+    var onProgressListener: ((message: String, step: Int, total: Int) -> Unit)? = null
+
     private val mainHandler = Handler(Looper.getMainLooper())
     private val executor = Executors.newSingleThreadExecutor()
 
@@ -85,5 +87,8 @@ class CompilerAsyncTask(
 
     private fun postProgress(msg: String, s: Int, t: Int) {
         Logger.log("[$s/$t] $msg")
+        mainHandler.post {
+            onProgressListener?.invoke(msg, s, t)
+        }
     }
 }

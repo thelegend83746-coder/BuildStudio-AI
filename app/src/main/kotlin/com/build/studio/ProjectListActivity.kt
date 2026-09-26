@@ -218,40 +218,121 @@ class ProjectListActivity : AppCompatActivity() {
     }
 
     private fun backupProject(project: Project) {
-        val backupDir = File("/storage/emulated/0/test-folder")
-        if (!backupDir.exists()) backupDir.mkdirs()
-        val zipFile = File(backupDir, "${project.name}_backup.zip")
-        android.widget.Toast.makeText(this, "Creating backup...", android.widget.Toast.LENGTH_SHORT).show()
+        val rootDir = File(project.rootPath)
+        if (!rootDir.exists()) {
+            android.widget.Toast.makeText(this, "Project folder not found: ${project.rootPath}", android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // Test and find guaranteed writable directory
+        val candidates = mutableListOf<File>()
+        try {
+            val pubDownload = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+            candidates.add(File(pubDownload, "BuildStudio/Backups"))
+            candidates.add(pubDownload)
+        } catch (_: Throwable) {}
+        candidates.add(File("/storage/emulated/0/.BUILD STUDIO/backups"))
+        candidates.add(File("/storage/emulated/0/test-folder"))
+        getExternalFilesDir("backups")?.let { candidates.add(it) }
+        candidates.add(File(filesDir, "backups"))
+
+        var targetDir: File? = null
+        for (candidate in candidates) {
+            try {
+                if (!candidate.exists()) candidate.mkdirs()
+                if (candidate.exists() && candidate.canWrite()) {
+                    val testFile = File(candidate, ".test_write_${System.currentTimeMillis()}")
+                    if (testFile.createNewFile()) {
+                        testFile.delete()
+                        targetDir = candidate
+                        break
+                    }
+                }
+            } catch (_: Throwable) {}
+        }
+
+        val finalDir = targetDir ?: File(filesDir, "backups").apply { mkdirs() }
+        val timeStamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())
+        val zipFileName = "${project.name}_backup_$timeStamp.zip"
+        val zipFile = File(finalDir, zipFileName)
+
+        val progressDialog = android.app.ProgressDialog(this).apply {
+            setMessage("Creating backup for ${project.name}...")
+            setCancelable(false)
+            show()
+        }
 
         Thread {
             try {
-                val rootDir = File(project.rootPath)
                 java.util.zip.ZipOutputStream(java.io.FileOutputStream(zipFile)).use { zos ->
                     rootDir.walkTopDown().forEach { f ->
-                        val relPath = f.relativeTo(rootDir).path
-                        if (relPath.isNotEmpty() && !relPath.startsWith("build") && !relPath.startsWith(".gradle")) {
+                        if (f.absolutePath == rootDir.absolutePath) return@forEach
+                        val relPath = f.relativeTo(rootDir).path.replace('\\', '/')
+                        if (relPath.isNotEmpty() && !relPath.startsWith("build/") && !relPath.startsWith(".git/") && relPath != "build" && relPath != ".git") {
                             if (f.isDirectory) {
                                 val dirEntry = if (relPath.endsWith("/")) relPath else "$relPath/"
-                                zos.putNextEntry(java.util.zip.ZipEntry(dirEntry))
-                                zos.closeEntry()
+                                try {
+                                    zos.putNextEntry(java.util.zip.ZipEntry(dirEntry))
+                                    zos.closeEntry()
+                                } catch (_: Throwable) {}
                             } else {
-                                zos.putNextEntry(java.util.zip.ZipEntry(relPath))
-                                f.inputStream().use { it.copyTo(zos) }
-                                zos.closeEntry()
+                                try {
+                                    zos.putNextEntry(java.util.zip.ZipEntry(relPath))
+                                    f.inputStream().use { it.copyTo(zos) }
+                                    zos.closeEntry()
+                                } catch (_: Throwable) {}
                             }
                         }
                     }
                 }
+
+                try {
+                    val staticZip = File(finalDir, "${project.name}_backup.zip")
+                    com.apk.builder.FileUtil.copyFile(zipFile, staticZip)
+                } catch (_: Throwable) {}
+
                 runOnUiThread {
-                    android.widget.Toast.makeText(this, "Backup saved to: ${zipFile.absolutePath}", android.widget.Toast.LENGTH_LONG).show()
+                    progressDialog.dismiss()
+                    showBackupSuccessDialog(project.name, zipFile)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
-                    android.widget.Toast.makeText(this, "Backup failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                    progressDialog.dismiss()
+                    androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("Backup Error")
+                        .setMessage("Failed to create backup:\n${e.message}")
+                        .setPositiveButton("OK", null)
+                        .show()
                 }
             }
         }.start()
+    }
+
+    private fun showBackupSuccessDialog(projectName: String, zipFile: File) {
+        val sizeMb = String.format(java.util.Locale.US, "%.2f MB", zipFile.length().toDouble() / (1024 * 1024))
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Backup Created ✓")
+            .setMessage("Project: $projectName\nSize: $sizeMb\n\nLocation:\n${zipFile.absolutePath}")
+            .setPositiveButton("Share / Export") { _, _ ->
+                try {
+                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                        this,
+                        "${packageName}.provider",
+                        zipFile
+                    )
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/zip"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(shareIntent, "Share Backup Zip"))
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(this, "Share error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("OK", null)
+            .show()
     }
 
     private fun promptDeleteProject(project: Project) {

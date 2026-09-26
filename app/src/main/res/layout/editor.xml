@@ -11,6 +11,8 @@
         </ImageView>
         <ImageView android:id="@+id/redo_btn" android:background="?android:attr/selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="38.0dp" android:layout_height="38.0dp" android:layout_marginRight="2.0dp" android:src="@drawable/ic_redo" android:scaleType="center">
         </ImageView>
+        <ImageView android:id="@+id/btn_save" android:background="?android:attr/selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="38.0dp" android:layout_height="38.0dp" android:layout_marginRight="4.0dp" android:src="@drawable/ic_save" android:scaleType="center" android:contentDescription="Save File">
+        </ImageView>
         <ImageView android:id="@+id/imageview3" android:background="?android:attr/selectableItemBackground" android:focusable="true" android:clickable="true" android:layout_width="38.0dp" android:layout_height="38.0dp" android:layout_marginRight="6.0dp" android:src="@drawable/ic_folder_black" android:scaleType="center">
         </ImageView>
         <LinearLayout android:id="@+id/Build" android:gravity="center" android:orientation="horizontal" android:background="@drawable/btn_run_green" android:paddingLeft="14.0dp" android:paddingRight="14.0dp" android:paddingTop="6.0dp" android:paddingBottom="6.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:clickable="true" android:focusable="true">
@@ -30,6 +32,10 @@
           android:layout_height="0dp"
           android:layout_weight="1"
           android:background="#ffffffff" />
+      <com.apk.builder.SymbolLayout
+          android:id="@+id/symbol_layout"
+          android:layout_width="match_parent"
+          android:layout_height="40dp" />
     </LinearLayout>
   </androidx.coordinatorlayout.widget.CoordinatorLayout>
   <LinearLayout android:layout_gravity="start" android:id="@+id/_nav_view" android:background="#ffeeeeee" android:layout_width="320.0dp" android:layout_height="match_parent">

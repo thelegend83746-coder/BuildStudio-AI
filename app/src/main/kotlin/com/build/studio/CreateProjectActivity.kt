@@ -186,7 +186,9 @@ class CreateProjectActivity : AppCompatActivity() {
 
     private fun showStep(step: Int) {
         currentStep = step
+        val tvHeader = findViewById<TextView>(R.id.textview1)
         if (step == 1) {
+            tvHeader?.text = "Choose Template"
             chooseTemplateBg.visibility = View.VISIBLE
             applicationInfoBg.visibility = View.GONE
             animateViewAlpha(chooseTemplateBg)
@@ -194,6 +196,7 @@ class CreateProjectActivity : AppCompatActivity() {
             tvExitPrevious.text = "EXIT"
             tvCreateBtn.text = "Next"
         } else {
+            tvHeader?.text = "Configure Project"
             chooseTemplateBg.visibility = View.GONE
             applicationInfoBg.visibility = View.VISIBLE
             animateViewAlpha(applicationInfoBg)
@@ -479,8 +482,66 @@ class CreateProjectActivity : AppCompatActivity() {
 
             FileUtil.writeFile(File(layoutDir, "activity_main.xml").absolutePath, layoutContent)
 
-            // Generate MainActivity.java
-            val javaContent = """package $pkgName;
+            // Generate MainActivity.java matching selected template
+            val javaContent = when (template) {
+                "fab" -> """package $pkgName;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+public class MainActivity extends Activity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        TextView tvTitle = findViewById(R.id.tv_title);
+
+        if (fab != null) {
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(MainActivity.this, "FAB button tapped!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+}
+"""
+                "simple" -> """package $pkgName;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class MainActivity extends Activity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        TextView tvWelcome = findViewById(R.id.tv_welcome);
+        if (tvWelcome != null) {
+            tvWelcome.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(MainActivity.this, "Hello from $appName!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+}
+"""
+                else -> """package $pkgName;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -494,6 +555,7 @@ public class MainActivity extends Activity {
     }
 }
 """
+            }
             FileUtil.writeFile(File(srcDir, "MainActivity.java").absolutePath, javaContent)
 
             // AndroidManifest.xml
