@@ -95,7 +95,6 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
     private fun setupAiSettings(root: View) {
         val sp = requireContext().getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
         val etApiKey = root.findViewById<EditText>(R.id.et_sheet_api_key)
-        val etEndpoint = root.findViewById<EditText>(R.id.et_sheet_endpoint)
         val spModels = root.findViewById<Spinner>(R.id.sp_sheet_models)
         val tvStatus = root.findViewById<TextView>(R.id.tv_sheet_conn_status)
         val btnTest = root.findViewById<Button>(R.id.btn_sheet_test_conn)
@@ -106,11 +105,9 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
 
         // Load existing AI prefs
         val savedKey = sp.getString("api_key", "") ?: ""
-        val savedEndpoint = sp.getString("endpoint", "") ?: ""
         val savedModel = sp.getString("model_name", "")?.ifEmpty { sp.getString("model", "") } ?: ""
 
         etApiKey.setText(savedKey)
-        etEndpoint.setText(savedEndpoint)
 
         val modelIdx = supportedAiModels.indexOfFirst { it.contains(savedModel, ignoreCase = true) }
         if (modelIdx >= 0) {
@@ -121,7 +118,6 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
 
         btnTest.setOnClickListener {
             val key = etApiKey.text.toString().trim()
-            val endpoint = etEndpoint.text.toString().trim()
             val selectedModelFull = supportedAiModels[spModels.selectedItemPosition]
             val actualModel = when {
                 selectedModelFull.startsWith("Qwen-Coder") -> "qwen2.5-coder:latest"
@@ -130,7 +126,7 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
                 else -> selectedModelFull
             }
 
-            val config = AiConfigHelper.detectProvider(key, customBaseUrl = endpoint, customModel = actualModel)
+            val config = AiConfigHelper.detectProvider(key, customModel = actualModel)
             val testUrl = config.testUrl
 
             tvStatus.text = "Testing ${config.providerName} (${config.defaultModel})..."
@@ -151,7 +147,13 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
                             tvStatus.setTextColor(Color.parseColor("#10B981"))
                             Toast.makeText(context, "${config.providerName} verified! 🚀", Toast.LENGTH_SHORT).show()
                         } else {
-                            tvStatus.text = "✗ ${config.providerName} returned HTTP $code"
+                            val msg = when (code) {
+                                401 -> "HTTP 401 (Invalid API Key)"
+                                404 -> "HTTP 404 (Model/Endpoint Not Found)"
+                                429 -> "HTTP 429 (Rate Limit / Quota Exceeded)"
+                                else -> "HTTP $code"
+                            }
+                            tvStatus.text = "✗ ${config.providerName} error: $msg"
                             tvStatus.setTextColor(Color.parseColor("#EF4444"))
                         }
                     }
@@ -166,25 +168,24 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
 
         btnSave.setOnClickListener {
             val key = etApiKey.text.toString().trim()
-            val endpoint = etEndpoint.text.toString().trim()
             val selectedModelFull = supportedAiModels[spModels.selectedItemPosition]
             val actualModel = when {
                 selectedModelFull.startsWith("Qwen-Coder") -> "qwen2.5-coder:latest"
-                selectedModelFull == "GLM-4.6" -> "glm-4.6"
-                selectedModelFull == "GLM-4.7" -> "glm-4.7"
+                selectedModelFull == "GLM-4.6" -> "glm-4-0520"
+                selectedModelFull == "GLM-4.7" -> "glm-4-plus"
                 else -> selectedModelFull
             }
 
-            val config = AiConfigHelper.detectProvider(key, customBaseUrl = endpoint, customModel = actualModel)
+            val config = AiConfigHelper.detectProvider(key, customModel = actualModel)
             sp.edit()
                 .putString("api_key", key)
-                .putString("endpoint", if (endpoint.isNotEmpty()) endpoint else config.baseUrl.substringBeforeLast("/chat/completions"))
-                .putString("base_url", if (endpoint.isNotEmpty()) (if (endpoint.endsWith("/chat/completions")) endpoint else "$endpoint/v1/chat/completions") else config.baseUrl)
+                .putString("endpoint", config.baseUrl.substringBeforeLast("/chat/completions"))
+                .putString("base_url", config.baseUrl)
                 .putString("model", actualModel)
                 .putString("model_name", actualModel)
                 .apply()
 
-            Toast.makeText(context, "AI Settings saved! 🚀", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "AI Settings saved (${config.providerName})! 🚀", Toast.LENGTH_SHORT).show()
             dismiss()
         }
     }
