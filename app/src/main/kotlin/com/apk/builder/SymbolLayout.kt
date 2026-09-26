@@ -81,7 +81,15 @@ class SymbolLayout @JvmOverloads constructor(
                 )
 
                 setOnClickListener {
-                    targetEditor?.insertText(sym, sym.length)
+                    try {
+                        val ed = targetEditor ?: return@setOnClickListener
+                        if (!ed.hasFocus()) {
+                            ed.requestFocus()
+                        }
+                        ed.insertText(sym, sym.length)
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
+                    }
                 }
             }
             container.addView(chip)

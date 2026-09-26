@@ -387,6 +387,10 @@ class ProjectListActivity : AppCompatActivity() {
                 ivIcon?.setImageResource(R.drawable.ic_launcher)
             }
 
+            view.findViewById<View>(R.id.btn_project_options)?.setOnClickListener {
+                (context as? ProjectListActivity)?.showProjectOptionsMenu(project)
+            }
+
             return view
         }
     }

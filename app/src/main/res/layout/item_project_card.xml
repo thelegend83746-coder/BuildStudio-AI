@@ -89,10 +89,17 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Options Menu Button (Three Dots) -->
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/arrow"
+            android:id="@+id/btn_project_options"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="6dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_more_vert_black"
             app:tint="@color/text_secondary" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

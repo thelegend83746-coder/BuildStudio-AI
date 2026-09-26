@@ -164,7 +164,6 @@
           android:layout_height="36dp"
           android:background="@color/bg_white"
           android:elevation="2dp"
-          app:tabIndicator="@drawable/tabindicator"
           app:tabIndicatorColor="@color/colorPrimary"
           app:tabIndicatorFullWidth="false"
           app:tabIndicatorHeight="3dp"

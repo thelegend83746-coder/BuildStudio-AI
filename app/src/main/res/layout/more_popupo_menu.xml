@@ -126,6 +126,42 @@
             android:layout_marginBottom="4dp"
             android:background="#EDF2F7" />
 
+        <!-- 4. Backup Project (.zip) -->
+        <LinearLayout
+            android:id="@+id/menu_backup"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginRight="12dp"
+                android:src="@drawable/round_save_20"
+                app:tint="@color/colorPrimary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Backup Project (.zip)"
+                android:textColor="@color/text_slate_900"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:background="#EDF2F7" />
+
         <!-- Java File Shortcut -->
         <LinearLayout
             android:id="@+id/java_file"
