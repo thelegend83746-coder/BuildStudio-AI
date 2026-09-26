@@ -31,9 +31,8 @@ import com.apk.builder.model.Project
 import com.blogspot.atifsoftwares.animatoolib.Animatoo
 import com.google.android.material.tabs.TabLayout
 import com.tyron.compiler.CompilerAsyncTask
-import io.github.rosemoe.sora.lang.java.JavaLanguage
+import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
-import io.github.rosemoe.sora.widget.EditorColorScheme
 import java.io.File
 import kotlin.math.abs
 
