@@ -53,7 +53,11 @@ class EditorActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.editor)
+        try {
+            setContentView(R.layout.editor)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
 
         try {
             val path = intent.getStringExtra("project_path")
@@ -81,15 +85,49 @@ class EditorActivity : AppCompatActivity() {
             currentProject = Project("Project", "com.example.app", "/storage/emulated/0/.BUILD STUDIO/MyApplication")
         }
 
-        initViews()
-        setupEditor()
-        setupTree()
-        openDefaultFile()
+        try {
+            initViews()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
+        try {
+            setupEditor()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
+        try {
+            setupTree()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+
+        try {
+            openDefaultFile()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
     }
 
     private fun initViews() {
         drawerLayout = findViewById(R.id._drawer) ?: DrawerLayout(this)
-        codeEditor = findViewById(R.id.code_editor)
+        
+        // Programmatic CodeEditor addition into FrameLayout (guarantees zero InflateException)
+        val editorContainer = findViewById<FrameLayout>(R.id.editor_container)
+        codeEditor = CodeEditor(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setTextSize(15f)
+            typefaceText = Typeface.MONOSPACE
+            typefaceLineNumber = Typeface.MONOSPACE
+            isLineNumberEnabled = true
+            isWordwrap = false
+        }
+        editorContainer?.addView(codeEditor)
+
         tabLayout = findViewById(R.id.tablayout1)
         tvPrjName = findViewById(R.id.prj_name)
         toolbarLayout = findViewById(R.id.toolbar) ?: LinearLayout(this)
@@ -245,12 +283,16 @@ class EditorActivity : AppCompatActivity() {
             if (expandedPaths.isEmpty() && rootDir.exists()) {
                 expandedPaths.add(rootDir.absolutePath)
                 fun expandSubDirs(dir: File) {
-                    val children = dir.listFiles() ?: return
-                    for (c in children) {
-                        if (c.isDirectory && c.name != "build" && c.name != ".git" && c.name != ".build_ai_backups") {
-                            expandedPaths.add(c.absolutePath)
-                            expandSubDirs(c)
+                    try {
+                        val children = dir.listFiles() ?: return
+                        for (c in children) {
+                            if (c.isDirectory && c.name != "build" && c.name != ".git" && c.name != ".build_ai_backups") {
+                                expandedPaths.add(c.absolutePath)
+                                expandSubDirs(c)
+                            }
                         }
+                    } catch (e: Throwable) {
+                        e.printStackTrace()
                     }
                 }
                 expandSubDirs(rootDir)
@@ -665,9 +707,12 @@ class EditorActivity : AppCompatActivity() {
                 if (manifest.exists()) targetFile = manifest
             }
 
-            // 4. Fallback to any file in project
-            if (targetFile == null && rootDir.exists()) {
-                targetFile = findFileRecursively(rootDir) { it.isFile && it.name != "project.json" }
+            // 4. Fallback to layout XML
+            if (targetFile == null) {
+                val resDir = currentProject.resDir
+                if (resDir.exists()) {
+                    targetFile = findFileRecursively(resDir) { it.name.endsWith(".xml") }
+                }
             }
 
             // 5. Ultimate fallback: create MainActivity.java
@@ -687,15 +732,19 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun findFileRecursively(dir: File, predicate: (File) -> Boolean): File? {
-        val children = dir.listFiles() ?: return null
-        for (f in children) {
-            if (f.isDirectory) {
-                if (f.name == "build" || f.name == ".git" || f.name == ".build_ai_backups") continue
-                val found = findFileRecursively(f, predicate)
-                if (found != null) return found
-            } else if (predicate(f)) {
-                return f
+        try {
+            val children = dir.listFiles() ?: return null
+            for (f in children) {
+                if (f.isDirectory) {
+                    if (f.name == "build" || f.name == ".git" || f.name == ".build_ai_backups") continue
+                    val found = findFileRecursively(f, predicate)
+                    if (found != null) return found
+                } else if (predicate(f)) {
+                    return f
+                }
             }
+        } catch (e: Throwable) {
+            e.printStackTrace()
         }
         return null
     }
