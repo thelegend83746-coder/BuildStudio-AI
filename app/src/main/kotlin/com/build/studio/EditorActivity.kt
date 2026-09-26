@@ -270,42 +270,20 @@ android {
 
         tvPrjName.text = currentProject.name
 
-        // Programmatic CodeEditor addition into FrameLayout (guarantees zero InflateException)
+        // Initialize CodeEditor from XML layout with clean fallback
         val editorContainer = findViewById<FrameLayout>(R.id.editor_container)
-        try {
+        val xmlEditor = findViewById<CodeEditor>(R.id.code_editor)
+        if (xmlEditor != null) {
+            codeEditor = xmlEditor
+        } else {
             codeEditor = CodeEditor(this).apply {
                 layoutParams = FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
-                setTextSize(14f)
-                typefaceText = Typeface.MONOSPACE
-                typefaceLineNumber = Typeface.MONOSPACE
-                isLineNumberEnabled = true
-                isWordwrap = false
-                isFocusable = true
-                isFocusableInTouchMode = true
-
-                try {
-                    colorScheme = SchemeGitHub()
-                } catch (_: Throwable) {}
-                try {
-                    val scheme = colorScheme
-                    scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, Color.parseColor("#FFFFFF"))
-                    scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, Color.parseColor("#F8FAFC"))
-                    scheme.setColor(EditorColorScheme.LINE_NUMBER, Color.parseColor("#64748B"))
-                    scheme.setColor(EditorColorScheme.LINE_DIVIDER, Color.parseColor("#E2E8F0"))
-                    scheme.setColor(EditorColorScheme.TEXT_NORMAL, Color.parseColor("#0F172A"))
-                    scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.parseColor("#2563EB"))
-                    scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.parseColor("#2563EB"))
-                    scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#BFDBFE"))
-                    scheme.setColor(EditorColorScheme.CURRENT_LINE, Color.parseColor("#F8FAFC"))
-                } catch (_: Throwable) {}
             }
             editorContainer?.removeAllViews()
             editorContainer?.addView(codeEditor)
-        } catch (e: Throwable) {
-            e.printStackTrace()
         }
 
         // Bottom Symbol / Code Assist Toolbar
@@ -401,6 +379,15 @@ android {
                 typefaceLineNumber = Typeface.MONOSPACE
                 isLineNumberEnabled = true
                 isWordwrap = wordWrap
+                isFocusable = true
+                isFocusableInTouchMode = true
+                overScrollMode = View.OVER_SCROLL_ALWAYS
+                try {
+                    isOverScrollEnabled = true
+                } catch (_: Throwable) {}
+                try {
+                    setEdgeEffectColor(Color.parseColor("#2563EB"))
+                } catch (_: Throwable) {}
             }
 
             // Smooth code pinch-to-zoom (Code Zooming)
@@ -864,9 +851,29 @@ android {
 
             var targetFile: File? = null
 
+            // 0. Check editorOpened.json for last opened files
+            val openedJsonFile = File(currentProject.rootPath, "editorOpened.json")
+            if (openedJsonFile.exists()) {
+                try {
+                    val raw = openedJsonFile.readText()
+                    val arr = org.json.JSONArray(raw)
+                    for (i in 0 until arr.length()) {
+                        val obj = arr.getJSONObject(i)
+                        val p = obj.optString("path", "")
+                        if (p.isNotEmpty()) {
+                            val f = File(p)
+                            if (f.exists() && f.isFile) {
+                                targetFile = f
+                                break
+                            }
+                        }
+                    }
+                } catch (_: Throwable) {}
+            }
+
             // 1. Search for MainActivity in srcDir
             val srcDir = currentProject.srcDir
-            if (srcDir.exists()) {
+            if (targetFile == null && srcDir.exists()) {
                 targetFile = findFileRecursively(srcDir) { it.name.startsWith("MainActivity") }
             }
 
@@ -1046,9 +1053,20 @@ public class $className extends Activity {
                 }
 
                 codeEditor.setText(content)
+                codeEditor.post {
+                    codeEditor.setText(content)
+                }
             }
 
             tvPrjName.text = "${currentProject.name} — ${file.name}"
+
+            // Persist active file to editorOpened.json
+            try {
+                val openedJson = org.json.JSONArray().apply {
+                    put(org.json.JSONObject().put("path", file.absolutePath))
+                }
+                File(currentProject.rootPath, "editorOpened.json").writeText(openedJson.toString())
+            } catch (_: Throwable) {}
         } catch (e: Throwable) {
             e.printStackTrace()
         }

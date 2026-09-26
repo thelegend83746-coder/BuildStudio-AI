@@ -99,7 +99,7 @@ class ProjectListActivity : AppCompatActivity() {
         }
     }
 
-    private fun openProject(proj: Project) {
+    fun openProject(proj: Project) {
         val intent = Intent(this, EditorActivity::class.java).apply {
             putExtra("project_path", proj.rootPath)
             putExtra("path", proj.rootPath)
@@ -188,22 +188,19 @@ class ProjectListActivity : AppCompatActivity() {
         popupWindow.showAsDropDown(anchor, 0, 0, Gravity.END)
     }
 
-    private fun showProjectOptionsMenu(project: Project) {
-        // "Rename" removed; replaced with "Edit Project Configuration"
+    fun showProjectOptionsMenu(project: Project) {
         val options = arrayOf(
-            "1. Open Project",
-            "2. Edit Project Configuration",
-            "3. Backup (.zip)",
-            "4. Delete Project"
+            "Edit Configuration",
+            "Backup Project (.zip)",
+            "Delete Project"
         )
         AlertDialog.Builder(this)
             .setTitle(project.name)
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> openProject(project)
-                    1 -> showEditProjectDialog(project)
-                    2 -> backupProject(project)
-                    3 -> promptDeleteProject(project)
+                    0 -> showEditProjectDialog(project)
+                    1 -> backupProject(project)
+                    2 -> promptDeleteProject(project)
                 }
             }
             .show()
@@ -1044,7 +1041,21 @@ class ProjectListActivity : AppCompatActivity() {
             tvTitle?.text = project.name
             tvPackage?.text = project.packageName
             tvTimestamp?.text = dateFormat.format(java.util.Date(project.lastModified))
-            tvSdkRange?.text = "SDK ${project.minSdk} - ${project.targetSdk}"
+
+            val hasMin = project.minSdk > 0
+            val hasTarget = project.targetSdk > 0
+            if (hasMin && hasTarget) {
+                tvSdkRange?.visibility = View.VISIBLE
+                tvSdkRange?.text = "Min ${project.minSdk} • Target ${project.targetSdk}"
+            } else if (hasMin) {
+                tvSdkRange?.visibility = View.VISIBLE
+                tvSdkRange?.text = "Min SDK ${project.minSdk}"
+            } else if (hasTarget) {
+                tvSdkRange?.visibility = View.VISIBLE
+                tvSdkRange?.text = "Target SDK ${project.targetSdk}"
+            } else {
+                tvSdkRange?.visibility = View.GONE
+            }
 
             // Check icon candidates
             val iconCandidates = listOf(
@@ -1064,7 +1075,15 @@ class ProjectListActivity : AppCompatActivity() {
                 ivIcon?.setImageResource(R.drawable.ic_launcher)
             }
 
-            view.findViewById<View>(R.id.btn_project_options)?.setOnClickListener {
+            // Clicking anywhere on project card opens project in editor
+            view.setOnClickListener {
+                (context as? ProjectListActivity)?.openProject(project)
+            }
+
+            // Clicking 3-dots icon opens backup, delete, or edit configuration
+            val btnOptions = view.findViewById<View>(R.id.btn_project_options)
+            btnOptions?.isFocusable = false
+            btnOptions?.setOnClickListener {
                 (context as? ProjectListActivity)?.showProjectOptionsMenu(project)
             }
 

@@ -2,6 +2,7 @@ package com.build.studio
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -41,7 +42,8 @@ class BuildAiActivity : AppCompatActivity() {
         val target: String = "",
         val replacement: String = "",
         val destPath: String = "",
-        var applied: Boolean = false
+        var applied: Boolean = false,
+        var rejected: Boolean = false
     )
 
     data class ChatMessage(
@@ -70,12 +72,13 @@ class BuildAiActivity : AppCompatActivity() {
         .readTimeout(120, TimeUnit.SECONDS)
         .build()
 
-    private val systemPrompt = """You are Build AI, an expert Android systems engineer and on-device IDE coding assistant inside the Build Studio app. You can create files, folders, write Java and XML code, fix compilation errors, and generate targeted smart patches.
+    private val systemPrompt = """You are Build AI, an expert Android systems engineer and on-device IDE coding assistant inside the Build Studio app. You can create complete Android apps, games, utilities, UI screens, create files and folders, write Java and XML code, fix compilation errors, and generate targeted smart patches.
 
 CRITICAL RULES:
-1. NEVER REWRITE ENTIRE FILES UNNECESSARILY: Output targeted patches using <replace_code> for specific XML attributes or Java method blocks to prevent breaking existing code.
-2. MANDATORY EXECUTION PLAN & CONFIDENCE SCORE: For every coding task, you MUST output a <plan>...</plan> block explaining your diagnosis and planned edits, followed by <confidence>98%</confidence> (stating your estimated confidence score between 90% and 99%).
-3. COMPILER ERROR AUTO-FIXER: When provided with a compiler error or stack trace, diagnose the root cause (e.g. AndroidX compatibility, missing view bindings, duplicate IDs, missing imports), patch ONLY the broken lines using <replace_code>, and preserve the rest of the file.
+1. FULL APP & GAME CREATION: When the user asks to build an app, game, or feature, create all necessary directories (<create_dir>), layout XML files, Java activities, Drawables, and Manifest entries using <write_file> or <replace_code>.
+2. TARGETED CODE PATCHES: Never rewrite entire large files unnecessarily. Use <replace_code> for specific modifications, or <write_file> for new files.
+3. MANDATORY EXECUTION PLAN & CONFIDENCE SCORE: For every coding task, you MUST output a <plan>...</plan> block explaining your diagnosis and planned edits, followed by <confidence>98%</confidence> (stating your estimated confidence score between 90% and 99%).
+4. COMPILER ERROR AUTO-FIXER: When provided with a compiler error or stack trace, diagnose the root cause and patch ONLY the broken lines using <replace_code>.
 
 TAG FORMATS:
 <plan>detailed analysis and targeted action steps</plan>
@@ -673,6 +676,13 @@ TAG FORMATS:
                         if (act.applied) {
                             layoutButtons?.visibility = View.GONE
                             tvStatus?.visibility = View.VISIBLE
+                            tvStatus?.text = "✓ Approved & Applied"
+                            tvStatus?.setTextColor(Color.parseColor("#16A34A"))
+                        } else if (act.rejected) {
+                            layoutButtons?.visibility = View.GONE
+                            tvStatus?.visibility = View.VISIBLE
+                            tvStatus?.text = "✗ Rejected"
+                            tvStatus?.setTextColor(Color.parseColor("#EF4444"))
                         } else {
                             layoutButtons?.visibility = View.VISIBLE
                             tvStatus?.visibility = View.GONE
@@ -680,12 +690,20 @@ TAG FORMATS:
                             btnApprove?.setOnClickListener {
                                 executeAction(act)
                                 act.applied = true
+                                act.rejected = false
                                 layoutButtons?.visibility = View.GONE
                                 tvStatus?.visibility = View.VISIBLE
+                                tvStatus?.text = "✓ Approved & Applied"
+                                tvStatus?.setTextColor(Color.parseColor("#16A34A"))
                             }
 
                             btnReject?.setOnClickListener {
-                                holder.containerActions.removeView(card)
+                                act.applied = false
+                                act.rejected = true
+                                layoutButtons?.visibility = View.GONE
+                                tvStatus?.visibility = View.VISIBLE
+                                tvStatus?.text = "✗ Rejected"
+                                tvStatus?.setTextColor(Color.parseColor("#EF4444"))
                                 Toast.makeText(this@BuildAiActivity, "Action rejected", Toast.LENGTH_SHORT).show()
                             }
                         }

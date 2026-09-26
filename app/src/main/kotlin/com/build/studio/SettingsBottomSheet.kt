@@ -95,8 +95,9 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun setupAiSettings(root: View) {
-        val sp = requireContext().getSharedPreferences("build_ai_prefs", Context.MODE_PRIVATE)
+        val tilApiKey = root.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.til_sheet_api_key)
         val etApiKey = root.findViewById<EditText>(R.id.et_sheet_api_key)
+        val etInstructions = root.findViewById<EditText>(R.id.et_sheet_instructions)
         val spProvider = root.findViewById<Spinner>(R.id.sp_sheet_provider)
         val spModels = root.findViewById<Spinner>(R.id.sp_sheet_models)
         val tvStatus = root.findViewById<TextView>(R.id.tv_sheet_conn_status)
@@ -116,12 +117,15 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
         val savedProvider = sp.getString("provider_name", "") ?: ""
         val savedModel = sp.getString("model_name", "")?.ifEmpty { sp.getString("model", "") } ?: ""
         val savedLabel = sp.getString("model_label", "") ?: ""
+        val savedInstructions = sp.getString("system_prompt", "")?.ifEmpty { sp.getString("system_instructions", "") } ?: ""
 
         etApiKey.setText(savedKey)
+        etInstructions?.setText(savedInstructions)
 
         fun updateModelsForProvider(providerName: String, preserveModel: String = "") {
             val config = AiConfigHelper.getProviderConfigByName(providerName, etApiKey.text.toString().trim())
-            etApiKey.hint = "Enter ${config.providerName} Key (${config.keyPrefixHint})"
+            tilApiKey?.hint = "Enter ${config.providerName} Key (${config.keyPrefixHint})"
+            etApiKey.hint = null
 
             activeModelsList.clear()
             activeModelsList.addAll(config.models)
@@ -249,6 +253,7 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
             }
 
             val cleanModel = AiConfigHelper.cleanModelId(selectedModelFull)
+            val customInstructions = etInstructions?.text?.toString()?.trim() ?: ""
 
             sp.edit()
                 .putString("api_key", key)
@@ -258,6 +263,8 @@ class SettingsBottomSheet : BottomSheetDialogFragment() {
                 .putString("model_name", cleanModel)
                 .putString("model_label", selectedModelFull)
                 .putString("provider_name", config.providerName)
+                .putString("system_prompt", customInstructions)
+                .putString("system_instructions", customInstructions)
                 .apply()
 
             Toast.makeText(context, "Saved: ${config.providerName} ($cleanModel)! 🚀", Toast.LENGTH_SHORT).show()
