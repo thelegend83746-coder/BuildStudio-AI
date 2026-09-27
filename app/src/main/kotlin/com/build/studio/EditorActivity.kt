@@ -52,7 +52,6 @@ class EditorActivity : AppCompatActivity() {
     private val openTabs = mutableListOf<File>()
     private val fileContentCache = mutableMapOf<String, String>()
 
-    private lateinit var scaleGestureDetector: ScaleGestureDetector
     private var currentFontSize = 14f
     private val fileNodes = mutableListOf<FileNode>()
     private val expandedPaths = HashSet<String>()
@@ -278,21 +277,16 @@ android {
 
         tvPrjName.text = currentProject.name
 
-        // Initialize CodeEditor from XML layout if present, otherwise add dynamically
-        val existingEditor = findViewById<CodeEditor?>(R.id.code_editor)
-        if (existingEditor != null) {
-            codeEditor = existingEditor
-        } else {
-            val editorContainer = findViewById<FrameLayout?>(R.id.editor_container)
-            codeEditor = CodeEditor(this).apply {
-                layoutParams = FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-            }
-            editorContainer?.removeAllViews()
-            editorContainer?.addView(codeEditor)
+        // Programmatic CodeEditor addition into FrameLayout (guarantees zero InflateException)
+        val editorContainer = findViewById<FrameLayout?>(R.id.editor_container)
+        codeEditor = CodeEditor(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
         }
+        editorContainer?.removeAllViews()
+        editorContainer?.addView(codeEditor)
 
         // Bottom Symbol / Code Assist Toolbar
         val symbolLayout = findViewById<com.apk.builder.SymbolLayout>(R.id.symbol_layout)
@@ -418,40 +412,6 @@ android {
                 } catch (_: Throwable) {}
             }
 
-            // Smooth code pinch-to-zoom (Code Zooming)
-            scaleGestureDetector = ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                private var baseSize = currentFontSize
-
-                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-                    baseSize = currentFontSize
-                    return true
-                }
-
-                override fun onScale(detector: ScaleGestureDetector): Boolean {
-                    val factor = detector.scaleFactor
-                    if (factor > 0.01f && factor < 100.0f) {
-                        val newSize = (baseSize * factor).coerceIn(10f, 38f)
-                        if (abs(newSize - currentFontSize) >= 0.25f) {
-                            currentFontSize = newSize
-                            codeEditor.setTextSize(currentFontSize)
-                        }
-                    }
-                    return true
-                }
-
-                override fun onScaleEnd(detector: ScaleGestureDetector) {
-                    prefs.edit().putInt("editor_font_size", currentFontSize.toInt()).apply()
-                }
-            })
-
-            codeEditor.setOnTouchListener { _, event ->
-                val handled = scaleGestureDetector.onTouchEvent(event)
-                if (event.pointerCount > 1 || scaleGestureDetector.isInProgress) {
-                    true
-                } else {
-                    false
-                }
-            }
 
             tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
                 override fun onTabSelected(tab: TabLayout.Tab) {
