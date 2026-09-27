@@ -278,16 +278,21 @@ android {
 
         tvPrjName.text = currentProject.name
 
-        // Programmatic CodeEditor addition into FrameLayout (guarantees zero InflateException)
-        val editorContainer = findViewById<FrameLayout>(R.id.editor_container)
-        codeEditor = CodeEditor(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
+        // Initialize CodeEditor from XML layout if present, otherwise add dynamically
+        val existingEditor = findViewById<CodeEditor?>(R.id.code_editor)
+        if (existingEditor != null) {
+            codeEditor = existingEditor
+        } else {
+            val editorContainer = findViewById<FrameLayout?>(R.id.editor_container)
+            codeEditor = CodeEditor(this).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+            editorContainer?.removeAllViews()
+            editorContainer?.addView(codeEditor)
         }
-        editorContainer?.removeAllViews()
-        editorContainer?.addView(codeEditor)
 
         // Bottom Symbol / Code Assist Toolbar
         val symbolLayout = findViewById<com.apk.builder.SymbolLayout>(R.id.symbol_layout)
@@ -384,14 +389,19 @@ android {
                 try {
                     val scheme = colorScheme
                     scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, Color.WHITE)
-                    scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, Color.WHITE)
+                    scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, Color.parseColor("#F8F9FA"))
                     scheme.setColor(EditorColorScheme.LINE_NUMBER, Color.parseColor("#0084FF"))
-                    scheme.setColor(EditorColorScheme.LINE_DIVIDER, Color.parseColor("#EEEEEE"))
+                    scheme.setColor(EditorColorScheme.LINE_DIVIDER, Color.parseColor("#E0E0E0"))
                     scheme.setColor(EditorColorScheme.TEXT_NORMAL, Color.parseColor("#212121"))
+                    scheme.setColor(EditorColorScheme.KEYWORD, Color.parseColor("#D73A49"))
+                    scheme.setColor(EditorColorScheme.IDENTIFIER_NAME, Color.parseColor("#005CC5"))
+                    scheme.setColor(EditorColorScheme.LITERAL, Color.parseColor("#032F62"))
+                    scheme.setColor(EditorColorScheme.COMMENT, Color.parseColor("#6A737D"))
+                    scheme.setColor(EditorColorScheme.OPERATOR, Color.parseColor("#D73A49"))
                     scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.parseColor("#0084FF"))
                     scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.parseColor("#0084FF"))
                     scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#BBDEFB"))
-                    scheme.setColor(EditorColorScheme.CURRENT_LINE, Color.parseColor("#FAFAFA"))
+                    scheme.setColor(EditorColorScheme.CURRENT_LINE, Color.parseColor("#F4F6F8"))
                 } catch (_: Throwable) {}
 
                 setTextSize(currentFontSize)
@@ -869,7 +879,7 @@ android {
 
             var targetFile: File? = null
 
-            // 0. Check editorOpened.json for last opened files
+            // 0. Check editorOpened.json for last opened files with non-zero length
             val openedJsonFile = File(currentProject.rootPath, "editorOpened.json")
             if (openedJsonFile.exists()) {
                 try {
@@ -880,7 +890,7 @@ android {
                         val p = obj.optString("path", "")
                         if (p.isNotEmpty()) {
                             val f = File(p)
-                            if (f.exists() && f.isFile) {
+                            if (f.exists() && f.isFile && f.length() > 0L) {
                                 targetFile = f
                                 break
                             }
@@ -897,23 +907,25 @@ android {
 
             // 2. Search for any .java or .kt file in project
             if (targetFile == null) {
-                targetFile = findFileRecursively(File(currentProject.rootPath)) { it.name.endsWith(".java") || it.name.endsWith(".kt") }
+                targetFile = findFileRecursively(File(currentProject.rootPath)) {
+                    (it.name.endsWith(".java", ignoreCase = true) || it.name.endsWith(".kt", ignoreCase = true)) && it.length() > 0L
+                }
             }
 
             // 3. Fallback to layout XML
             if (targetFile == null) {
                 val layoutFile = File(currentProject.resDir, "layout/activity_main.xml")
-                if (layoutFile.exists()) targetFile = layoutFile
+                if (layoutFile.exists() && layoutFile.length() > 0L) targetFile = layoutFile
             }
 
             // 4. Fallback to manifest
             if (targetFile == null) {
                 val manifest = currentProject.manifestFile
-                if (manifest.exists()) targetFile = manifest
+                if (manifest.exists() && manifest.length() > 0L) targetFile = manifest
             }
 
-            // 5. Ultimate fallback: create MainActivity.java
-            if (targetFile == null || !targetFile.exists()) {
+            // 5. Ultimate fallback: create / ensure MainActivity.java
+            if (targetFile == null || !targetFile.exists() || targetFile.length() == 0L) {
                 val defaultJava = File(currentProject.srcDir, "MainActivity.java")
                 defaultJava.parentFile?.mkdirs()
                 val pkg = if (currentProject.packageName.isNotEmpty()) currentProject.packageName else "com.example.app"
@@ -963,9 +975,29 @@ public class MainActivity extends Activity {
 
     private fun openFileInEditor(file: File) {
         try {
-            if (!file.exists()) {
+            if (!file.exists() || file.length() == 0L) {
                 file.parentFile?.mkdirs()
-                FileUtil.writeFile(file.absolutePath, "// File: ${file.name}\n")
+                if (file.name.endsWith(".java", ignoreCase = true) || file.name.endsWith(".kt", ignoreCase = true)) {
+                    val pkg = if (currentProject.packageName.isNotEmpty()) currentProject.packageName else "com.example.app"
+                    val className = file.nameWithoutExtension
+                    val template = """package $pkg;
+
+import android.app.Activity;
+import android.os.Bundle;
+
+public class $className extends Activity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+}
+"""
+                    FileUtil.writeFile(file.absolutePath, template)
+                } else {
+                    FileUtil.writeFile(file.absolutePath, "// File: ${file.name}\n")
+                }
             }
 
             var existingIndex = -1
@@ -1031,12 +1063,13 @@ public class MainActivity extends Activity {
         try {
             activeFile = file
             var content = fileContentCache[file.absolutePath]
-            if (content == null) {
-                content = if (file.exists()) FileUtil.readFile(file.absolutePath) else ""
-                if (content.isEmpty() && (file.name.endsWith(".java", ignoreCase = true) || file.name.endsWith(".kt", ignoreCase = true))) {
-                    val pkg = if (currentProject.packageName.isNotEmpty()) currentProject.packageName else "com.example.app"
-                    val className = file.nameWithoutExtension
-                    content = """package $pkg;
+            if (content.isNullOrEmpty()) {
+                content = if (file.exists() && file.length() > 0L) FileUtil.readFile(file.absolutePath) else ""
+            }
+            if (content.isNullOrBlank() && (file.name.endsWith(".java", ignoreCase = true) || file.name.endsWith(".kt", ignoreCase = true))) {
+                val pkg = if (currentProject.packageName.isNotEmpty()) currentProject.packageName else "com.example.app"
+                val className = file.nameWithoutExtension
+                content = """package $pkg;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -1050,10 +1083,10 @@ public class $className extends Activity {
     }
 }
 """
-                    FileUtil.writeFile(file.absolutePath, content)
-                }
+                FileUtil.writeFile(file.absolutePath, content)
             }
-            fileContentCache[file.absolutePath] = content
+            val textToDisplay = content ?: ""
+            fileContentCache[file.absolutePath] = textToDisplay
 
             if (::codeEditor.isInitialized) {
                 if (file.name.endsWith(".java", ignoreCase = true) || file.name.endsWith(".kt", ignoreCase = true)) {
@@ -1070,9 +1103,12 @@ public class $className extends Activity {
                     }
                 }
 
-                codeEditor.setText(content)
+                codeEditor.setText(textToDisplay)
                 codeEditor.post {
-                    codeEditor.setText(content)
+                    if (codeEditor.text.toString().isEmpty() && textToDisplay.isNotEmpty()) {
+                        codeEditor.setText(textToDisplay)
+                    }
+                    codeEditor.setSelection(0, 0)
                     codeEditor.invalidate()
                 }
             }
@@ -1095,6 +1131,10 @@ public class $className extends Activity {
         val f = activeFile ?: return
         if (!::codeEditor.isInitialized) return
         val text = codeEditor.text.toString()
+        if (text.isEmpty() && f.exists() && f.length() > 0L) {
+            // Guard: Never overwrite an existing non-empty file with empty string if editor is not yet ready!
+            return
+        }
         fileContentCache[f.absolutePath] = text
         FileUtil.writeFile(f.absolutePath, text)
         currentProject.lastModified = System.currentTimeMillis()
